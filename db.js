@@ -7,5 +7,13 @@ const pool = new Pool({
   password: 'swe workshop',  
   port: 5432,            // PostgreSQL port not our server
 });
-
+console.log('Attempting to connect to the database...');
+pool.connect()
+  .then(client => {
+    console.log('Connected to the database successfully');
+    client.release();
+  })
+  .catch(err => {
+    console.error('Error connecting to the database:', err.stack);
+  });
 module.exports = pool; 

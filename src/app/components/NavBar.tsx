@@ -11,7 +11,7 @@ const navItems = [
   { text: 'Furniture', href: '/furniture' }, 
   { text: 'Listings', href: '/listings' },   
   { text: 'Messages', href: '/messages' },   
-  { text: 'Login', href: '/login' }          
+  { text: 'Sign In', href: '/login' }          
 ];
 
 export default function DrawerAppBar(props: { window?: () => Window }) {

@@ -62,6 +62,7 @@ const FurniturePage = () => {
     return isInPriceRange && isTagged && isInRating && isColorMatch;
   });
 
+
   return (
     <div style={{ display: 'flex', padding: '30px' }}>
       <div style={{ flexGrow: 1 }}>
@@ -71,7 +72,8 @@ const FurniturePage = () => {
               <FurnitureCard
                 title={item.description} 
                 price={`$${item.price}`}
-                imageUrl="https://via.placeholder.com/345x140" 
+                imageUrl="https://via.placeholder.com/345x140"
+                id={item.id}
               />
             </Grid>
           ))}
