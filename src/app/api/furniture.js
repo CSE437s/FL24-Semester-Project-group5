@@ -4,7 +4,7 @@ const pool = require('../../../db');
 
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT fl.*, bu.rating from public."furniture_listing" fl join public."business_user" bu on bu.user_id = fl."user-id";');
+    const result = await pool.query('SELECT fl.*, bu.rating from public."furniture_listing" fl join public."business_user" bu on bu.user_id = fl."user_id";');
     res.json(result.rows); 
   } catch (err) {
     console.error('Error fetching furniture data:', err);
@@ -19,8 +19,8 @@ router.get('/:id', async (req, res) => {
     const result = await pool.query(
       `SELECT fl.*, bu.rating 
        FROM public."furniture_listing" fl 
-       JOIN public."business_user" bu ON bu.user_id = fl."user-id" 
-       WHERE fl.id = 1`
+       JOIN public."business_user" bu ON bu.user_id = fl."user_id" 
+       WHERE fl.id = ${id}`
     );    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Furniture item not found' });
     }

@@ -1,4 +1,6 @@
-import { useRouter } from 'next/router';
+"use client";
+
+import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface ColorData {
@@ -16,14 +18,16 @@ interface FurnitureItem {
 
 const FurnitureDescriptionPage = () => {
   const router = useRouter();
-  console.log("iam here", router.query)
-  const { id } = router.query; 
+  console.log("iam here")
+  const params = useParams<{ tag: string; item: string }>()
+  const id  = params['id']; 
+  console.log(id);
 
   const [furnitureItem, setFurnitureItem] = useState<FurnitureItem | null>(null); 
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (id) {
+    //if (id) {
       console.log("Fetching furniture item with ID:", id);
       const fetchFurnitureItem = async () => {
         try {
@@ -41,11 +45,10 @@ const FurnitureDescriptionPage = () => {
         }
       };
       fetchFurnitureItem();
-    }
+  //  }
   }, [id]);
   
 
-  if (error) return <div>{error}</div>;
   if (!furnitureItem) return <div>Loading...</div>;
 
   return (
