@@ -63,3 +63,4 @@ model VerificationRequest {
 
   @@unique([identifier, token])
 }
+

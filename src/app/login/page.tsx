@@ -4,7 +4,7 @@ import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Button, TextField, Typography, Container, Box, Tabs, Tab } from '@mui/material';
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react';
 
 const validationSchema = Yup.object({
@@ -15,6 +15,8 @@ const validationSchema = Yup.object({
 
 const LoginPage = () => {
   const [value, setValue] = React.useState(0); // 0 for Sign In, 1 for Sign Up
+
+  const router = useRouter();
 
   const formik = useFormik({
     initialValues: {
@@ -50,10 +52,13 @@ const LoginPage = () => {
           callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}`,
           redirect: false,
         });
+
+        console.log(res)
     
         if (res?.ok) {
           // toast success
-          console.log("success");
+          router.push('/furniture');
+
           return;
         } else {
           // Toast failed

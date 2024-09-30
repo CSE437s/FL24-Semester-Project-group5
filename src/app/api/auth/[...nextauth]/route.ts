@@ -9,13 +9,12 @@ const options: NextAuthOptions = {
   providers: [
     // @ts-ignore
     CredentialsProvider({
-      name: "Credentials",
+      name: "credentials",
       async authorize(credentials, req) {
         const userCredentials = {
           email: credentials.email,
           password: credentials.password,
         };
-
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/user/login`,
           {
@@ -27,7 +26,6 @@ const options: NextAuthOptions = {
           }
         );
         const user = await res.json();
-
         if (res.ok && user) {
           return user;
         } else {
