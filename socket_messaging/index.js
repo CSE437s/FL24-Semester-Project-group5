@@ -59,6 +59,8 @@ io.on('connection', async(socket) => {
       console.error('Error inserting message:', e);
       console.log("error could not insert, check pg query and connections")
       return;
+    }finally {
+      
     }
     io.emit('chat message', msg, result.id);
   });
