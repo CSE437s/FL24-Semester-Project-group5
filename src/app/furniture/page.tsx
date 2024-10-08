@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
 import FurnitureCard from '../components/furniture-card';
 import Filter from '../components/furniture-filter-card';
-
+import Button from '@mui/material/Button';
+import Link from 'next/link'; 
 
 interface ColorData {
   colors: string[];
@@ -17,6 +18,7 @@ interface FurnitureItem {
   condition: string;
   rating: number;
   colors: ColorData; 
+  pics: string[];
 }
 
 const FurniturePage = () => {
@@ -46,13 +48,15 @@ const FurniturePage = () => {
   }, []);
 
   const filteredItems = furnitureItems.filter(item => {
+    console.log("pics: ",item.pics);
     const isInPriceRange = item.price >= priceRange[0] && item.price <= priceRange[1];
     const isTagged = tags.length === 0 || tags.some(tag => item.description.toLowerCase().includes(tag.toLowerCase()));
     const isInRating = item.rating >= ratingValue;
     let isColorMatch = colorsValue.length === 0;
+ 
     if (item.colors) {
-      for (let i = 0; i < item.colors.colors.length; i++) {
-        if (colorsValue.includes(item.colors.colors[i])) {
+      for (let i = 0; i < item.colors.length; i++) {
+        if (colorsValue.includes(item.colors[i])) {
           isColorMatch = true; 
           break; 
         }
@@ -65,6 +69,13 @@ const FurniturePage = () => {
 
   return (
     <div style={{ display: 'flex', padding: '30px' }}>
+
+<div style={{ display: 'flex', justifyContent: 'flex-end', padding: '20px' }}>
+      <Link href="/furniture/upload" passHref>
+        <Button variant="contained">Add Listing</Button>
+      </Link>
+    </div>
+
       <div style={{ flexGrow: 1 }}>
         <Grid container spacing={4}>
           {filteredItems.map((item) => (
@@ -72,7 +83,7 @@ const FurniturePage = () => {
               <FurnitureCard
                 title={item.description} 
                 price={`$${item.price}`}
-                imageUrl="https://via.placeholder.com/345x140"
+                imageUrl= {item.pics[0] || "https://via.placeholder.com/345x140"}
                 id={item.id}
               />
             </Grid>

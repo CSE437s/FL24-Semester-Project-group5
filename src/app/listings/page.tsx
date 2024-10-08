@@ -5,6 +5,9 @@ import Grid from '@mui/material/Grid2';
 import { ApartmentCard } from '../components/apartment-card';
 import ApartmentFilter from '../components/apartment-filter-card'; 
 import Maps from '../components/map-card';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Link from 'next/link'; 
 import { getCoordinatesOfAddress, haversineDistance } from './utils'; 
 
 interface ApartmentItems {
@@ -31,7 +34,7 @@ interface Location {
 const Listings = () => {
   const [apartmentItems, setApartmentItems] = useState<ApartmentItems[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 2000]);
+  const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
   const [distRange, setDistRange] = useState<number[]>([0, 3]);
   const [filteredItems, setFilteredItems] = useState<ApartmentItems[]>([]);
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([]); 
@@ -76,35 +79,53 @@ const Listings = () => {
     //massive filter proccess
     const filterItems = async () => {
       const newFilteredItems = await Promise.all(apartmentItems.map(async (item, index) => {
+    
         const isInRange = item.price >= priceRange[0] && item.price <= priceRange[1];
         const isNumBeds = bedNum === "Any" || (bedNum === "4+" && item.bedrooms >= 4) || 
         (bedNum !== "4+" && item.bedrooms === parseInt(bedNum || '0'));
         const isNumBaths = bathNum === "Any" || (bathNum === "4+" && item.bathrooms >= 4) || 
         (bathNum !== "4+" && item.bathrooms === parseInt(bathNum || '0'));
-        console.log(item.bathrooms);
         const apartmentLocation = locations[index];
         if (apartmentLocation) {
           const distToUser = haversineDistance(apartmentLocation.latitude, apartmentLocation.longitude);
           const isWithinDistance = await distToUser <= distRange[1] && await distToUser >= distRange[0];
-          return isInRange && isNumBeds && isNumBaths && isWithinDistance ? item : null;
+          console.log(priceRange[1]);
+          if (isInRange && isNumBeds && isNumBaths && isWithinDistance) {
+            
+            return item;
+          }
         }
         return null;
       }));
 
       //build location filter for map icon
-      const validFilteredItems = newFilteredItems.filter(item => item !== null);
+      const validFilteredItems = newFilteredItems.filter(item => item !== null) as ApartmentItems[];
+
       setFilteredItems(validFilteredItems);
 
-      setFilteredItems(newFilteredItems.filter(item => item !== null));
-      let validFilteredLocations = locations.filter((_, index) => validFilteredItems.some(item => item.id === apartmentItems[index].id));
+      const validFilteredLocations = locations.filter((_, index) =>
+        validFilteredItems.some(item => item.id === apartmentItems[index].id)
+      );
       setFilteredLocations(validFilteredLocations);
     };
-  
+     
     filterItems();
   }, [apartmentItems, locations, priceRange, distRange, bedNum, bathNum]); 
 
+
   return (
+
+
+
+
     <div style={{ display: 'flex', padding: '30px', flexDirection: 'column' }}>
+
+<div style={{ display: 'flex', justifyContent: 'flex-end', padding: '20px' }}>
+      <Link href="/listings/upload" passHref>
+        <Button variant="contained">Add Listing</Button>
+      </Link>
+    </div>
+
       {/* Map Section */}
       <div style={{ position: 'fixed', width: '600px', height: '1000px', top: '100px', left: '30px', zIndex: 1000 }}>
             <Maps locations={filteredLocations} /> 
@@ -123,7 +144,7 @@ const Listings = () => {
         setBathrooms={setBathNum}
         /> 
         <Grid container spacing={3} style={{ padding: '5px' }}>
-          {filteredItems.map((item) => (
+          {filteredItems.map((item) => ( 
             <Grid size="auto" key={item.id}>
               <ApartmentCard
                 title={item.description || "Apartment"}

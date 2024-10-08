@@ -1,9 +1,9 @@
 export async function getCoordinatesOfAddress(address) {
-  //const key = process.env.GEOCODING_API_KEY;
+  const key = process.env.NEXT_PUBLIC_GOOGLE_API;
 
   //!!! need to add .env so api key isn't known !!!
   
-  const queryString = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=AIzaSyD2BWhSBSzdvjnDPJTO96pKmjd6RspbXPk`;
+  const queryString = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${key}`;
 
   try {
     const response = await fetch(queryString);

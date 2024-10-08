@@ -4,8 +4,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface ColorData {
-  colors: string[];
+  colors: string[] | null; // Allow colors to be null
 }
+
 interface FurnitureItem {
   id: number;
   userId: number; 
@@ -13,43 +14,50 @@ interface FurnitureItem {
   description: string;
   condition: string;
   rating: number;
-  colors: ColorData; 
+  colors: ColorData | null; // Allow colors to be null
 }
 
 const FurnitureDescriptionPage = () => {
   const router = useRouter();
-  console.log("iam here")
-  const params = useParams<{ id: string }>()
-  const id  = params['id']; 
-  console.log(id);
+  const params = useParams<{ id: string }>();
+  const id = params['id']; 
 
   const [furnitureItem, setFurnitureItem] = useState<FurnitureItem | null>(null); 
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null); // Change to string for error message
+  const [loading, setLoading] = useState(true); // Track loading state
 
   useEffect(() => {
     if (id) {
-      console.log("Fetching furniture item with ID:", id);
       const fetchFurnitureItem = async () => {
         try {
           const response = await fetch(`http://localhost:5001/api/furniture/${id}`);
-          console.log("Response status:", response.status); 
           const data = await response.json();
-          console.log("Fetched data:", data); 
+
           if (response.ok) {
             setFurnitureItem(data);
           } else {
-            console.log(`Error: ${response.status} - ${data.message}`);
+            setError(`Error: ${response.status} - ${data.message}`);
           }
         } catch (error) {
-          console.log('Error fetching furniture item:', error);
+          setError('Error fetching furniture item: ' + error);
+        } finally {
+          setLoading(false); // Stop loading regardless of success or failure
         }
       };
       fetchFurnitureItem();
     }
   }, [id]);
-  
 
-  if (!furnitureItem) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>; // Display error message
+  if (!furnitureItem) return <div>No furniture item found.</div>; // Fallback for no item
+
+  console.log(furnitureItem.colors);
+
+  // Handle the case where colors might be null or an empty array
+  const colorList = furnitureItem.colors
+    ? furnitureItem.colors.join(', ') 
+    : 'None'; 
 
   return (
     <div>
@@ -57,6 +65,7 @@ const FurnitureDescriptionPage = () => {
       <p>Price: ${furnitureItem.price}</p>
       <p>Condition: {furnitureItem.condition}</p>
       <p>Rating: {furnitureItem.rating}</p>
+      <p>Colors: {colorList}</p> 
     </div>
   );
 };

@@ -46,7 +46,7 @@ const Maps: React.FC<MapsProps> = ({ locations }) => {
       <MapContainer
        //brookings as centers
       center={[38.648, -90.3052]} 
-        zoom={14}
+        zoom={13}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={false}
       >
