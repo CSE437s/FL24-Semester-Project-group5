@@ -1,0 +1,7 @@
+Create a ".env" file with this information and fill it in with pgAdmin details.
+
+PG_HOST=<postgres hostname>
+PG_PORT=<postgres port>
+PG_USER=<postgres database user>
+PG_PASSWORD=<postgres database password>
+PG_DATABASE=<postgres database name>
