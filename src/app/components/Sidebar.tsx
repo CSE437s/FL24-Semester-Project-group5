@@ -17,9 +17,9 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onUserSelect }) => {
   const users = [
-    { id: 1, name: 'John Doe' },
-    { id: 2, name: 'Jane Smith' },
-    { id: 3, name: 'Alex Johnson' }
+    { userId: 1, name: 'John Doe' },
+    { userId: 2, name: 'Jane Smith' },
+    { userId: 3, name: 'Alex Johnson' }
   ];
   // if the user has a previous message history with anyone, then bring up the list of users and load their chats. -> for now mock user data
   // uncomment when user IDs can be connected across pages 
@@ -106,7 +106,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onUserSelect }) => {
       </Search>
       <List>
         {users.map(user => (
-          <ListItemButton key={user.id} onClick={() =>  onUserSelect(user.id)} style={{ cursor: 'pointer', padding: '10px' }} >
+          <ListItemButton key={user.userId} onClick={() =>  onUserSelect(user.userId)} style={{ cursor: 'pointer', padding: '10px' }} >
             <ListItem>
               <ListItemAvatar>
               <Avatar src={user.avatar} alt={user.name}>{!user.avatar && user.name.charAt(0)}</Avatar>

@@ -5,6 +5,7 @@ import { Grid2, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 
+
 interface CurrentMessage {
     id: number;
     userId: number;
@@ -15,30 +16,38 @@ interface CurrentMessage {
 }
 
 interface MessageThreadProps {
-    currentMessage?: CurrentMessage[];
+    currentMessage: CurrentMessage[];
+    onCloseThread: () => void;
 }
 
-const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage }) => {
+const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage, onCloseThread }) => {
     return (
-                <Grid2 size={8} style={{ display: 'flex', flexDirection: 'column', height:"100%"}}>
-                <Box>
-                    <div style={{ flexGrow: 1, overflowY: "auto"}}>
-                        {/* {currentMessage.map((msg)=>( */}
+        <Grid2 
+        size={9.5} 
+        style={{ display: 'flex', flexDirection: 'column', height:'100%'}}>
+            <Grid2 style={{display:'flex', justifyContent: 'right'}}>
+                <CloseIcon onClick={onCloseThread}
+                style={{ cursor: 'pointer', color: 'gray', paddingBottom: '5px' }} 
+                titleAccess="Close thread"/>
+            </Grid2>
+            <Box style={{flexGrow:1, display:'flex', flexDirection:'column'}}>
+                <div style={{ flexGrow: 1, overflowY:'auto'}}>
+                    {currentMessage.map((msg) => (
                         <Message
-                            key={1}
-                            id={1}
-                            sender={'Me'}
-                            content={"Hello! Is this item currently for sale?"}
-                            timestamp={'10:00 AM'}
-                            isSender={true}
+                            key={msg.id}
+                            id={msg.userId}
+                            sender={msg.sender}
+                            content={msg.content}
+                            timestamp={msg.timestamp}
+                            isSender={msg.isSender}
                         />
-                        {/* ))} */}
-                    </div>
-                    <div style={{ padding: "10px", paddingBottom: "20px", borderTop: "1px solid #ccc" }}>
-                        <SendInput />
-                    </div>
-                </Box>
-                </Grid2>
+                    ))}
+                </div>
+                <div style={{paddingBottom: "20px", borderTop: "1px solid #ccc" }}>
+                    <SendInput />
+                </div>
+            </Box>
+        </Grid2>
 
     );
 };

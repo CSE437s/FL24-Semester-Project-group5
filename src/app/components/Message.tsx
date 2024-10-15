@@ -6,7 +6,7 @@ interface MessageProps {
     sender: string;
     content: string;
     timestamp: string;
-    isSender?: boolean; // To differentiate between sender and receiver
+    isSender?: boolean;
 }
 
 const Message: React.FC<MessageProps> = ({ sender, content, timestamp, isSender }) => {
