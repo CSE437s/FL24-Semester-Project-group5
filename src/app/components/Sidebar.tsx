@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, List, ListItem, ListItemText, Typography, Avatar, ListItemAvatar } from '@mui/material';
+import { Drawer, List, ListItem, ListItemButton, ListItemText, Typography, Avatar, ListItemAvatar, InputBase } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import { styled, alpha } from '@mui/material/styles';
 import axios from 'axios';
 
 interface User {
@@ -7,15 +9,19 @@ interface User {
   name: string;
   avatar?: string;
 }
+interface SidebarProps {
+  onUserSelect: (userId: number) => void;
+}
 
-// if the user has a previous message history with anyone, then bring up the list of users and load their chats. -> for now mock user data
-const users = [
-  { id: 1, name: 'John Doe', avatar: 'https://via.placeholder.com/40' },
-  { id: 2, name: 'Jane Smith', avatar: 'https://via.placeholder.com/40' },
-  { id: 3, name: 'Alex Johnson', avatar: 'https://via.placeholder.com/40' },
-];
 
-const Sidebar = () => {
+
+const Sidebar: React.FC<SidebarProps> = ({ onUserSelect }) => {
+  const users = [
+    { id: 1, name: 'John Doe' },
+    { id: 2, name: 'Jane Smith' },
+    { id: 3, name: 'Alex Johnson' }
+  ];
+  // if the user has a previous message history with anyone, then bring up the list of users and load their chats. -> for now mock user data
   // uncomment when user IDs can be connected across pages 
   // const [users, setUsers] = useState<User[]>([]); // State to hold the users
 
@@ -39,6 +45,48 @@ const Sidebar = () => {
   //     fetchUsers();
   // }, []);
 
+  //from mui documentation on AppBar
+  const Search = styled('div')(({ theme }) => ({
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: alpha(theme.palette.common.white, 0.15),
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.common.white, 0.25),
+    },
+    marginLeft: 0,
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+      marginLeft: theme.spacing(1),
+      width: 'auto',
+    },
+  }));
+
+  const SearchIconWrapper = styled('div')(({ theme }) => ({
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }));
+
+  const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    width: '100%',
+    '& .MuiInputBase-input': {
+      padding: theme.spacing(1, 1, 1, 0),
+      // vertical padding + font size from searchIcon
+      paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+      transition: theme.transitions.create('width'),
+      [theme.breakpoints.up('sm')]: {
+        width: '12ch',
+        '&:focus': {
+          width: '20ch',
+        },
+      },
+    },
+  }));
 
   return (
     <Drawer variant="permanent" anchor="left"
@@ -46,11 +94,26 @@ const Sidebar = () => {
       <Typography variant="h4" style={{ padding: '12px' }}>
         Chats
       </Typography>
+      <Search>
+        <SearchIconWrapper>
+          <SearchIcon />
+        </SearchIconWrapper>
+        <StyledInputBase
+          placeholder="Search…"
+          inputProps={{ 'aria-label': 'search' }}
+          sx={{padding:'20px'}}
+        />
+      </Search>
       <List>
         {users.map(user => (
-          <ListItem key={user.id}>
-            <ListItemText primary={user.name} />
-          </ListItem>
+          <ListItemButton key={user.id} onClick={() =>  onUserSelect(user.id)} style={{ cursor: 'pointer', padding: '10px' }} >
+            <ListItem>
+              <ListItemAvatar>
+              <Avatar src={user.avatar} alt={user.name}>{!user.avatar && user.name.charAt(0)}</Avatar>
+              </ListItemAvatar>
+              <ListItemText primary={user.name} />
+            </ListItem>
+          </ListItemButton>
         ))}
       </List>
     </Drawer >

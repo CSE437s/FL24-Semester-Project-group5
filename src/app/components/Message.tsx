@@ -21,11 +21,11 @@ const Message: React.FC<MessageProps> = ({ sender, content, timestamp, isSender 
             <Paper 
                 elevation={3}
                 sx={{ 
-                    p: 2, 
                     borderRadius: '20px', 
-                    backgroundColor: isSender ? '#dcf8c6' : '#fff', 
-                    maxWidth: '75%', 
-                    wordWrap: 'break-word' 
+                    backgroundColor: '#FFFEF8', 
+                    maxWidth: '100%', 
+                    wordWrap: 'break-word', 
+                    padding: '20px'
                 }}
             >
                 <Typography variant="subtitle2" fontWeight="bold" gutterBottom>

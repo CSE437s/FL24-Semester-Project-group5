@@ -7,7 +7,6 @@ interface SendInputProps {
   // setMessage: (msg: string) => void;
   onClick?: () => void;
 }
-
 // const SendInput: React.FC<SendInputProps> = ({ message, setMessage, onClick }) => {
 const SendInput: React.FC<SendInputProps> = ({onClick }) => {
   return (
@@ -22,15 +21,14 @@ const SendInput: React.FC<SendInputProps> = ({onClick }) => {
       {/* Using Input instead of TextField */}
       <Input
         fullWidth
-        placeholder="Send a message..."
         // value={message}
         // onChange={(e) => setMessage(e.target.value)}
         disableUnderline={true} // Removes the underline for a cleaner look
         sx={{
-          padding: "10px", // Adds padding inside the input
-          border: "1px solid #ccc", // Adds a border to mimic the appearance of TextField
-          borderRadius: "8px", // Rounds the corners
-          backgroundColor: "#f9f9f9", // Adds a subtle background color
+          padding: "10px", 
+          border: "1px solid #ccc", 
+          borderRadius: "8px", 
+          backgroundColor: "#f9f9f9", 
         }}
       />
       <Button

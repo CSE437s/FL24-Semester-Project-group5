@@ -1,6 +1,9 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Navbar from './components/NavBar';
+import ClientProvider from './components/client-provider'; // Import ClientProvider
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -26,9 +29,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        style={{ backgroundColor: 'white' }}
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Navbar /> {/* This is still server-side */}
+        
+        {/* Wrap all client-side components with ClientProvider */}
+        <ClientProvider>
+          <main>{children}</main>
+        </ClientProvider>
       </body>
     </html>
   );

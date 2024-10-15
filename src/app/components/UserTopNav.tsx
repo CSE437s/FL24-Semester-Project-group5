@@ -1,7 +1,6 @@
-// UserTopNav.tsx
 import React from 'react';
 import { AppBar, Toolbar, Typography, Box } from '@mui/material';
-import UserAvatar from '../components/UserAvatar'; // Adjust the import path based on your file structure
+import UserAvatar from '../components/UserAvatar';
 
 interface UserTopNavProps {
     userName: string;
