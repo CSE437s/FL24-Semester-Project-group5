@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, List, ListItem, ListItemButton, ListItemText, Typography, Avatar, ListItemAvatar, InputBase } from '@mui/material';
+import { Drawer, List, ListItem, ListItemButton, ListItemText, Typography, Avatar, ListItemAvatar, InputBase, Divider, ListItemIcon, Grid2 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { styled, alpha } from '@mui/material/styles';
-import axios from 'axios';
 
 interface User {
   id: number;
@@ -88,35 +87,79 @@ const Sidebar: React.FC<SidebarProps> = ({ onUserSelect }) => {
     },
   }));
 
+  const BorderRight = styled('div')(({ theme }) => ({
+    borderRight: '1px solid #e0e0e0',
+  }));
+  
+
   return (
-    <Drawer variant="permanent" anchor="left"
-      sx={{ width: 250, '& .MuiDrawer-paper': { width: 250 } }}>
-      <Typography variant="h4" style={{ padding: '12px' }}>
-        Chats
-      </Typography>
-      <Search>
-        <SearchIconWrapper>
-          <SearchIcon />
-        </SearchIconWrapper>
-        <StyledInputBase
-          placeholder="Search…"
-          inputProps={{ 'aria-label': 'search' }}
-          sx={{padding:'20px'}}
-        />
-      </Search>
+    // <Drawer variant="permanent" anchor="left"
+    //   sx={{ width: 250, '& .MuiDrawer-paper': { width: 250 } }}>
+    //   <Typography variant="h4" style={{ padding: '12px' }}>
+    //     Chats
+    //   </Typography>
+    //   <Search>
+    //     <SearchIconWrapper>
+    //       <SearchIcon />
+    //     </SearchIconWrapper>
+    //     <StyledInputBase
+    //       placeholder="Search…"
+    //       inputProps={{ 'aria-label': 'search' }}
+    //       sx={{padding:'20px'}}
+    //     />
+    //   </Search>
+    //   <List>
+    //     {users.map(user => (
+    //       <ListItemButton key={user.userId} onClick={() =>  onUserSelect(user.userId)} style={{ cursor: 'pointer', padding: '10px' }} >
+    //         <ListItem>
+    //           <ListItemAvatar>
+    //           <Avatar src={user.avatar} alt={user.name}>{!user.avatar && user.name.charAt(0)}</Avatar>
+    //           </ListItemAvatar>
+    //           <ListItemText primary={user.name} />
+    //         </ListItem>
+    //       </ListItemButton>
+    //     ))}
+    //   </List>
+    // </Drawer >
+    // new code
+    <Grid2 size={{ xs: 3 }} component={BorderRight}>
+      {/* this is the chatuser navigation panel */}
+      <List>
+        <ListItemButton key="RemySharp">
+          <ListItemIcon>
+            <Avatar alt="Remy Sharp" src="https://material-ui.com/static/images/avatar/1.jpg" />
+          </ListItemIcon>
+          <ListItemText primary="John Wick" />
+        </ListItemButton>
+      </List>
+      <Divider />
+      <Grid2 size={{ xs: 4 }} sx={{ padding: '10px' }}>
+        <Search>
+          <SearchIconWrapper>
+            <SearchIcon />
+          </SearchIconWrapper>
+          <StyledInputBase
+            placeholder="Search…"
+            inputProps={{ 'aria-label': 'search' }}
+            sx={{ padding: '20px' }}
+          />
+        </Search>
+      </Grid2>
+      <Divider />
       <List>
         {users.map(user => (
-          <ListItemButton key={user.userId} onClick={() =>  onUserSelect(user.userId)} style={{ cursor: 'pointer', padding: '10px' }} >
+          <ListItemButton key={user.userId} onClick={() => onUserSelect(user.userId)} style={{ cursor: 'pointer', padding: '10px' }} >
             <ListItem>
               <ListItemAvatar>
-              <Avatar src={user.avatar} alt={user.name}>{!user.avatar && user.name.charAt(0)}</Avatar>
+                <Avatar src={user.avatar} alt={user.name}>{!user.avatar && user.name.charAt(0)}</Avatar>
               </ListItemAvatar>
               <ListItemText primary={user.name} />
             </ListItem>
           </ListItemButton>
         ))}
       </List>
-    </Drawer >
+    </Grid2>
+
   );
 };
 

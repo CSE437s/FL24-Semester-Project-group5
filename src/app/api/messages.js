@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../../../db'); 
 
-router.get('/', async (req, res) => {
+router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try{
         const conversations = await pool.query(`
@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
               sender.username AS sender_username, 
               receiver.username AS receiver_username
             FROM messages m
-            JOIN conversations c ON m.conversation_id = c.id
+            JOIN conversations ON m.conversation_id = c.id
             JOIN users sender ON m.sender_id = sender.id
             JOIN users receiver ON m.reciever_id = receiver.id
             WHERE (c.user1_id = $1 OR c.user2_id = $1)

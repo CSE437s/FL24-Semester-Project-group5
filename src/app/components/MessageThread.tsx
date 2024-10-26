@@ -23,9 +23,12 @@ interface MessageThreadProps {
 const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage, onCloseThread }) => {
     return (
         <Grid2 
-        size={9.5} 
-        style={{ display: 'flex', flexDirection: 'column', height:'100%'}}>
-            <Grid2 style={{display:'flex', justifyContent: 'right'}}>
+        size={8} 
+        style={{ display: 'flex', flexDirection: 'column'}}
+        >
+            <Grid2 
+            style={{display:'flex', justifyContent: 'right'}}
+            >
                 <CloseIcon onClick={onCloseThread}
                 style={{ cursor: 'pointer', color: 'gray', paddingBottom: '5px' }} 
                 titleAccess="Close thread"/>
@@ -43,7 +46,9 @@ const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage, onCloseTh
                         />
                     ))}
                 </div>
-                <div style={{paddingBottom: "20px", borderTop: "1px solid #ccc" }}>
+                <div 
+                // style={{paddingBottom: "20px", borderTop: "1px solid #ccc" }}
+                >
                     <SendInput />
                 </div>
             </Box>

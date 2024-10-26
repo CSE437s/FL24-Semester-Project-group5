@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper, List, Grid2, ListItem, ListItemText } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 interface MessageProps {
     id: number;
@@ -9,37 +10,47 @@ interface MessageProps {
     isSender?: boolean;
 }
 
+const MessageArea = styled(List)(({ theme }) => ({
+    height: '70vh',
+    overflowY: 'auto',
+}));
+
 const Message: React.FC<MessageProps> = ({ sender, content, timestamp, isSender }) => {
     return (
-        <Box 
-            sx={{ 
-                display: 'flex', 
-                justifyContent: isSender ? 'flex-end' : 'flex-start', 
-                mb: 2 
+        <Box
+            sx={{
+                display: 'flex', flexDirection: 'row',
+                justifyContent: isSender ? 'flex-end' : 'flex-start',
+                mb: 2
             }}
         >
-            <Paper 
-                elevation={3}
-                sx={{ 
-                    borderRadius: '20px', 
-                    backgroundColor: '#FFFEF8', 
-                    maxWidth: '100%', 
-                    wordWrap: 'break-word', 
-                    padding: '20px'
-                }}
-            >
-                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                    {sender}
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                    {content}
-                </Typography>
-                <Typography variant="caption" color="textSecondary">
-                    {timestamp}
-                </Typography>
-            </Paper>
+
+            <Grid2 size={{ xs: 9 }} sx={{
+                display: 'flex', 
+                justifyContent: isSender ? 'flex-end' : 'flex-start',
+                mb: 2
+            }}>
+                <MessageArea>
+                    <ListItem>
+                        <Grid2 container>
+                            <Grid2 size={{ xs: 4 }}>
+                                <ListItemText secondary={sender} />
+                            </Grid2>
+
+                            <Grid2 size={{ xs: 12 }}>
+                                <ListItemText primary={content} />
+                            </Grid2>
+
+                            <Grid2 size={{ xs: 4 }}>
+                                <ListItemText secondary={timestamp} />
+                            </Grid2> 
+                        </Grid2>
+                    </ListItem>
+                </MessageArea>
+            </Grid2>
         </Box>
     );
 };
+
 
 export default Message;
