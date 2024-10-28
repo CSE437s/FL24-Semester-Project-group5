@@ -9,7 +9,8 @@ import { handleSignOut } from '../utils/auth/signOutHandler';
 const drawerWidth = 240;
 const navItems = [
   { text: 'Furniture', href: '/furniture' }, 
-  { text: 'Listings', href: '/listings' },   
+  { text: 'Listings', href: '/listings' }, 
+  { text: 'Messages', href: '/messaging' },     
   { text: 'Login', href: '/login' },   
   { text: 'Sign Out', href: '#' }
 ];

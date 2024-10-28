@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 // import { socket } from './socket';
-import io from 'socket.iO-client'
+import { io, Socket } from 'socket.io-client'
 import MessageThread from '../components/MessageThread';
 import Sidebar from '../components/Sidebar';
 import LandingPage from '../components/LandingPage';
@@ -12,6 +12,8 @@ import { useSession, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { getToken } from 'next-auth/jwt';
 import { styled } from '@mui/material/styles';
+
+import Script from 'next/script';
 
 interface CurrentMessage {
   id: number;
@@ -42,62 +44,70 @@ const MessagingPage = () => {
     { id: 5, userId: 3, sender: 'Alex Johnson', content: 'Are you selling any products?', timestamp: '2:00 PM', isSender: false },
   ];
 
-  const [currentMessage, setCurrentMessage] = useState<CurrentMessage[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const { data: session, status } = useSession();
+  // const [currentMessage, setCurrentMessage] = useState<CurrentMessage[]>([]);
+  const [currentChat, setCurrentChat] = useState({ chatName: "none", recieverId: "" })
+  const [currentMessage, setCurrentMessage] = useState(""); //similar to message in the video
+  const [connected, setConnected] = useState(false);
+  const [connectedRooms, setConnectedRooms] = useState([""]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [allUsers, setallUsers] = useState([]);
+  const socketRef = useRef();
   const router = useRouter();
 
-  const handleUserAuth = async () => {
-    if (status === 'unauthenticated') {
-      const res = confirm("You must be logged in to send a message.");
-      if (res) {
-        router.push('/login');
-      }
-    } else {
-      const session = await getSession();
-      const token = getToken; //check this line & the jwt import
-
-      const socket = io('http://localhost:5001', {
-        auth: {
-          token, // Send the token as part of the auth object
-        },
-      });
-    }
-  }
+  function handleMessageChange (e){
+    setCurrentMessage(e.target.value);
+  };
   useEffect(() => {
-    handleUserAuth();
-
-    // const fetchCurrentMessage = async () => {
-    //   try {
-    //     const response = await fetch('http://localhost:5001/api/messages');
-    //     const text = await response.text();
-    //     if (response.ok) {
-    //       const data = JSON.parse(text);
-    //       setCurrentMessage(data);
-    //     } else {
-    //       console.error(`Error: ${response.status} - ${text}`);
-    //     }
-    //   } catch (error) {
-    //     console.error('Error fetching furniture items:', error);
-    //   };
-
-    // }
-    // fetchCurrentMessage();
+    const checkAuth = async () => {
+      if (status === 'unauthenticated') {
+        const res = confirm("You must be logged in to send a message.");
+        if (res) {
+          router.push('/login');
+        }
+      } else {
+        // const session = await getSession(); -> would we still use a session?
+        setIsAuthenticated(true);
+      }
+    }; checkAuth();
   }, [status]);
-  //socket server side
-  //   function onConnect() {
-  //     setIsConnected(true);
-  //   }
-  //   function onDisconnect() {
-  //     setIsConnected(false);
-  //   }
-  //   io.on('connect', onConnect);
-  // io.on('disconnect', onDisconnect);
 
-  // return () => {
-  //   io.off('connect', onConnect);
-  //   io.off('disconnect', onDisconnect);
-  // };
+  useEffect(() => {
+    const socket = io();
+    socket.on('connect', () => {
+      setConnected(true)
+      console.log('Connected to server');
+    });
+    socket.on('connect_error', (error) => {
+      setConnected(false)
+      console.error('Failed to connect:', error);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  });
+
+
+
+  // const fetchCurrentMessage = async () => {
+  //   try {
+  //     const response = await fetch('http://localhost:5001/api/messages');
+  //     const text = await response.text();
+  //     if (response.ok) {
+  //       const data = JSON.parse(text);
+  //       setCurrentMessage(data);
+  //     } else {
+  //       console.error(`Error: ${response.status} - ${text}`);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching messages:', error);
+  //   };
+
+  // }
+  // fetchCurrentMessage();
+
 
 
   const handleUserSelect = (userId: number) => {
@@ -113,16 +123,22 @@ const MessagingPage = () => {
   return (
     // <div className="h-screen w-screen bg-gradient-to-l from-gray-200 via-fuchsia-200 to-stone-100">
     <div>
+      <Script src="/socket.io/socket.io.js" strategy="beforeInteractive" />
       {/* <Grid2 container>
       </Grid2> */}
-      <Grid2 container component={ChatSection}>
-        <Sidebar onUserSelect={handleUserSelect} />
-        {selectedUserId ? (
-          <MessageThread currentMessage={filteredMessages} onCloseThread={handleCloseThread} />
-        ) : (<LandingPage />)}
-      </Grid2>
+      {connected && isAuthenticated ? (
+        <Grid2 container component={ChatSection}>
+          <Sidebar onUserSelect={handleUserSelect} />
+          {selectedUserId ? (
+            <MessageThread currentMessage={filteredMessages} onCloseThread={handleCloseThread} handleMessageChange = {handleMessageChange}/>
+          ) : (<LandingPage />)}
+        </Grid2>
+      ) : (null //show an empty page or a different page?
+      )}
     </div>
   );
+
+
 };
 
 export default MessagingPage;

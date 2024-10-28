@@ -18,9 +18,10 @@ interface CurrentMessage {
 interface MessageThreadProps {
     currentMessage: CurrentMessage[];
     onCloseThread: () => void;
+    handleMessageChange: (e) => void;
 }
 
-const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage, onCloseThread }) => {
+const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage, onCloseThread, handleMessageChange }) => {
     return (
         <Grid2 
         size={8} 
