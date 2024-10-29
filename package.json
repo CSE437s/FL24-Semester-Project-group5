@@ -27,6 +27,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "formik": "^2.4.6",
+    "immer": "^10.1.1",
     "jsonwebtoken": "^9.0.2",
     "next": "^14.2.11",
     "next-auth": "^4.24.8",
@@ -36,6 +37,7 @@
     "react-leaflet": "^4.2.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "use-immer": "^0.10.0",
     "yup": "^1.4.0"
   },
   "devDependencies": {

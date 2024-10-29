@@ -15,13 +15,21 @@ interface CurrentMessage {
     isSender: boolean;
 }
 
+interface CurrentChat {
+    chatName: string;
+    recieverId: string;
+}
+
 interface MessageThreadProps {
     currentMessage: CurrentMessage[];
     onCloseThread: () => void;
-    handleMessageChange: (e) => void;
+    handleMessageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    sendMessage: () => void;
+    joinRoom: (room:string) => void;
+    toggleChat: (chat: CurrentChat) => void; 
 }
 
-const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage, onCloseThread, handleMessageChange }) => {
+const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage, onCloseThread, handleMessageChange, sendMessage, joinRoom, toggleChat }) => {
     return (
         <Grid2 
         size={8} 
@@ -50,7 +58,7 @@ const MessageThread: React.FC<MessageThreadProps> = ({ currentMessage, onCloseTh
                 <div 
                 // style={{paddingBottom: "20px", borderTop: "1px solid #ccc" }}
                 >
-                    <SendInput />
+                    <SendInput onClick={sendMessage}/>
                 </div>
             </Box>
         </Grid2>
