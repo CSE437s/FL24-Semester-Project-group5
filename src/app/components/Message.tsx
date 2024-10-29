@@ -11,7 +11,7 @@ interface MessageProps {
 }
 
 const MessageArea = styled(List)(({ theme }) => ({
-    height: '70vh',
+    height: '10vh',
     overflowY: 'auto',
 }));
 

@@ -35,14 +35,15 @@ const ChatSection = styled(Paper)(({ theme }) => ({
 
 const MessagingPage = () => {
   const dummyMessages: CurrentMessage[] = [
-    { id: 1, userId: 1, sender: 'John Doe', content: 'Hey, how are you?', timestamp: '10:00 AM', isSender: false },
-    { id: 2, userId: 1, sender: 'Me', content: 'I\'m good, thanks!', timestamp: '10:01 AM', isSender: true },
-    { id: 3, userId: 2, sender: 'Jane Smith', content: 'Are you free to chat?', timestamp: '10:02 AM', isSender: false },
-    { id: 4, userId: 2, sender: 'Me', content: 'Sure! What\'s up?', timestamp: '10:03 AM', isSender: true },
+    { id: 1, userId: 1, sender: 'John Doe', content: 'Hello, I am looking to sublease your apartment', timestamp: '10:00 AM', isSender: false },
+    { id: 2, userId: 1, sender: 'Me', content: 'Of course, do you have any questions?', timestamp: '1:01 PM', isSender: true },
+    { id: 4, userId: 2, sender: 'Me', content: 'Hello, I want to buy the lamp that you listed. Are you willing to sell for $10?', timestamp: '1 PM', isSender: true },
+    { id: 3, userId: 2, sender: 'Jane Smith', content: 'No, the listing says $25.', timestamp: '2 PM', isSender: false },
+  
     { id: 5, userId: 3, sender: 'Alex Johnson', content: 'Are you selling any products?', timestamp: '2:00 PM', isSender: false },
   ];
 
-  const [currentMessage, setCurrentMessage] = useState<CurrentMessage[]>([]);
+  const [currentMessage, setCurrentMessage] = useState<CurrentMessage[]>(dummyMessages);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -56,12 +57,6 @@ const MessagingPage = () => {
     } else {
       const session = await getSession();
       const token = getToken; //check this line & the jwt import
-
-      const socket = io('http://localhost:5001', {
-        auth: {
-          token, // Send the token as part of the auth object
-        },
-      });
     }
   }
   useEffect(() => {
@@ -101,6 +96,7 @@ const MessagingPage = () => {
 
 
   const handleUserSelect = (userId: number) => {
+    console.log(userId, "it clicked!");
     setSelectedUserId(userId);
   };
   const handleCloseThread = () => {

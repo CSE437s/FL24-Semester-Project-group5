@@ -35,34 +35,34 @@ app.prepare().then(() => {
     return handle(req, res);
   });
 
-  const httpServer = require("http").createServer();
-  const io = require("socket.io")(httpServer, {
-    cors: {
-      origin: "http://localhost:8080",
-    },
-  });
-  io.on('connection', socket => {
-    console.log('Client connected');
+  // const httpServer = require("http").createServer();
+  // const io = require("socket.io")(httpServer, {
+  //   cors: {
+  //     origin: "http://localhost:3000",
+  //   },
+  // });
+  // io.on('connection', socket => {
+  //   console.log('Client connected');
 
-    socket.on('disconnect', () => {
-      console.log('Client disconnected');
-    });
-  });
+  //   socket.on('disconnect', () => {
+  //     console.log('Client disconnected');
+  //   });
+  // });
 
-  io.use((socket, next)=>{
-    const token = socket.handshake.auth.token;
-    if (token) {
-      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-          return next(new Error('Authentication error'));
-        }
-        socket.user = decoded; // Attach user info to socket
-        next(); // Call next to continue
-      });
-    } else {
-      next(new Error('Authentication error'));
-    }
-  });
+  // io.use((socket, next)=>{
+  //   const token = socket.handshake.auth.token;
+  //   if (token) {
+  //     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  //       if (err) {
+  //         return next(new Error('Authentication error'));
+  //       }
+  //       socket.user = decoded; // Attach user info to socket
+  //       next(); // Call next to continue
+  //     });
+  //   } else {
+  //     next(new Error('Authentication error'));
+  //   }
+  // });
 
   // Start the server
   server.listen(port, (err) => {
