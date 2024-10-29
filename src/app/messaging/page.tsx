@@ -38,7 +38,9 @@ const ChatSection = styled(Paper)(({ theme }) => ({
   padding: '20px',
   height: '85vh', //change this if there are issues with scrolling 
 }));
-const initialMessagesState: MessagesState = {};
+const initialMessagesState: 
+  MessagesState = {};
+
 
 const MessagingPage = () => {
   // const dummyMessages: MessagesState[] = [
@@ -51,7 +53,7 @@ const MessagingPage = () => {
 
   const { data: session, status } = useSession();
   // const [currentMessage, setMessage] = useState<CurrentMessage[]>([]);
-  const [username, setUsername] =  useState<string | null>(null);
+  const [userId, setuserId] =  useState<string | null>(null);
   const [currentChat, setCurrentChat] = useState({ chatName: "none", recieverId: "" })
   const [message, setMessage] = useState(""); //similar to message in the video
   const [messages, setMessages] = useState<MessagesState>(initialMessagesState);
@@ -70,7 +72,7 @@ const MessagingPage = () => {
     const payload = {
       content: message,
       to: currentChat.recieverId, 
-      sender: username,
+      sender: userId,
       chatName: currentChat.chatName
     };
     socketRef.current.emit("send message", payload); 
@@ -79,7 +81,7 @@ const MessagingPage = () => {
         draft[currentChat.chatName] = []; // Initialize the array if it doesn’t exist
       }
       draft[currentChat.chatName].push({
-        sender: username,
+        sender: userId,
         content: message,
       });
     });
@@ -117,7 +119,7 @@ const MessagingPage = () => {
     socketRef.current = io();
     
     socketRef.current.on('connect', () => {
-      socketRef.current.emit('join server', { username });
+      socketRef.current.emit('join server', { userId });
       socketRef.current.emit('join room ', "", (messages) => roomJoinCallback(messages, ""));
       socketRef.current.on('new user', allUsers => {
         setallUsers(allUsers);
@@ -148,14 +150,14 @@ const MessagingPage = () => {
   useEffect(() => {
     const checkAuth = async () => {
       if (status === 'unauthenticated') {
-        setUsername(null);
+        setuserId(null);
         const res = confirm("You must be logged in to send a message.");
         if (res) {
           router.push('/login');
         }
       } else if(status === 'authenticated' && session?.user){
         setIsAuthenticated(true);
-        setUsername(session.user.name ?? null);
+        setuserId(session.user.name ?? null); //change this line to include the id
         connect();
       }
     }; checkAuth();
@@ -205,8 +207,11 @@ const MessagingPage = () => {
     setSelectedUserId(null); // Close the message thread
   };
 
-  const filteredMessages = initialMessagesState.filter(msg => msg.userId === selectedUserId);
+  // const filteredMessages = messages.filter(msg => msg.userId === selectedUserId);
+  // console.log(filteredMessages);
+  const filteredMessages = Object.values(messages ?? {}).flat().filter(msg => msg.userId === selectedUserId);
   console.log(filteredMessages);
+
 
   return (
     // <div className="h-screen w-screen bg-gradient-to-l from-gray-200 via-fuchsia-200 to-stone-100">

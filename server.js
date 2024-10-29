@@ -6,10 +6,12 @@ const jwt = require('jsonwebtoken');
 const furnitureRoutes = require('./src/app/api/furniture'); 
 const apartmentRoutes = require('./src/app/api/apartment'); 
 const messageRoutes = require('./src/app/api/messages');
+const { PrismaClient } = require('@prisma/client');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
+const prisma = new PrismaClient();
 
 app.prepare().then(() => {
   const server = express(); 
@@ -48,41 +50,38 @@ app.prepare().then(() => {
   io.on('connection', socket => {
     console.log('Client connected');
 
-    socket.on('join server', (username)=> {
+    socket.on('join server', (userId)=> {
       const user = {
-        username,
-        id: socket.id,
+        id: userId,
+        socketId: socket.id,
       };
       user.push(user);
       io.emit('new user', users); //broadcasts that a new user has joined.
-    })
+    });
 
     socket.on("join room", async ({userId, recipientId}, cb) => {
       // socket.join(roomName);
       try {
-        // Fetch usernames from the database based on user IDs
+        // Fetch userIds from the database based on user IDs
         const user = await prisma.user.findUnique({ where: { id: userId } });
         const recipient = await prisma.user.findUnique({ where: { id: recipientId } });
     
         if (!user || !recipient) return cb({ error: 'User not found' });
     
-        // Generate room ID using sorted usernames
-        const roomId = [user.username, recipient.username].sort().join('-');
+        // Generate room ID using sorted userIds
+        const roomId = [user.userId, recipient.userId].sort().join('-');
         
         // Join the room
         socket.join(roomId);
     
         // Check if the room exists in the messages object
         if (!messages[roomId]) {
-          messages[roomId] = []; // Initialize the room’s messages array for a new conversation
+          messages[roomId] = [];
     
-          // Optionally, save this new conversation to the database
           await prisma.conversation.create({
             data: {
-              roomId,
-              participants: {
-                connect: [{ id: userId }, { id: recipientId }],
-              },
+              user1_id: user.id,
+              user2_id: recipient.id,
             },
           });
         }
@@ -93,10 +92,7 @@ app.prepare().then(() => {
         console.error(error);
         cb({ error: 'Failed to join room' });
       }
-      // keep a callback here so that all messages previously sent can be recovered.
-
-      // cb(messages[roomName]);
-    })
+    });
 
     socket.on('send message', ({content, to, sender, chatName}) =>{
       const payload = {
@@ -109,13 +105,13 @@ app.prepare().then(() => {
       if (messages[chatName]){
         messages[chatName].push({
           sender, 
-          content
+          content,
         });
       }
     });
 
     socket.on('disconnect', () => {
-      users = users.filter(u=> u.id !== socket.id);
+      users = users.filter(u=> u.socketId !== socket.id);
       // the client side is waiting for this emit to update the users currently connected
       io.emit('new user', users)
       console.log('Client disconnected');

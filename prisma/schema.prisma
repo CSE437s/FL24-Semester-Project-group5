@@ -49,6 +49,10 @@ model User {
   furnitureListings FurnitureListing[]  // Relation to furniture listings
   businessUsers     BusinessUser[]      // Relation to business users
   apartmentListings ApartmentListing[]  // Relation to apartment listings
+  conversations1 Conversation[] @relation("UserConversations1") // relations for user1
+  conversations2 Conversation[] @relation("UserConversations2") // relations for user2
+  messagesSent   Message[]      @relation("UserMessagesSent")   // for sender
+  messagesReceived Message[]    @relation("UserMessagesReceived") // for receiver
 }
 
 model FurnitureListing {
@@ -105,3 +109,30 @@ model VerificationRequest {
 
   @@unique([identifier, token])
 }
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  user1_id  String
+  user2_id  String
+  created_at DateTime @default(now())
+  messages   Message[] @relation("ConversationMessages")
+
+  // Foreign key relations
+  user1     User      @relation("UserConversations1", fields: [user1_id], references: [id])
+  user2     User      @relation("UserConversations2", fields: [user2_id], references: [id])
+}
+
+model Message {
+  id             Int       @id @default(autoincrement())
+  sender_id      String
+  receiver_id    String
+  content        String
+  timestamp      DateTime  @default(now())
+  conversation_id Int?
+
+  // Foreign key relations
+  sender        User      @relation("UserMessagesSent", fields: [sender_id], references: [id])
+  receiver      User      @relation("UserMessagesReceived", fields: [receiver_id], references: [id])
+  conversation  Conversation? @relation("ConversationMessages", fields: [conversation_id], references: [id])
+}
+
