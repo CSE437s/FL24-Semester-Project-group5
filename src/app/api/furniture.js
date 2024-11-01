@@ -1,33 +1,46 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../../../db'); 
+const pool = require('../../../db');
+
 
 router.get('/', async (req, res) => {
+  const { user_id } = req.query;
   try {
-    const result = await pool.query('SELECT fl.*, bu.rating from public."furniture_listing" fl join public."business_user" bu on bu.user_id = fl."user_id";');
+    const query = user_id
+      ? `SELECT fl.*, bu.rating 
+    FROM public."furniture_listing" fl 
+    JOIN public."business_user" bu 
+    ON bu.user_id = fl."user_id"
+    WHERE fl."user_id" = $1;`
+      : `SELECT fl.*, bu.rating 
+    FROM public."furniture_listing" fl 
+    JOIN public."business_user" bu 
+    ON bu.user_id = fl."user_id";`;
+    const result = await pool.query(query, user_id ? [user_id]: []);
 
     const furnitures = result.rows.map(furniture => ({
       ...furniture,
       pics: furniture.pics.map(pic => `data:image/jpeg;base64,${Buffer.from(pic).toString('base64')}`),
     }));
+    console.log("USER fURNITURE", furnitures);
 
-    res.json(furnitures); 
+    res.json(furnitures);
   } catch (err) {
     console.error('Error fetching furniture data:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
-
   try {
     const result = await pool.query(
       `SELECT fl.*, bu.rating, u.name
        FROM public."furniture_listing" fl 
        JOIN public."business_user" bu ON bu.user_id = fl."user_id" 
        JOIN public."User" u on u.id = fl."user_id"
-       WHERE fl.id = $1`, [id] 
+       WHERE fl.id = $1`, [id]
     );
 
     if (result.rows.length === 0) {
@@ -37,10 +50,10 @@ router.get('/:id', async (req, res) => {
     const furniture = {
       ...result.rows[0],
       pics: result.rows[0].pics.map(pic => `data:image/jpeg;base64,${Buffer.from(pic).toString('base64')}`),
-      
+
     };
 
-    res.json(furniture); 
+    res.json(furniture);
   } catch (err) {
     console.error(`Error fetching furniture item:`, err);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -57,7 +70,7 @@ router.post('/check-or-add-user', async (req, res) => {
     if (userCheck.rows.length === 0) {
       const insertUser = await pool.query(
         'INSERT INTO public."business_user" (user_id, rating) VALUES ($1, $2) RETURNING *',
-        [user_id, 5] 
+        [user_id, 5]
       );
 
       if (insertUser.rows.length === 0) {
@@ -80,7 +93,7 @@ router.post('/upload', async (req, res) => {
 
     const bufferPics = pics ? pics.map(pic => Buffer.from(pic, 'base64')) : [];
 
-    const colorsArray = colors ? JSON.stringify(colors) : null; 
+    const colorsArray = colors ? JSON.stringify(colors) : null;
 
     const result = await pool.query(
       `INSERT INTO furniture_listing (user_id, price, description, condition, pics, colors, location)
@@ -100,16 +113,16 @@ router.post('/upload', async (req, res) => {
   } catch (error) {
     console.error('Error saving furniture listing:', error);
     if (error.name === 'ValidationError') {
-      return res.status(400).json({ error: error.message }); 
+      return res.status(400).json({ error: error.message });
     }
-    res.status(500).json({ error: 'Internal server error' }); 
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 
 router.post('/check-or-add-user', async (req, res) => {
   const { user_id } = req.body;
-console.log(user_id);
+  console.log(user_id);
   try {
     const userCheck = await pool.query('SELECT * FROM public."business_user" WHERE user_id = $1', [user_id]);
 
