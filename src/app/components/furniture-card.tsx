@@ -9,12 +9,12 @@ interface FurnitureCardProps {
   title: string;
   price: string;
   imageUrl: string;
-  id: number;
+  linkDestination: string;
 }
 
-const FurnitureCard = ({ title, price, imageUrl, id }: FurnitureCardProps) => {
+const FurnitureCard = ({ title, price, imageUrl, linkDestination }: FurnitureCardProps) => {
   return (
-    <Link href={`/furniture/${id}`} passHref>
+    <Link href={linkDestination} passHref>
       <Card sx={{ maxWidth: 345, borderRadius: 2, boxShadow: 3 }}>
         <CardMedia component="img" height="140" image={imageUrl} alt={title} />
         <CardContent>

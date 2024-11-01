@@ -7,6 +7,8 @@ import { Container, Typography, Box, CircularProgress, Grid } from '@mui/materia
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import FurnitureCard from '../components/furniture-card';
+import Link from 'next/link';
+
 
 
 type UserProfile = {
@@ -25,7 +27,7 @@ type FurnitureListing = {
 export default function Profile() {
   const { data: session } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [listings, setListings] =  useState<FurnitureListing[]>([]);
+  const [listings, setListings] = useState<FurnitureListing[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,48 +36,48 @@ export default function Profile() {
 
   useEffect(() => {
     if (!session || !session.user) {
-        router.push('/furniture');
-        return;
-      }
+      router.push('/furniture');
+      return;
+    }
     fetchProfile();
     fetchListings();
   }, [session]);
 
-  async function fetchProfile(){
+  async function fetchProfile() {
     const profile_id = userId || session?.user?.id;
 
-      try {
-        const response = await fetch(`/api/user/profile?id=${profile_id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setProfile(data);
-        } else {
-          console.error("Failed to fetch profile data");
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
+    try {
+      const response = await fetch(`/api/user/profile?id=${profile_id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProfile(data);
+      } else {
+        console.error("Failed to fetch profile data");
       }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    async function fetchListings(){
-      const profile_id = userId || session?.user?.id;
-      try {
-        const listingsResponse = await fetch(`http://localhost:5001/api/furniture?user_id=${profile_id}`);
-        if (listingsResponse.ok){
-          const listingsData = await listingsResponse.json();
-          setListings(listingsData);
-        }
+  async function fetchListings() {
+    const profile_id = userId || session?.user?.id;
+    try {
+      const listingsResponse = await fetch(`http://localhost:5001/api/furniture?user_id=${profile_id}`);
+      if (listingsResponse.ok) {
+        const listingsData = await listingsResponse.json();
+        setListings(listingsData);
+      }
 
-      }
-      catch(error){
-        console.error("Error fetching listings", error)
-      }
-      finally{
-        setLoading(false);
-      }
     }
+    catch (error) {
+      console.error("Error fetching listings", error)
+    }
+    finally {
+      setLoading(false);
+    }
+  }
 
 
   if (!session || !session.user) {
@@ -107,12 +109,12 @@ export default function Profile() {
         <Grid container spacing={4}>
           {listings.map((item) => (
             <Grid item key={item.id} xs={12} sm={6} md={4}>
-              <FurnitureCard
-                title={item.description} 
-                price={`$${item.price}`}
-                imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
-                id={item.id}
-              />
+                <FurnitureCard
+                  title={item.description}
+                  price={`$${item.price}`}
+                  imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+                  linkDestination={`/furniture/edit/${item.id}`}
+                />
             </Grid>
           ))}
         </Grid>

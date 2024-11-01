@@ -40,7 +40,7 @@ const MessagesPage = () => {
     if (session) {
       const fetchConversations = async () => {
         try {
-          const response = await fetch(`http://localhost:5001/api/message/conversations?userId=${session.user.id}`);
+          const response = await fetch(`http://localhost:5001/api/message/conversations?userId=${session?.user?.id}`);
           const data: Conversation[] = await response.json();
 
           

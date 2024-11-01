@@ -33,6 +33,7 @@ router.get('/', async (req, res) => {
 
 
 router.get('/:id', async (req, res) => {
+  console.log("in here");
   const { id } = req.params;
   try {
     const result = await pool.query(
@@ -127,10 +128,9 @@ router.post('/check-or-add-user', async (req, res) => {
     const userCheck = await pool.query('SELECT * FROM public."business_user" WHERE user_id = $1', [user_id]);
 
     if (userCheck.rows.length === 0) {
-      // If the user doesn't exist, insert them into the business_user table
       const insertUser = await pool.query(
         'INSERT INTO public."business_user" (user_id, rating) VALUES ($1, $2) RETURNING *',
-        [user_id, 5]  // Default rating of 5
+        [user_id, 5]
       );
 
       if (insertUser.rows.length === 0) {
@@ -146,6 +146,31 @@ router.post('/check-or-add-user', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { price, description, condition, colors, location, pics } = req.body;
+
+  try {
+    const colorsArray = colors ? JSON.stringify(colors) : null;
+    const bufferPics = pics ? pics.map(pic => Buffer.from(pic, 'base64')) : [];
+
+    const result = await pool.query(
+      `UPDATE public."furniture_listing"
+       SET price = $1, description = $2, condition = $3, colors = $4, location = $5, pics = $6
+       WHERE id = $7 RETURNING *`,
+      [price, description, condition, colorsArray, location, bufferPics, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating listing:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 module.exports = router; 
