@@ -1,10 +1,16 @@
 "use client";
 
-import { Card, CardContent, CardMedia, Typography, Box, Grid, Button } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, Box, Grid, Button, Paper } from '@mui/material';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Maps from '../../components/map-card';
 import { getCoordinatesOfAddress } from '../../utils'; 
+
+// const theme = createTheme({
+//   typography: {
+//     fontFamily: '',
+//   },
+// });
 
 interface ColorData {
   colors: string[] | null;
@@ -95,14 +101,15 @@ const FurnitureDescriptionPage = () => {
           justifyContent: 'center'
         }}
       >
-
+        <Paper elevation={10}>
         <CardMedia
           component="img"
-          height="500"
+          height="300"
           image={furnitureItem.pics[0] || "https://via.placeholder.com/400x300"}
           alt="Listing Image"
           sx={{ objectFit: 'cover' }}
         />
+        </Paper>
         <CardContent>
 
           <Typography variant="h4" component="div" gutterBottom>
