@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardMedia, Typography, Box, Grid, Button } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, Box, Grid, Button, Paper, Rating, CircularProgress } from '@mui/material';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Maps from '../../components/map-card';
@@ -76,7 +76,9 @@ const FurnitureDescriptionPage = () => {
     }
   }, [id]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)return <div><Box sx={{ position:'absolute', top:'50%', left:'50%'}}>
+  <CircularProgress size='4rem'/>
+</Box></div>;
   if (error) return <div>{error}</div>; 
   if (!furnitureItem) return <div>No furniture item found.</div>; 
   address.push(furnitureItem?.location);
@@ -108,7 +110,8 @@ const FurnitureDescriptionPage = () => {
           minHeight: '80vh', 
           display: 'flex', 
           flexDirection: 'column',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          // padding: 4,
         }}
       >
 
