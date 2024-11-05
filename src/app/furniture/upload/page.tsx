@@ -123,30 +123,29 @@ export default function ListingUpload() {
   };
 
   return (
-    <Box
-      component="form"
-      sx={{ '& > :not(style)': { m: 2, width: '25ch' } }}
-      noValidate
-      autoComplete="off"
-      onSubmit={formik.handleSubmit}
-    >
+    <form onSubmit={formik.handleSubmit} className="flex flex-col items-center gap-4 p-6 w-full max-w-2xl mx-auto bg-white shadow-lg rounded-lg">
+      <h2 className="text-2xl font-semibold mb-4">New Furniture Listing</h2>
+
       <TextField
         id="outlined-description"
         label="Description"
         variant="outlined"
         name="description"
+        fullWidth
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         value={formik.values.description}
         error={formik.touched.description && Boolean(formik.errors.description)}
         helperText={formik.touched.description && formik.errors.description}
+        className="w-full"
       />
-      <FormControl fullWidth sx={{ m: 1 }}>
-        <InputLabel htmlFor="outlined-adornment-price">Listing Price</InputLabel>
+
+      <FormControl className="w-full">
+        <InputLabel htmlFor="outlined-adornment-price">Price</InputLabel>
         <OutlinedInput
           id="outlined-adornment-price"
           startAdornment={<InputAdornment position="start">$</InputAdornment>}
-          label="Listing Price"
+          label="Price"
           name="price"
           type="number"
           onChange={formik.handleChange}
@@ -155,12 +154,15 @@ export default function ListingUpload() {
           error={formik.touched.price && Boolean(formik.errors.price)}
         />
         {formik.touched.price && formik.errors.price && (
-          <div style={{ color: 'red' }}>{formik.errors.price}</div>
+          <p className="text-red-500 text-sm mt-1">{formik.errors.price}</p>
         )}
       </FormControl>
+
       <TextField
         id="outlined-condition"
         label="Condition"
+        variant="outlined"
+        fullWidth
         multiline
         rows={4}
         name="condition"
@@ -169,19 +171,23 @@ export default function ListingUpload() {
         value={formik.values.condition}
         error={formik.touched.condition && Boolean(formik.errors.condition)}
         helperText={formik.touched.condition && formik.errors.condition}
+        className="w-full"
       />
       <TextField
         id="outlined-location"
         label="Pick up Location"
         variant="outlined"
         name="location"
+        fullWidth
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         value={formik.values.location}
         error={formik.touched.location && Boolean(formik.errors.location)}
         helperText={formik.touched.location && formik.errors.location}
+        className="w-full"
       />
-      <FormControl fullWidth sx={{ m: 1 }}>
+
+      <FormControl className="w-full">
         <InputLabel id="demo-multiple-checkbox-label">Color</InputLabel>
         <Select
           labelId="demo-multiple-checkbox-label"
@@ -203,15 +209,12 @@ export default function ListingUpload() {
           ))}
         </Select>
         {formik.touched.colors && formik.errors.colors && (
-          <div style={{ color: 'red' }}>{formik.errors.colors}</div>
+          <p className="text-red-500 text-sm mt-1">{formik.errors.colors}</p>
         )}
       </FormControl>
 
-      <Button
-        variant="contained"
-        component="label"
-      >
-        {fileNames.length > 0 ? `${fileNames.join(', ')}` : 'Upload File'}
+      <Button variant="contained" component="label" className="w-full mt-4">
+        {fileNames.length > 0 ? `Uploaded Files: ${fileNames.join(', ')}` : 'Upload Image'}
         <input
           type="file"
           hidden
@@ -224,9 +227,10 @@ export default function ListingUpload() {
         type="submit"
         variant="contained"
         disabled={!formik.isValid || !formik.dirty}
+        className="w-full mt-6 bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-400"
       >
-        Submit Listing
+        Submit Furniture
       </Button>
-    </Box>
+    </form>
   );
 }
