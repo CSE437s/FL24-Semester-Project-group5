@@ -18,6 +18,7 @@ export default function ListingUpload() {
   const [fileNames, setFileNames] = React.useState<string[]>([]);
   const { data: session } = useSession();
   const router = useRouter();
+  const MAX_FILE_SIZE = 65 * 1024; // 1MB
 
   // Validation schema for Formik using Yup
   const validationSchema = Yup.object({
@@ -51,6 +52,10 @@ export default function ListingUpload() {
     policies: Yup.string()
       .min(5, 'Policies must be at least 5 characters')
       .required('Policies are required'),
+      files: Yup.mixed().test('fileSize', 'Each file must be less than 65 KB', (value) => {
+        if (!value) return true; // Skip validation if no files are selected
+        return Array.from(value).every(file => file.size <= MAX_FILE_SIZE);
+      }),
   });
 
   // Formik setup
@@ -65,6 +70,7 @@ export default function ListingUpload() {
       bathrooms: 0,
       amenities: '',
       policies: '',
+      files: null,
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
@@ -112,9 +118,16 @@ export default function ListingUpload() {
   });
 
   // Handle file input change and update file names
+  
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selectedFiles = Array.from(event.target.files);
+      const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
+
+      if (oversizedFiles.length > 0) {
+        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 1MB.`);
+        return;
+      }
       setFiles(selectedFiles);
       setFileNames(selectedFiles.map((file) => file.name));
     }
