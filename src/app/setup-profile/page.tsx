@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { TextField, Button, Container, Box } from '@mui/material';
+import { TextField, Button, Container, Box, CircularProgress } from '@mui/material';
 import { useSession } from 'next-auth/react';
 
 const SetupProfile = () => {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const { data: session } = useSession(); // Get session data
   const email = session?.user?.email || '';
   
@@ -25,6 +26,7 @@ const SetupProfile = () => {
       bio: Yup.string().required('Bio is required'),
     }),
     onSubmit: async (values) => {
+      setLoading(true);
       try {
         const res = await fetch('/api/user/update-profile', {
           method: 'PATCH',
@@ -40,6 +42,7 @@ const SetupProfile = () => {
       } catch (error) {
         console.error('Failed to submit form', error);
       }
+      setLoading(false);
     },
   });
 
@@ -71,7 +74,7 @@ const SetupProfile = () => {
             margin="normal"
           />
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 3 }}>
-            Save Profile
+            {loading ? <CircularProgress size={24} color="inherit"/> : 'Save Profile'}
           </Button>
         </form>
       </Box>

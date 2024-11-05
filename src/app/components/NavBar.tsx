@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { AppBar, Box, CssBaseline, Divider, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText, Toolbar, Typography, Button } from '@mui/material';
 import { handleSignOut } from '../utils/auth/signOutHandler'; 
+import Image from 'next/image';
+
 
 const drawerWidth = 240;
 const navItems = [
@@ -67,13 +69,23 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
             onClick={handleDrawerToggle}
             sx={{ mr: 2, display: { sm: 'none' } }}
           />
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
-          >
-            Subletify
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <Image
+              src="/images/favicon.png"
+              alt="Subletify Logo"
+              width={40} 
+              height={40} 
+              priority
+              style={{ marginRight: 8, filter: 'brightness(0) invert(1)' }}
+              />
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ display: { xs: 'none', sm: 'block' } }}
+            >
+              Subletify
+            </Typography>
+          </Box>
           <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
             {filteredItems.map((item) => (
               <Button key={item.text} sx={{ color: '#fff' }} onClick={item.text === 'Sign Out' ? handleSignOut : undefined}>

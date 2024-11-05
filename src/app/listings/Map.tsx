@@ -42,7 +42,7 @@ interface Location {
         {locations.map((location, index) => (
           <Marker key={index} position={[location.latitude, location.longitude]} icon={customIcon}>
             <Popup>
-              Location: {names[index]}
+              Location: {names[index+1]}
             </Popup>
           </Marker>
         ))}

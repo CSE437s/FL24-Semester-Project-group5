@@ -78,8 +78,13 @@ const ProfileContent = () => {
   }
 
   async function fetchListings() {
-    const profile_id = session?.user?.id;
-    console.log('id', profile_id);
+    let profile_id;
+    if(userId){
+      profile_id = userId;
+    }
+    else if (session){
+      profile_id = session.user.id;
+    }
     try {
       const listingsResponse = await fetch(`http://localhost:5001/api/furniture?user_id=${profile_id}`);
       if (listingsResponse.ok) {
@@ -97,7 +102,13 @@ const ProfileContent = () => {
   }
 
   async function fetchApartmentListings() {
-    const profile_id = session?.user?.id;
+    let profile_id;
+    if(userId){
+      profile_id = userId;
+    }
+    else if (session){
+      profile_id = session.user.id;
+    }
     try {
       const response = await fetch(`http://localhost:5001/api/apartment?user_id=${profile_id}`);
       if (response.ok) {
@@ -118,25 +129,28 @@ const ProfileContent = () => {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 5 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-    {userId ? 'Seller Profile' : 'Your Profile'}
-  </Typography>
-      <Box sx={{ mt: 3 }}>
-        <Typography variant="h6">Email:</Typography>
-        <Typography>{profile?.email || 'Not available'}</Typography>
-
-        <Typography variant="h6" sx={{ mt: 2 }}>Full Name:</Typography>
-        <Typography>{profile?.name || 'Not provided'}</Typography>
-
-        <Typography variant="h6" sx={{ mt: 2 }}>Bio:</Typography>
-        <Typography>{profile?.bio || 'Not provided'}</Typography>
-      </Box>
-      <Typography variant="h5" sx={{ mt: 4 }}>Your Furniture Listings</Typography>
-      <div style={{ flexGrow: 1 }}>
+    <Container maxWidth="lg" sx={{ mt: 5 }}>
+    <Typography variant="h4" component="h1" gutterBottom>
+      {userId ? 'Seller Profile' : 'Your Profile'}
+    </Typography>
+    <Box sx={{ mt: 3 }}>
+      <Typography variant="h6">Email:</Typography>
+      <Typography>{profile?.email || 'Not available'}</Typography>
+  
+      <Typography variant="h6" sx={{ mt: 2 }}>Full Name:</Typography>
+      <Typography>{profile?.name || 'Not provided'}</Typography>
+  
+      <Typography variant="h6" sx={{ mt: 2 }}>Bio:</Typography>
+      <Typography>{profile?.bio || 'Not provided'}</Typography>
+    </Box>
+    {userId ? (
+  <>
+    <Typography variant="h5" sx={{ mt: 4 }}>Seller's Furniture Listings</Typography>
+    <div style={{ flexGrow: 1 }}>
+      {listings.length > 0 ? (
         <Grid container spacing={4}>
           {listings.map((item) => (
-            <Grid item key={item.id} xs={12} sm={6} md={4}>
+            <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
               <FurnitureCard
                 title={item.description}
                 price={`$${item.price}`}
@@ -146,13 +160,19 @@ const ProfileContent = () => {
             </Grid>
           ))}
         </Grid>
-      </div>
+      ) : (
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          Seller has no furniture listings.
+        </Typography>
+      )}
+    </div>
 
-      <Typography variant="h5" sx={{ mt: 4 }}>Your Apartment Listings</Typography>
-      <div style={{ flexGrow: 1 }}>
+    <Typography variant="h5" sx={{ mt: 4 }}>Seller's Apartment Listings</Typography>
+    <div style={{ flexGrow: 1 }}>
+      {apartmentListings.length > 0 ? (
         <Grid container spacing={4}>
           {apartmentListings.map((item) => (
-            <Grid item key={item.id} xs={12} sm={6} md={4}>
+            <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
               <ApartmentCard
                 title={item.description}
                 address={item.location}
@@ -163,8 +183,66 @@ const ProfileContent = () => {
             </Grid>
           ))}
         </Grid>
-      </div>
-    </Container>
+      ) : (
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          Seller has no apartment listings.
+        </Typography>
+      )}
+    </div>
+  </>
+) : (
+  <>
+  <Typography variant="h5" sx={{ mt: 4 }}>Your Furniture Listings</Typography>
+  <div style={{ flexGrow: 1 }}>
+    {listings.length > 0 ? (
+      <Grid container spacing={4}>
+        {listings.map((item) => (
+          <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
+            <FurnitureCard
+              title={item.description}
+              price={`$${item.price}`}
+              imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+              linkDestination={`/furniture/edit/${item.id}`}
+            />
+          </Grid>
+        ))}
+      </Grid>
+    ) : (
+      <Typography variant="body1" sx={{ mt: 2 }}>
+        You have no furniture listings.
+      </Typography>
+    )}
+  </div>
+
+  <Typography variant="h5" sx={{ mt: 4 }}>Your Apartment Listings</Typography>
+  <div style={{ flexGrow: 1 }}>
+    {apartmentListings.length > 0 ? (
+      <Grid container spacing={4}>
+        {apartmentListings.map((item) => (
+          <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
+            <ApartmentCard
+              title={item.description}
+              address={item.location}
+              price={`$${item.price}`}
+              imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+              linkDestination={`/listings/edit/${item.id}`}
+            />
+          </Grid>
+        ))}
+      </Grid>
+    ) : (
+      <Typography variant="body1" sx={{ mt: 2 }}>
+        You have no apartment listings.
+      </Typography>
+    )}
+  </div>
+</>
+)}
+
+    
+  </Container>
+  
+  
   );
 };
 

@@ -169,6 +169,21 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+router.delete('/delete/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+  
+    const result = await pool.query('DELETE FROM public."furniture_listing" WHERE id = $1 RETURNING *', [id]);
 
+    if (result.rows.length) {
+      res.json({ message: 'Listing deleted successfully' });
+    } else {
+      res.status(404).json({ error: 'Listing not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting listing:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 module.exports = router; 
