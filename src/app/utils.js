@@ -1,3 +1,4 @@
+import { SHA256 as sha256 } from "crypto-js"; 
 export async function getCoordinatesOfAddress(address) {
   //const key = process.env.GEOCODING_API_KEY;
 
@@ -43,3 +44,6 @@ export async function haversineDistance(lat1, lon1) {
   return distance;
 }
 
+export const hashPassword = (string) => {
+  return sha256(string).toString();
+};

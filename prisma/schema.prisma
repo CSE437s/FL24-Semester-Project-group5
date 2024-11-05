@@ -49,6 +49,8 @@ model User {
   furnitureListings FurnitureListing[]  // Relation to furniture listings
   businessUsers     BusinessUser[]      // Relation to business users
   apartmentListings ApartmentListing[]  // Relation to apartment listings
+  sentMessages     messages[]  @relation("SentMessages")
+  receivedMessages messages[]  @relation("ReceivedMessages")
 }
 
 model FurnitureListing {
@@ -94,6 +96,20 @@ model ApartmentListing {
   user        User @relation(fields: [user_id], references: [id])
 
   @@map("apartment_listing")
+}
+
+model messages {
+  id              Int      @id @default(autoincrement()) @map("id")
+  sender_id       String   @map("sender_id")
+  recipient_id    String   @map("recipient_id")
+  message_text    String   @map("message_text")
+  timestamp       DateTime @default(now()) @map("timestamp")
+  conversation_id String?  @map("conversation_id")
+
+  sender          User     @relation("SentMessages", fields: [sender_id], references: [id])
+  recipient       User     @relation("ReceivedMessages", fields: [recipient_id], references: [id])
+
+  @@map("messages")
 }
 
 model VerificationRequest {

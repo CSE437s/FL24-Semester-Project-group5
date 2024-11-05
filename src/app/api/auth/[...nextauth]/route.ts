@@ -64,12 +64,12 @@ const options: NextAuthOptions = {
 
     async session({ session, token }) {
       if (token) {
-        session.user = {
-          id: token.id,
-          email: token.email,
-          bio: token.bio || '',
-          name: token.name || '',
-        };
+          session.user = session.user || {};
+          session.user.id = token.id;
+          session.user.email = token.email;
+          session.user.bio = token.bio || '';
+          session.user.name =  token.name || '';
+      
       }
       return session;
     },

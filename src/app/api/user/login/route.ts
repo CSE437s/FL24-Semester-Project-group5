@@ -1,6 +1,6 @@
 import { SHA256 as sha256 } from "crypto-js"; // Ensure you have this for password hashing
 import { prisma } from "../../../../../prisma"; 
-import { hashPassword } from "../create/route";
+import { hashPassword } from "../../../utils";
 import { error } from "console";
 
 export async function POST(req: Request) {
@@ -50,7 +50,7 @@ async function loginUserHandler(req: Request) {
 
 
 // Function to exclude user password returned from prisma
-function exclude(user, keys) {
+function exclude(user: any, keys: string[]) {
  
   for (let key of keys) {
     delete user[key];

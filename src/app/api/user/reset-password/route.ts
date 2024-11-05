@@ -1,6 +1,6 @@
 import { prisma } from "../../../../../prisma";
 import jwt from "jsonwebtoken";
-import { hashPassword } from "../create/route";
+import { hashPassword } from "../../../utils";
 import nodemailer from "nodemailer";
 
 // email the reset link
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: "There is no account with this email." }), { status: 404 });
     }
 
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET as string;
     const token = jwt.sign({ email: email }, secret, { expiresIn: '1h' });
 
     const transporter = nodemailer.createTransport({
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     const mailOptions = {
       from: '"Subletify" <subletify.contact@gmail.com>',
-      to: user.email,
+      to: user.email || "default-email@example.com",
       subject: "Password Reset",
       text: `Click the link to reset your password: ${resetLink}`,
     };
@@ -65,7 +65,7 @@ export async function PATCH(req: Request) {
       return new Response(JSON.stringify({ error: "Invalid inputs" }), { status: 400 });
     }
 
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET as string;
     let decodedToken;
     try {
       decodedToken = jwt.verify(token, secret);

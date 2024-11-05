@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardMedia, Typography, Box, Grid, Button, Rating, CircularProgress} from '@mui/material';
 import { getCoordinatesOfAddress } from '../../utils';
 import Maps from '../../components/map-card';
+import { useSession } from 'next-auth/react';
 interface ApartmentItem {
   id: number;
   user_id: number;
@@ -32,6 +33,7 @@ const ApartmentDescriptionPage = () => {
   const id = params['id'];
   const [locations, setLocations] = useState<Location[]>([]);
   const address = [''];
+  const { data: session, status } = useSession();
   const [apartmentItem, setApartmentItem] = useState<ApartmentItem | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,6 +76,18 @@ const ApartmentDescriptionPage = () => {
   if (error) return <div>{error}</div>;
   if (!apartmentItem) return <div>No apartment item found.</div>;
   address.push(apartmentItem?.location);
+
+  const handleContactLister = () => {
+    if (status === 'unauthenticated') {
+      const res = confirm("You must be logged in to contact the lister. Do you want to log in or sign up?");
+      if (res) {
+        router.push('/login'); 
+      }
+    } else {
+      router.push(`/messages?recipientId=${apartmentItem?.user_id}&sellerId=${session?.user?.id}`);
+    }
+  };
+
 
   return (
     <Box sx={{ padding: '20px', maxWidth: '1200px', margin: '20px auto' }}>
@@ -144,6 +158,7 @@ const ApartmentDescriptionPage = () => {
                 </Typography>
                 </Grid>
 
+
                 <Grid item xs={6}>
                 <Typography variant="h6" color="text.secondary">
                   Amenities: {apartmentItem.amenities}
@@ -182,10 +197,20 @@ const ApartmentDescriptionPage = () => {
                   >
                     View Profile
                   </Button>
+                    <Button 
+              variant="contained" 
+              color="secondary" 
+              onClick={handleContactLister}
+              sx={{ marginLeft: '10px' }}
+            >
+              Contact Lister
+            </Button>
                   </Grid>
                 </Grid>
+         
                 </Card>
               </CardContent>
+
         </Grid>
         <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
           <Button variant="contained" color="primary" onClick={() => router.back()}>

@@ -8,7 +8,7 @@ import { MenuButton as BaseMenuButton } from '@mui/base/MenuButton';
 import { MenuItem as BaseMenuItem, menuItemClasses } from '@mui/base/MenuItem';
 import { styled } from '@mui/system';
 import Slider from '@mui/material/Slider';
-import { Typography, MenuItem } from '@mui/material';
+import { Typography, MenuItem, Button } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import FormControl from '@mui/material/FormControl';
@@ -23,13 +23,14 @@ interface FilterProps {
   setBedrooms: React.Dispatch<React.SetStateAction<string>>;
   bathrooms: string;
   setBathrooms: React.Dispatch<React.SetStateAction<string>>;
+  handleAddApartment: () => void;
 }
 
 function valuetext(value: number) {
   return `${value}`;
 }
 
-export default function ApartmentFilter({ priceRange, setPriceRange, distRange, setDistRange, bedrooms, setBedrooms, bathrooms, setBathrooms }: FilterProps) {
+export default function ApartmentFilter({ priceRange, setPriceRange, distRange, setDistRange, bedrooms, setBedrooms, bathrooms, setBathrooms, handleAddApartment }: FilterProps) {
   const handlePriceSliderChange = (event: Event, newValue: number | number[]) => {
     setPriceRange(newValue as number[]);
   };
@@ -47,9 +48,9 @@ export default function ApartmentFilter({ priceRange, setPriceRange, distRange, 
   };
 
   return (
-    <div>
+    <div className='border border-gray-300 mb-4'>
 
-      <Grid container spacing={3} style = {{marginLeft:'40px'}}>
+      <Grid container className="flex flex-row justify-center gap-4 gap-y-0 py-2">
       <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
       <InputLabel id="demo-select-small-label">Bedrooms</InputLabel>
       <Select
@@ -118,6 +119,9 @@ export default function ApartmentFilter({ priceRange, setPriceRange, distRange, 
             />
           </Menu>
         </Dropdown>
+        <div style={{ display: 'flex', justifyContent: 'flex-end',  }}>
+          <Button variant="contained" onClick={handleAddApartment} className="w-full py-2 text-base transition-transform duration-300 ease-in-out transform hover:scale-105 m-2">Add Listing</Button> 
+        </div>
       </Grid>
     </div>
   );

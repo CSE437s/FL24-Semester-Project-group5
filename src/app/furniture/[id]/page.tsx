@@ -1,16 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardMedia, Typography, Box, Button, Paper, Grid, Rating, CircularProgress } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, Box, Grid, Button, Paper, Rating, CircularProgress } from '@mui/material';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Maps from '../../components/map-card';
-import { getCoordinatesOfAddress } from '../../utils';
+import { getCoordinatesOfAddress } from '../../utils'; 
+import { useSession } from 'next-auth/react';
 
-// const theme = createTheme({
-//   typography: {
-//     fontFamily: '',
-//   },
-// });
 
 interface ColorData {
   colors: string[] | null;
@@ -42,7 +38,8 @@ const FurnitureDescriptionPage = () => {
   const id = params['id'];
   const [locations, setLocations] = useState<Location[]>([]);
   const address = [''];
-
+  const { data: session, status } = useSession();
+  
 
   const [furnitureItem, setFurnitureItem] = useState<FurnitureItem | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +47,7 @@ const FurnitureDescriptionPage = () => {
 
   useEffect(() => {
     if (id) {
+      console.log('id', id)
       const fetchFurnitureItem = async () => {
         try {
           const response = await fetch(`http://localhost:5001/api/furniture/${id}`);
@@ -79,17 +77,30 @@ const FurnitureDescriptionPage = () => {
     }
   }, [id]);
 
-  if (loading) return <div><Box sx={{ position:'absolute', top:'50%', left:'50%'}}>
+  if (loading)return <div><Box sx={{ position:'absolute', top:'50%', left:'50%'}}>
   <CircularProgress size='4rem'/>
 </Box></div>;
-  if (error) return <div>{error}</div>;
-  if (!furnitureItem) return <div>No furniture item found.</div>;
+  if (error) return <div>{error}</div>; 
+  if (!furnitureItem) return <div>No furniture item found.</div>; 
   address.push(furnitureItem?.location);
 
 
   const colorList = Array.isArray(furnitureItem.colors)
     ? furnitureItem.colors.join(', ')
     : 'None';
+
+
+
+  const handleContactLister = () => {
+    if (status === 'unauthenticated') {
+      const res = confirm("You must be logged in to contact the lister. Do you want to log in or sign up?");
+      if (res) {
+        router.push('/login'); 
+      }
+    } else {
+      router.push(`/messages?recipientId=${furnitureItem?.user_id}&sellerId=${session?.user?.id}`);
+    }
+  };
 
   return (
     <Box sx={{ padding: '20px', maxWidth: '1200px', margin: '20px auto' }}>
@@ -101,6 +112,7 @@ const FurnitureDescriptionPage = () => {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
+
           padding: 4,
         }}
       >
@@ -136,7 +148,18 @@ const FurnitureDescriptionPage = () => {
               <Typography variant="h6" color="text.secondary">
                 Price:
               </Typography>
+
               <Typography variant="h6">${furnitureItem.price}</Typography>
+
+<Button 
+              variant="contained" 
+              color="secondary" 
+              onClick={handleContactLister}
+              sx={{ marginLeft: '10px' }}
+            >
+              Contact Lister
+            </Button>
+
             </Grid>
             <br></br>
             <Grid container spacing={2}>

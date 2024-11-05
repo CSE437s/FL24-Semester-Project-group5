@@ -93,6 +93,25 @@ CREATE TABLE "VerificationRequest" (
     CONSTRAINT "VerificationRequest_pkey" PRIMARY KEY ("id")
 );
 
+CREATE TABLE IF NOT EXISTS messages
+(
+    id integer NOT NULL DEFAULT nextval('messages_id_seq'::regclass),
+    sender_id text COLLATE pg_catalog."default" NOT NULL,
+    recipient_id text COLLATE pg_catalog."default" NOT NULL,
+    message_text text COLLATE pg_catalog."default" NOT NULL,
+    "timestamp" timestamp with time zone DEFAULT now(),
+    conversation_id text COLLATE pg_catalog."default",
+    CONSTRAINT messages_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_recipient_id_fkey FOREIGN KEY (recipient_id)
+        REFERENCES public."User" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id)
+        REFERENCES public."User" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Account_providerId_providerAccountId_key" ON "Account"("providerId", "providerAccountId");
 

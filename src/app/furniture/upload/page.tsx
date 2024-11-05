@@ -23,7 +23,7 @@ export default function ListingUpload() {
   const { data: session, status } = useSession();  
     const router = useRouter();
 
-  const colorItems = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Black', 'Grey'];
+  const colorItems: any[] = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Black', 'Grey'];
 
   const validationSchema = Yup.object({
     description: Yup.string()
@@ -46,7 +46,7 @@ export default function ListingUpload() {
       price: '',
       description: '',
       condition: '',
-      colors: [],
+      colors: [''],
       location: '',
     },
     validationSchema: validationSchema,
@@ -189,7 +189,7 @@ export default function ListingUpload() {
           renderValue={(selected) => selected.join(', ')}
           error={formik.touched.colors && Boolean(formik.errors.colors)}
         >
-          {colorItems.map((name) => (
+          {colorItems.map((name: string) => (
             <MenuItem key={name} value={name}>
               <Checkbox checked={formik.values.colors.includes(name)} />
               <ListItemText primary={name} />

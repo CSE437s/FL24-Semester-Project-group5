@@ -3,8 +3,19 @@ const router = express.Router();
 const pool = require('../../../db'); 
 
 router.get('/', async (req, res) => {
+  const { user_id } = req.query;
   try {
-    const result = await pool.query('SELECT fl.*, bu.rating from public."furniture_listing" fl join public."business_user" bu on bu.user_id = fl."user_id";');
+    const query = user_id
+      ? `SELECT fl.*, bu.rating 
+    FROM public."furniture_listing" fl 
+    JOIN public."business_user" bu 
+    ON bu.user_id = fl."user_id"
+    WHERE fl."user_id" = $1;`
+      : `SELECT fl.*, bu.rating 
+    FROM public."furniture_listing" fl 
+    JOIN public."business_user" bu 
+    ON bu.user_id = fl."user_id";`;
+    const result = await pool.query(query, user_id ? [user_id]: []);
 
     const furnitures = result.rows.map(furniture => ({
       ...furniture,
@@ -19,6 +30,7 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
+  console.log("two")
   const { id } = req.params;
 
   try {
@@ -133,6 +145,30 @@ console.log(user_id);
   }
 });
 
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { price, description, condition, colors, location, pics } = req.body;
+  const bufferPics = pics ? pics.map(pic => Buffer.from(pic, 'base64')) : [];
+  try {
+    const colorsArray = colors ? JSON.stringify(colors) : null;
+
+    const result = await pool.query(
+      `UPDATE public."furniture_listing"
+       SET price = $1, description = $2, condition = $3, colors = $4, location = $5, pics = $6
+       WHERE id = $7 RETURNING *`,
+      [price, description, condition, colorsArray, location, bufferPics, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating listing:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 module.exports = router; 

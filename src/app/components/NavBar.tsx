@@ -11,6 +11,7 @@ const navItems = [
   { text: 'Furniture', href: '/furniture' }, 
   { text: 'Listings', href: '/listings' },
   { text: 'Profile', href: '/profile' },
+  { text: 'Messages', href: '/messages' },
   { text: 'Login', href: '/login' },   
   { text: 'Sign Out', href: '#' }
 ];
@@ -28,7 +29,7 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
   const filteredItems = navItems.filter(item => {
     if (item.text === 'Login' && session) return false;   
     if (item.text === 'Sign Out' && !session) return false; 
-    if (item.text === 'Profile' && !session) return false; 
+    if ((item.text === 'Profile' || item.text === 'Messages') && !session) return false;
     return true;
   });
 
@@ -55,7 +56,7 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
   const container = window !== undefined ? () => window().document.body : undefined;
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box className="flex h-20" >
       <CssBaseline />
       <AppBar component="nav">
         <Toolbar>

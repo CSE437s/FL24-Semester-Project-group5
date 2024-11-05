@@ -7,10 +7,22 @@ import { Button, TextField, Typography, Container, Box, Tabs, Tab, Link } from '
 import { useRouter } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react';
 
+// const validationSchema = Yup.object({
+//   email: Yup.string().email('Invalid email address').required('Email is required'),
+//   password: Yup.string().max(9, 'Password must be less than 10 characters').required('Password is required'),
+//   confirmPassword: Yup.string().oneOf([Yup.ref('password')], 'Passwords must match')
+// });
+
 const validationSchema = Yup.object({
-  email: Yup.string().email('Invalid email address').required('Email is required'),
-  password: Yup.string().max(9, 'Password must be less than 10 characters').required('Password is required'),
-  confirmPassword: Yup.string().oneOf([Yup.ref('password')], 'Passwords must match')
+  email: Yup.string()
+    .email('Invalid email address')
+    .matches(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[Ee][Dd][Uu]$/, 'Email must be a .edu address')
+    .required('Email is required'),
+  password: Yup.string()
+    .max(9, 'Password must be less than 10 characters')
+    .required('Password is required'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password')], 'Passwords must match'),
 });
 
 const LoginPage = () => {

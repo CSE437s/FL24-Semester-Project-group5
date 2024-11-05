@@ -14,7 +14,7 @@ export async function GET(req: Request) {
       where: { id },
       select: { email: true, name: true, bio: true },
     });
-
+console.log("prof", user);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
