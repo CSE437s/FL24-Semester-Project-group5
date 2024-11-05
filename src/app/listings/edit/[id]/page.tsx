@@ -128,6 +128,24 @@ export default function EditApartmentListing() {
     return byteArrays;
   };
 
+  const handleDelete = async () => {
+    const confirmDelete = confirm("Are you sure you want to delete this listing?");
+    if (confirmDelete) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/apartment/delete/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          router.push('/listings');
+        } else {
+          console.error("Failed to delete listing data");
+        }
+      } catch (error) {
+        console.error("Error deleting listing:", error);
+      }
+    }
+  };
+
   if (loading) return <CircularProgress />;
 
   return (
@@ -232,6 +250,9 @@ export default function EditApartmentListing() {
           onChange={handleFileChange}
           multiple
         />
+      </Button>
+      <Button variant="contained" color="secondary" onClick={handleDelete}>
+        Delete Listing
       </Button>
       <Button type="submit" variant="contained">Save Changes</Button>
     </Box>

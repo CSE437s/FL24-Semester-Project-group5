@@ -115,6 +115,23 @@ export default function EditListing() {
       : originalPics.map(pic => pic.split(',')[1]);; 
     return byteArrays;
   };
+  const handleDelete = async () => {
+    const confirmDelete = confirm("Are you sure you want to delete this listing?");
+    if (confirmDelete) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/furniture/delete/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          router.push('/furniture');
+        } else {
+          console.error("Failed to delete listing data");
+        }
+      } catch (error) {
+        console.error("Error deleting listing:", error);
+      }
+    }
+  };
 
 
   if (loading) return <CircularProgress />;
@@ -196,6 +213,10 @@ export default function EditListing() {
           onChange={handleFileChange}
           multiple
         />
+
+      </Button>
+      <Button variant="contained" color="secondary" onClick={handleDelete}>
+        Delete Listing
       </Button>
       <Button type="submit" variant="contained">Save Changes</Button>
     </Box>
