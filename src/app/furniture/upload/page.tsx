@@ -23,7 +23,7 @@ export default function ListingUpload() {
   const { data: session, status } = useSession();  
     const router = useRouter();
 
-  const colorItems = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Black', 'Grey'];
+  const colorItems: any[] = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Black', 'Grey'];
 
   const validationSchema = Yup.object({
     description: Yup.string()
@@ -46,7 +46,8 @@ export default function ListingUpload() {
       price: '',
       description: '',
       condition: '',
-      colors: [],
+      colors: [''],
+      location: '',
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
@@ -163,7 +164,17 @@ export default function ListingUpload() {
         error={formik.touched.condition && Boolean(formik.errors.condition)}
         helperText={formik.touched.condition && formik.errors.condition}
       />
-
+          <TextField
+        id="outlined-location"
+        label="Pick up Location"
+        variant="outlined"
+        name="location"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.location}
+        error={formik.touched.location && Boolean(formik.errors.location)}
+        helperText={formik.touched.location && formik.errors.location}
+      />
       <FormControl fullWidth sx={{ m: 1 }}>
         <InputLabel id="demo-multiple-checkbox-label">Color</InputLabel>
         <Select
@@ -178,7 +189,7 @@ export default function ListingUpload() {
           renderValue={(selected) => selected.join(', ')}
           error={formik.touched.colors && Boolean(formik.errors.colors)}
         >
-          {colorItems.map((name) => (
+          {colorItems.map((name: string) => (
             <MenuItem key={name} value={name}>
               <Checkbox checked={formik.values.colors.includes(name)} />
               <ListItemText primary={name} />

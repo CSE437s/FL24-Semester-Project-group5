@@ -1,38 +1,62 @@
-const express = require('express');
-const next = require('next');
-const cors = require('cors'); 
-const path = require('path');
-const furnitureRoutes = require('./src/app/api/furniture'); 
-const apartmentRoutes = require('./src/app/api/apartment'); 
+const { createServer } = require("http");
+const next = require("next");
+const { Server } = require("socket.io");
+const express = require("express");
+const cors = require("cors");
 
-const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
+const furnitureRoutes = require("./src/app/api/furniture");
+const apartmentRoutes = require("./src/app/api/apartment");
+const messagesRoutes = require("./src/app/api/message");
+
+const dev = process.env.NODE_ENV !== "production";
+const hostname = "localhost";
+const port = 5001; 
+
+const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  const server = express(); 
-  const port =  5001;
+  const expressServer = express();
+  const httpServer = createServer(expressServer); 
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "http://localhost:3000",
+      methods: ["GET", "POST"],
+    },
+  });
 
-  // Use JSON middleware
-  server.use(express.json());
+  expressServer.use(express.json());
+  expressServer.use(
+    cors({
+      origin: "http://localhost:3000",
+    })
+  );
 
-  // Use CORS middleware
-  server.use(cors({
-    origin: 'http://localhost:3000', 
-  }));
-  
+  expressServer.use("/api/furniture", furnitureRoutes);
+  expressServer.use("/api/apartment", apartmentRoutes);
+  expressServer.use("/api/message", messagesRoutes);
 
-  server.use('/api/furniture', furnitureRoutes); 
-  server.use('/api/apartment', apartmentRoutes);
+  io.on("connection", (socket) => {
+    console.log("A user connected:", socket.id);
 
-  // Catch all other requests
-  server.all('*', (req, res) => {
+    socket.on("message", (messageData) => {
+      socket.broadcast.emit("message", messageData);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("User disconnected:", socket.id);
+    });
+  });
+
+  expressServer.all("*", (req, res) => {
     return handle(req, res);
   });
 
-  // Start the server
-  server.listen(port, (err) => {
-    if (err) throw err;
-    console.log(`Server running on http://localhost:${port}`);
+  httpServer.listen(port, () => {
+    console.log(`> Server running on http://${hostname}:${port}`);
   });
 });

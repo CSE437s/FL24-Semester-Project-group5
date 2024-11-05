@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Define custom marker icon
+
 const customIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   iconSize: [25, 41], 
@@ -23,32 +23,15 @@ interface Location {
     names: string[];
   }
 
-const Maps: React.FC<MapsProps> = ({ locations , names }) => {
-  console.log("names",names);
-    if (locations[0] === undefined){
-      return (
-      <MapContainer
-      //brookings as center
-        center={[38.648942, -90.311551]}  
-        zoom={14}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={false}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-
-      </MapContainer>
-    );
-
-    }else{
+  const Maps: React.FC<MapsProps> = ({ locations, names }) => {
+    const defaultCenter:[number, number] = [38.648942, -90.311551]; 
+    const mapCenter: [number, number]  =
+      locations.length === 1 ? [locations[0].latitude, locations[0].longitude] : defaultCenter;
+  
     return (
-    
       <MapContainer
-       //brookings as centers
-       center={[38.648942, -90.311551]}
-        zoom={13}
+        center={mapCenter}
+        zoom={locations.length === 1 ? 15 : 13} 
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={false}
       >
@@ -59,13 +42,12 @@ const Maps: React.FC<MapsProps> = ({ locations , names }) => {
         {locations.map((location, index) => (
           <Marker key={index} position={[location.latitude, location.longitude]} icon={customIcon}>
             <Popup>
-              Location: {names[index + 1]}
+              Location: {names[index]}
             </Popup>
           </Marker>
         ))}
       </MapContainer>
     );
-}
   };
 
 export default Maps;

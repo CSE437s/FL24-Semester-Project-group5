@@ -40,7 +40,7 @@ const FurniturePage = () => {
         router.push('/login'); 
       }
     } else {
-      router.push('/furniture/upload');  // Allow navigation to upload page
+      router.push('/furniture/upload'); 
     }
   };
 
@@ -68,10 +68,10 @@ const FurniturePage = () => {
     const isTagged = tags.length === 0 || tags.some(tag => item.description.toLowerCase().includes(tag.toLowerCase()));
     const isInRating = item.rating >= ratingValue;
     let isColorMatch = colorsValue.length === 0;
- 
-    if (item.colors) {
-      for (let i = 0; i < item.colors.length; i++) {
-        if (colorsValue.includes(item.colors[i])) {
+    const colors = item.colors as unknown as string[];
+    if (colors) {
+      for (let i = 0; i < colors.length; i++) {
+        if (colorsValue.includes(colors[i])) {
           isColorMatch = true; 
           break; 
         }
@@ -83,40 +83,39 @@ const FurniturePage = () => {
 
 
   return (
-    <div style={{ display: 'flex', padding: '30px' }}>
-
-<div style={{ display: 'flex', justifyContent: 'flex-end', padding: '20px', height: '100px' }}>
-        <Button variant="contained" onClick={handleAddFurniture}>Add Furniture</Button> 
-      </div>
-
-      <div style={{ flexGrow: 1 }}>
-        <Grid container spacing={4}>
-          {filteredItems.map((item) => (
-            <Grid item key={item.id} xs={12} sm={6} md={4}>
-              <FurnitureCard
-                title={item.description} 
-                price={`$${item.price}`}
-                imageUrl= {item.pics[0] || "https://via.placeholder.com/345x140"}
-                id={item.id}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      </div>
-
-      <div style={{ display: 'flex', marginLeft: '15px' }}>
-        <Filter 
-          tags={tags} 
-          setTags={setTags} 
-          priceRange={priceRange} 
-          setPriceRange={setPriceRange} 
-          ratingValue={ratingValue} 
-          setRatingValue={setRatingValue} 
-          colorsValue={colorsValue} 
-          setColors={setColors} 
-        /> 
-      </div>
+    <div className="flex flex-col lg:flex-row gap-6 p-5 mx-10">
+    {/* Grid container */}
+    <div className="flex-grow">
+      <Grid container spacing={4}>
+        {filteredItems.map((item) => (
+          <Grid item key={item.id} xs={12} sm={6} md={4}>
+            <FurnitureCard
+              title={item.description} 
+              price={`$${item.price}`}
+              imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+              linkDestination={`/furniture/${item.id}`}
+            />
+          </Grid>
+        ))}
+      </Grid>
     </div>
+  
+    {/* Filter container */}
+    <div className="w-full lg:w-1/4">
+      <Filter 
+        tags={tags} 
+        setTags={setTags} 
+        priceRange={priceRange} 
+        setPriceRange={setPriceRange} 
+        ratingValue={ratingValue} 
+        setRatingValue={setRatingValue} 
+        colorsValue={colorsValue} 
+        setColors={setColors} 
+        handleAddFurniture={handleAddFurniture}
+      /> 
+    </div>
+  </div>
+  
   );
 };
 

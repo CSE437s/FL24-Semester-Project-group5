@@ -15,6 +15,7 @@ import FormControl from '@mui/material/FormControl';
 import ListItemText from '@mui/material/ListItemText';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Checkbox from '@mui/material/Checkbox';
+import Button from '@mui/material/Button';
 
 interface TagsProps {
   tags: string[];
@@ -25,13 +26,14 @@ interface TagsProps {
   setRatingValue: React.Dispatch<React.SetStateAction<number>>;
   colorsValue: string[];
   setColors: React.Dispatch<React.SetStateAction<string[]>>;
+  handleAddFurniture: () => void;
 }
 
 function valuetext(value: number) {
   return `${value}`;
 }
 
-export default function Filter({ tags, setTags, priceRange, setPriceRange, ratingValue, setRatingValue, colorsValue, setColors }: TagsProps) {
+export default function Filter({ tags, setTags, priceRange, setPriceRange, ratingValue, setRatingValue, colorsValue, setColors, handleAddFurniture }: TagsProps) {
   const furnitureItems = [
     { title: 'Sofa' },
     { title: 'Table' },
@@ -74,14 +76,7 @@ export default function Filter({ tags, setTags, priceRange, setPriceRange, ratin
 
   return (
     <Box
-      sx={{
-        width: '250px',
-        padding: '20px',
-        border: '1px solid #ccc',
-        borderRadius: '8px',
-        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-      }}
-    >
+      className="w-64 p-5 border border-gray-300 rounded-lg shadow-md space-y-6 flex flex-col justify-between h-full">
       <Stack spacing={1} sx={{ width: '100%' }}>
         <Autocomplete
           multiple
@@ -148,6 +143,9 @@ export default function Filter({ tags, setTags, priceRange, setPriceRange, ratin
             ))}
           </Select>
         </FormControl>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+        <Button variant="contained" onClick={handleAddFurniture} className="w-full py-3 text-base transition-transform duration-300 ease-in-out transform hover:scale-105">Add furniture</Button> 
       </Box>
     </Box>
   );

@@ -8,8 +8,7 @@ import { useRouter } from 'next/navigation';
 
 
 const validationSchema = Yup.object({
-  email: Yup.string().email('Invalid email address').required('Email is required'),
-  newPassword: Yup.string().min(6, 'Password must be at least 6 characters').required('New password is required'),
+  email: Yup.string().email('Invalid email address').required('Email is required')
 });
 
 const ResetPasswordPage = () => {
@@ -17,8 +16,7 @@ const ResetPasswordPage = () => {
 
   const formik = useFormik({
     initialValues: {
-      email: '',
-      newPassword: '',
+      email: ''
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -31,9 +29,8 @@ const ResetPasswordPage = () => {
       });
 
       if (res.ok) {
-        alert("Password has been reset successfully");
         formik.resetForm();
-        router.push('/login')
+        alert("Email has been sent");
       } else {
         const error = await res.json();
         alert(error.error);
@@ -57,16 +54,6 @@ const ResetPasswordPage = () => {
             {...formik.getFieldProps('email')}
             error={formik.touched.email && Boolean(formik.errors.email)}
             helperText={formik.touched.email && formik.errors.email}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="New Password"
-            type="password"
-            {...formik.getFieldProps('newPassword')}
-            error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
-            helperText={formik.touched.newPassword && formik.errors.newPassword}
           />
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 3 }}>
             Reset Password

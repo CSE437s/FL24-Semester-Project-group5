@@ -1,11 +1,11 @@
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  user: 'cse437group5', 
-  host: 'localhost',    
-  database: 'subletifydev_v2', 
-  password: 'swe workshop',  
-  port: 5432,            // PostgreSQL port not our server
+  user: 'cse437group5',
+  host: 'localhost', 
+  database: 'subletifydev_v2',
+  password: 'swe workshop',
+  port: 5432,
 });
 console.log('Attempting to connect to the database...');
 pool.connect()

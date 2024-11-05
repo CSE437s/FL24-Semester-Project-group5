@@ -55,23 +55,30 @@ const options: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      // Persist the user information in the token
       if (user) {
-        token.id = user.id; // Add the user id to the token
-        token.email = user.email; // Add the email as well if needed
+        token.id = user.id; 
+        token.email = user.email; 
       }
       return token;
     },
 
     async session({ session, token }) {
-      console.log('token', token);
       if (token) {
-        session.user = {
-          id: token.id, // Retrieve the id from token
-          email: token.email, // Retrieve the email from token
-        };
+          session.user = session.user || {};
+          session.user.id = token.id;
+          session.user.email = token.email;
+          session.user.bio = token.bio || '';
+          session.user.name =  token.name || '';
+      
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      const isNewUser = url.includes("isNewUser=true");
+      if (isNewUser) {
+        return `${baseUrl}/setup-profile?email=${encodeURIComponent(url.split("email=")[1])}`;
+      }
+      return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },
 };

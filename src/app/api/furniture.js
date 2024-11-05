@@ -3,8 +3,19 @@ const router = express.Router();
 const pool = require('../../../db'); 
 
 router.get('/', async (req, res) => {
+  const { user_id } = req.query;
   try {
-    const result = await pool.query('SELECT fl.*, bu.rating from public."furniture_listing" fl join public."business_user" bu on bu.user_id = fl."user_id";');
+    const query = user_id
+      ? `SELECT fl.*, bu.rating 
+    FROM public."furniture_listing" fl 
+    JOIN public."business_user" bu 
+    ON bu.user_id = fl."user_id"
+    WHERE fl."user_id" = $1;`
+      : `SELECT fl.*, bu.rating 
+    FROM public."furniture_listing" fl 
+    JOIN public."business_user" bu 
+    ON bu.user_id = fl."user_id";`;
+    const result = await pool.query(query, user_id ? [user_id]: []);
 
     const furnitures = result.rows.map(furniture => ({
       ...furniture,
@@ -19,13 +30,15 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
+  console.log("two")
   const { id } = req.params;
 
   try {
     const result = await pool.query(
-      `SELECT fl.*, bu.rating 
+      `SELECT fl.*, bu.rating, u.name
        FROM public."furniture_listing" fl 
        JOIN public."business_user" bu ON bu.user_id = fl."user_id" 
+       JOIN public."User" u on u.id = fl."user_id"
        WHERE fl.id = $1`, [id] 
     );
 
@@ -75,23 +88,23 @@ router.post('/check-or-add-user', async (req, res) => {
 router.post('/upload', async (req, res) => {
   try {
 
-    const { price, description, condition, pics, user_id, colors } = req.body;
+    const { price, description, condition, pics, user_id, location, colors } = req.body;
 
     const bufferPics = pics ? pics.map(pic => Buffer.from(pic, 'base64')) : [];
 
     const colorsArray = colors ? JSON.stringify(colors) : null; 
 
-    // Insert the new furniture listing into the database
     const result = await pool.query(
-      `INSERT INTO furniture_listing (user_id, price, description, condition, pics, colors)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      `INSERT INTO furniture_listing (user_id, price, description, condition, pics, colors, location)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
       [
         user_id,
         price,
         description,
         condition,
         bufferPics,
-        colorsArray 
+        colorsArray,
+        location
       ]
     );
 
@@ -99,9 +112,9 @@ router.post('/upload', async (req, res) => {
   } catch (error) {
     console.error('Error saving furniture listing:', error);
     if (error.name === 'ValidationError') {
-      return res.status(400).json({ error: error.message }); // Handle validation errors
+      return res.status(400).json({ error: error.message }); 
     }
-    res.status(500).json({ error: 'Internal server error' }); // Handle general errors
+    res.status(500).json({ error: 'Internal server error' }); 
   }
 });
 
@@ -110,7 +123,6 @@ router.post('/check-or-add-user', async (req, res) => {
   const { user_id } = req.body;
 console.log(user_id);
   try {
-    // Check if the user exists in the business_user table
     const userCheck = await pool.query('SELECT * FROM public."business_user" WHERE user_id = $1', [user_id]);
 
     if (userCheck.rows.length === 0) {
@@ -133,6 +145,30 @@ console.log(user_id);
   }
 });
 
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { price, description, condition, colors, location, pics } = req.body;
+  const bufferPics = pics ? pics.map(pic => Buffer.from(pic, 'base64')) : [];
+  try {
+    const colorsArray = colors ? JSON.stringify(colors) : null;
+
+    const result = await pool.query(
+      `UPDATE public."furniture_listing"
+       SET price = $1, description = $2, condition = $3, colors = $4, location = $5, pics = $6
+       WHERE id = $7 RETURNING *`,
+      [price, description, condition, colorsArray, location, bufferPics, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating listing:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 module.exports = router; 

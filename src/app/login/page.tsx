@@ -7,16 +7,28 @@ import { Button, TextField, Typography, Container, Box, Tabs, Tab, Link } from '
 import { useRouter } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react';
 
+// const validationSchema = Yup.object({
+//   email: Yup.string().email('Invalid email address').required('Email is required'),
+//   password: Yup.string().max(9, 'Password must be less than 10 characters').required('Password is required'),
+//   confirmPassword: Yup.string().oneOf([Yup.ref('password')], 'Passwords must match')
+// });
+
 const validationSchema = Yup.object({
-  email: Yup.string().email('Invalid email address').required('Email is required'),
-  password: Yup.string().max(9, 'Password must be less than 10 characters').required('Password is required'),
-  confirmPassword: Yup.string().oneOf([Yup.ref('password')], 'Passwords must match')
+  email: Yup.string()
+    .email('Invalid email address')
+    .matches(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[Ee][Dd][Uu]$/, 'Email must be a .edu address')
+    .required('Email is required'),
+  password: Yup.string()
+    .max(9, 'Password must be less than 10 characters')
+    .required('Password is required'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password')], 'Passwords must match'),
 });
 
 const LoginPage = () => {
   const [value, setValue] = React.useState(0); // 0 for Sign In, 1 for Sign Up
   const router = useRouter();
-  const { data: session } = useSession(); 
+  // const { data: session } = useSession(); 
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -59,21 +71,20 @@ const LoginPage = () => {
           const signInRes = await signIn("credentials", {
             email: values.email,
             password: values.password,
-            redirect: false, 
+            callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/setup-profile?isNewUser=true&email=${values.email}`, // Redirect new users to setup-profile
+            redirect: false,
           });
-        
+          
           if (signInRes?.ok) {
-            router.push('/furniture');
+            router.push('/setup-profile');
           } else {
-            alert('Error signing up, please try again')
-            console.error("Auto sign-in failed after sign-up");
+            alert('Error signing up, please try again');
           }
         } else {
-          alert('Error signing up, please try again')
-          console.log("Registration failed");
+          alert('Error signing up, please try again');
         }
       }
-      formik.resetForm(); 
+      formik.resetForm();
     },
   });
 
