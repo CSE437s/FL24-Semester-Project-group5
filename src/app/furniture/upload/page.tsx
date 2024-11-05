@@ -20,8 +20,9 @@ import * as Yup from 'yup';
 export default function ListingUpload() {
   const [files, setFiles] = React.useState<File[]>([]);
   const [fileNames, setFileNames] = React.useState<string[]>([]);
-  const { data: session, status } = useSession();  
-    const router = useRouter();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const MAX_FILE_SIZE = 65 * 1024;
 
   const colorItems: any[] = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Black', 'Grey'];
 
@@ -94,6 +95,11 @@ export default function ListingUpload() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selectedFiles = Array.from(event.target.files);
+      const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
+      if (oversizedFiles.length > 0) {
+        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64 KB.`);
+        return;
+      }
       setFiles(selectedFiles);
       setFileNames(selectedFiles.map((file) => file.name));
     }
@@ -164,7 +170,7 @@ export default function ListingUpload() {
         error={formik.touched.condition && Boolean(formik.errors.condition)}
         helperText={formik.touched.condition && formik.errors.condition}
       />
-          <TextField
+      <TextField
         id="outlined-location"
         label="Pick up Location"
         variant="outlined"
