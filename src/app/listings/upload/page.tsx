@@ -118,7 +118,8 @@ export default function ListingUpload() {
       const selectedFiles = Array.from(event.target.files);
       const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
       if (oversizedFiles.length > 0) {
-        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64 KB.`);
+        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64KB.`);
+
         return;
       }
       setFiles(selectedFiles);
