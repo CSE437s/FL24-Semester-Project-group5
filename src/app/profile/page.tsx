@@ -162,7 +162,7 @@ const ProfileContent = () => {
                 title={item.description}
                 price={`$${item.price}`}
                 imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
-                linkDestination={`/furniture/edit/${item.id}`}
+                linkDestination={`/furniture/${item.id}`}
               />
             </Grid>
           ))}
@@ -185,7 +185,7 @@ const ProfileContent = () => {
                 address={item.location}
                 price={`$${item.price}`}
                 imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
-                linkDestination={`/listings/edit/${item.id}`}
+                linkDestination={`/listings/${item.id}`}
               />
             </Grid>
           ))}
