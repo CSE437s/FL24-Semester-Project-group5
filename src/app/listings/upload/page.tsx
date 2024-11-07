@@ -118,7 +118,8 @@ export default function ListingUpload() {
       const selectedFiles = Array.from(event.target.files);
       const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
       if (oversizedFiles.length > 0) {
-        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64 KB.`);
+        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64KB.`);
+
         return;
       }
       setFiles(selectedFiles);
@@ -145,17 +146,16 @@ export default function ListingUpload() {
   };
 
   return (
-    <Box
-      component="form"
-      sx={{ '& > :not(style)': { m: 2, width: '25ch' } }}
-      noValidate
-      autoComplete="off"
+    <form
       onSubmit={formik.handleSubmit}
+      className="flex flex-col items-center gap-4 p-8 border border-gray-200 w-full max-w-2xl mx-auto bg-white shadow-md rounded-lg"
     >
+      <h2 className="text-2xl font-semibold mb-4">New Apartment Listing</h2>
+      
       <TextField
-        id="outlined-title"
         label="Title"
         variant="outlined"
+        fullWidth
         name="title"
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
@@ -163,7 +163,8 @@ export default function ListingUpload() {
         error={formik.touched.title && Boolean(formik.errors.title)}
         helperText={formik.touched.title && formik.errors.title}
       />
-      <FormControl fullWidth sx={{ m: 1 }}>
+  
+      <FormControl fullWidth variant="outlined">
         <InputLabel htmlFor="outlined-adornment-price">Listing Price</InputLabel>
         <OutlinedInput
           id="outlined-adornment-price"
@@ -177,14 +178,15 @@ export default function ListingUpload() {
           error={formik.touched.price && Boolean(formik.errors.price)}
         />
         {formik.touched.price && formik.errors.price && (
-          <div style={{ color: 'red' }}>{formik.errors.price}</div>
+          <p className="text-red-500 text-sm mt-1">{formik.errors.price}</p>
         )}
       </FormControl>
+  
       <TextField
-        id="outlined-description"
         label="Description"
         multiline
         rows={4}
+        fullWidth
         name="description"
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
@@ -192,10 +194,11 @@ export default function ListingUpload() {
         error={formik.touched.description && Boolean(formik.errors.description)}
         helperText={formik.touched.description && formik.errors.description}
       />
+  
       <TextField
-        id="outlined-location"
         label="Location"
         variant="outlined"
+        fullWidth
         name="location"
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
@@ -203,10 +206,11 @@ export default function ListingUpload() {
         error={formik.touched.location && Boolean(formik.errors.location)}
         helperText={formik.touched.location && formik.errors.location}
       />
+  
       <TextField
-        id="outlined-availability"
         label="Availability"
         variant="outlined"
+        fullWidth
         name="availability"
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
@@ -214,11 +218,12 @@ export default function ListingUpload() {
         error={formik.touched.availability && Boolean(formik.errors.availability)}
         helperText={formik.touched.availability && formik.errors.availability}
       />
+  
       <TextField
-        id="outlined-bedrooms"
         label="Bedrooms"
         type="number"
         variant="outlined"
+        fullWidth
         name="bedrooms"
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
@@ -226,11 +231,12 @@ export default function ListingUpload() {
         error={formik.touched.bedrooms && Boolean(formik.errors.bedrooms)}
         helperText={formik.touched.bedrooms && formik.errors.bedrooms}
       />
+  
       <TextField
-        id="outlined-bathrooms"
         label="Bathrooms"
         type="number"
         variant="outlined"
+        fullWidth
         name="bathrooms"
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
@@ -238,11 +244,12 @@ export default function ListingUpload() {
         error={formik.touched.bathrooms && Boolean(formik.errors.bathrooms)}
         helperText={formik.touched.bathrooms && formik.errors.bathrooms}
       />
+  
       <TextField
-        id="outlined-amenities"
         label="Amenities"
         multiline
         rows={4}
+        fullWidth
         name="amenities"
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
@@ -250,11 +257,12 @@ export default function ListingUpload() {
         error={formik.touched.amenities && Boolean(formik.errors.amenities)}
         helperText={formik.touched.amenities && formik.errors.amenities}
       />
+  
       <TextField
-        id="outlined-policies"
         label="Policies"
         multiline
         rows={4}
+        fullWidth
         name="policies"
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
@@ -262,11 +270,13 @@ export default function ListingUpload() {
         error={formik.touched.policies && Boolean(formik.errors.policies)}
         helperText={formik.touched.policies && formik.errors.policies}
       />
+  
       <Button
         variant="contained"
         component="label"
+        className="w-full mt-4"
       >
-        {fileNames.length > 0 ? `${fileNames.join(', ')}` : 'Upload File'}
+        {fileNames.length > 0 ? `Uploaded File: ${fileNames.join(', ')}` : 'Upload Image'}
         <input
           type="file"
           hidden
@@ -274,13 +284,27 @@ export default function ListingUpload() {
           multiple
         />
       </Button>
+  
+      {files.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {files.map((file, index) => (
+            <div key={index} className="w-24 h-24 rounded-md overflow-hidden shadow-sm">
+              <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
+            </div>
+          ))}
+        </div>
+      )}
+  
       <Button
         type="submit"
         variant="contained"
         disabled={!formik.isValid || !formik.dirty}
+        className="w-full mt-6 bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-200"
       >
         Submit Listing
       </Button>
-    </Box>
+    </form>
   );
+  
+  
 }

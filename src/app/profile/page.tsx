@@ -1,7 +1,8 @@
 "use client";
 
+
 import { useSession } from 'next-auth/react';
-import { Container, Typography, Box, CircularProgress, Grid } from '@mui/material';
+import { Container, Typography, Box, CircularProgress, Grid, Avatar, Card, CardMedia } from '@mui/material';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import FurnitureCard from '../components/furniture-card';
@@ -9,26 +10,32 @@ import Link from 'next/link';
 import { ApartmentCard } from '../components/apartment-card';
 
 
+
+
 type UserProfile = {
-  email: string;
-  name: string | null;
-  bio: string | null;
+ email: string;
+ name: string | null;
+ bio: string | null;
 };
+
 
 type FurnitureListing = {
-  id: number;
-  description: string;
-  price: number;
-  pics: string[];
+ id: number;
+ description: string;
+ price: number;
+ pics: string[];
 };
 
+
 type ApartmentListing = {
-  id: number;
-  description: string;
-  price: number;
-  pics: string[];
-  location: string;
+ id: number;
+ description: string;
+ price: number;
+ pics: string[];
+ location: string;
 };
+
+
 
 
 const ProfileContent = () => {
@@ -155,7 +162,7 @@ const ProfileContent = () => {
                 title={item.description}
                 price={`$${item.price}`}
                 imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
-                linkDestination={`/furniture/edit/${item.id}`}
+                linkDestination={`/furniture/${item.id}`}
               />
             </Grid>
           ))}
@@ -178,7 +185,7 @@ const ProfileContent = () => {
                 address={item.location}
                 price={`$${item.price}`}
                 imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
-                linkDestination={`/listings/edit/${item.id}`}
+                linkDestination={`/listings/${item.id}`}
               />
             </Grid>
           ))}
@@ -246,10 +253,12 @@ const ProfileContent = () => {
   );
 };
 
+
 const Profile = () => (
-  <Suspense fallback={<CircularProgress />}>
-    <ProfileContent />
-  </Suspense>
+ <Suspense fallback={<CircularProgress />}>
+   <ProfileContent />
+ </Suspense>
 );
+
 
 export default Profile;
