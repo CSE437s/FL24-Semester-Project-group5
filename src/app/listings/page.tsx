@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 
 interface ApartmentItems {
   id: number;
-  userId: number;
+  user_id: number;
   price: number;
   location: string;
   amenities: string;
@@ -130,7 +130,6 @@ const Listings = () => {
     hi.push(item.location);
   });
 
-
   return (
     <div className="flex flex-col  lg:flex-row p-8 space-x-0 lg:space-x-4">
   {/* Map Section */}
@@ -157,12 +156,16 @@ const Listings = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 p-1">
         {filteredItems.map((item) => (
           <div key={item.id} className="auto">
+        
             <ApartmentCard
               title={item.description || "Apartment"}
               address={item.location}
               price={`$${item.price}`}
               imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
-              linkDestination={`/listings/${item.id}`}
+              
+              linkDestination= {item.user_id === session?.user.id 
+                ? `/listings/edit/${item.id}` 
+                : `/listings/${item.id}`}
             />
           </div>
         ))}

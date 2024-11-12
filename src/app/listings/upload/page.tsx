@@ -12,11 +12,13 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import LocationDropdown from '../../components/location-dropdown';
 
 export default function ListingUpload() {
   const [files, setFiles] = React.useState<File[]>([]);
   const [fileNames, setFileNames] = React.useState<string[]>([]);
   const { data: session } = useSession();
+  const [location, setLocation] = React.useState('');
   const router = useRouter();
   const MAX_FILE_SIZE = 65 * 1024;
 
@@ -32,9 +34,6 @@ export default function ListingUpload() {
     description: Yup.string()
       .min(5, 'Description must be at least 5 characters')
       .required('Description is required'),
-    location: Yup.string()
-      .min(5, 'Location must be at least 5 characters')
-      .required('Location is required'),
     availability: Yup.string()
       .min(5, 'Availability must be at least 5 characters')
       .required('Availability is required'),
@@ -60,7 +59,6 @@ export default function ListingUpload() {
       title: '',
       price: 0,
       description: '',
-      location: '',
       availability: '',
       bedrooms: 0,
       bathrooms: 0,
@@ -74,6 +72,7 @@ export default function ListingUpload() {
         ...values,
         pics: byteArrays,
         user_id: session?.user?.id,
+        location,
       };
 
       const checkUserResponse = await fetch('http://localhost:5001/api/furniture/check-or-add-user', {
@@ -194,19 +193,7 @@ export default function ListingUpload() {
         error={formik.touched.description && Boolean(formik.errors.description)}
         helperText={formik.touched.description && formik.errors.description}
       />
-  
-      <TextField
-        label="Location"
-        variant="outlined"
-        fullWidth
-        name="location"
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.location}
-        error={formik.touched.location && Boolean(formik.errors.location)}
-        helperText={formik.touched.location && formik.errors.location}
-      />
-  
+      <LocationDropdown onLocationSelect={(selectedLocation) => setLocation(selectedLocation)} />
       <TextField
         label="Availability"
         variant="outlined"

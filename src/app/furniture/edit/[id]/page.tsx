@@ -16,6 +16,7 @@ export default function EditListing() {
   const [originalPics, setOriginalPics] = useState<string[]>([]);
   const [files, setFiles] = React.useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
 
   const formik = useFormik({
     initialValues: {

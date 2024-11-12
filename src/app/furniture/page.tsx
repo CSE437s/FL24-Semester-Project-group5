@@ -14,7 +14,7 @@ interface ColorData {
 }
 interface FurnitureItem {
   id: number;
-  userId: number; 
+  user_id: number; 
   price: number;
   description: string;
   condition: string;
@@ -39,7 +39,7 @@ const FurniturePage = () => {
       if(res){
         router.push('/login'); 
       }
-    } else {
+    } else  {
       router.push('/furniture/upload'); 
     }
   };
@@ -93,7 +93,10 @@ const FurniturePage = () => {
               title={item.description} 
               price={`$${item.price}`}
               imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
-              linkDestination={`/furniture/${item.id}`}
+              linkDestination={item.user_id === session?.user.id 
+                ? `/furniture/edit/${item.id}` : 
+                `/furniture/${item.id}`
+              }
             />
           </Grid>
         ))}

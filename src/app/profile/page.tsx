@@ -260,5 +260,4 @@ const Profile = () => (
  </Suspense>
 );
 
-
 export default Profile;

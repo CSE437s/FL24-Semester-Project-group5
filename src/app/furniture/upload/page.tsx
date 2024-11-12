@@ -16,14 +16,16 @@ import FormControl from '@mui/material/FormControl';
 import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import LocationDropdown from '../../components/location-dropdown';
 
 export default function ListingUpload() {
   const [files, setFiles] = React.useState<File[]>([]);
   const [fileNames, setFileNames] = React.useState<string[]>([]);
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const MAX_FILE_SIZE = 65 * 1024;
+  const [location, setLocation] = React.useState('');
 
+  const { data: session, status } = useSession();  
+    const router = useRouter();
+    const MAX_FILE_SIZE = 65 * 1024;
   const colorItems: any[] = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Black', 'Grey'];
 
   const validationSchema = Yup.object({
@@ -47,8 +49,8 @@ export default function ListingUpload() {
       price: '',
       description: '',
       condition: '',
-      colors: [''],
-      location: '',
+      colors: [],
+     
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
@@ -57,6 +59,7 @@ export default function ListingUpload() {
         ...values,
         pics: byteArrays,
         user_id: session?.user?.id,
+        location,
       };
 
       const checkUserResponse = await fetch('http://localhost:5001/api/furniture/check-or-add-user', {
@@ -173,21 +176,7 @@ export default function ListingUpload() {
         helperText={formik.touched.condition && formik.errors.condition}
         className="w-full"
       />
-      <TextField
-        id="outlined-location"
-        label="Pick up Location"
-        variant="outlined"
-        name="location"
-        fullWidth
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.location}
-        error={formik.touched.location && Boolean(formik.errors.location)}
-        helperText={formik.touched.location && formik.errors.location}
-        className="w-full"
-      />
-
-      <FormControl className="w-full">
+      <FormControl fullWidth sx={{ m: 1 }}>
         <InputLabel id="demo-multiple-checkbox-label">Color</InputLabel>
         <Select
           labelId="demo-multiple-checkbox-label"
@@ -208,10 +197,12 @@ export default function ListingUpload() {
             </MenuItem>
           ))}
         </Select>
+        
         {formik.touched.colors && formik.errors.colors && (
           <p className="text-red-500 text-sm mt-1">{formik.errors.colors}</p>
         )}
       </FormControl>
+      <LocationDropdown onLocationSelect={(selectedLocation) => setLocation(selectedLocation)} />
 
       <Button variant="contained" component="label" className="w-full mt-4">
         {fileNames.length > 0 ? `Uploaded Files: ${fileNames.join(', ')}` : 'Upload Image'}
