@@ -5,6 +5,6 @@ COPY prisma ./prisma
 RUN npm install
 COPY . .
 RUN npm i -g prisma 
-RUN prisma generate
+RUN npx prisma generate
 EXPOSE 3000
 CMD npm run dev
