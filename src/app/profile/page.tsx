@@ -161,7 +161,7 @@ const ProfileContent = () => {
               <FurnitureCard
                 title={item.description}
                 price={`$${item.price}`}
-                imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+                images={item.pics || ["https://via.placeholder.com/345x140"]}
                 linkDestination={`/furniture/${item.id}`}
               />
             </Grid>

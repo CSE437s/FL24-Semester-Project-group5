@@ -3,24 +3,43 @@ const router = express.Router();
 const pool = require('../../../db'); 
 
 router.get('/', async (req, res) => {
-  const { user_id } = req.query;
-  try {
-    const query = user_id
-      ? `SELECT fl.*, bu.rating 
-    FROM public."furniture_listing" fl 
-    JOIN public."business_user" bu 
-    ON bu.user_id = fl."user_id"
-    WHERE fl."user_id" = $1;`
-      : `SELECT fl.*, bu.rating 
-    FROM public."furniture_listing" fl 
-    JOIN public."business_user" bu 
-    ON bu.user_id = fl."user_id";`;
-    const result = await pool.query(query, user_id ? [user_id]: []);
 
-    const furnitures = result.rows.map(furniture => ({
-      ...furniture,
-      pics: furniture.pics.map(pic => `data:image/jpeg;base64,${Buffer.from(pic).toString('base64')}`),
-    }));
+  try {
+    const query =
+    `SELECT fl.*, 
+       bu.rating, 
+       '{}'::bytea[] AS pics
+FROM public."furniture_listing" fl
+JOIN public."business_user" bu
+  ON bu.user_id = fl."user_id"
+LEFT JOIN public."FurnitureImage" fi
+  ON fi."FurnitureListingId" = fl.id
+WHERE fi."imageData" IS NULL
+GROUP BY fl.id, bu.rating
+UNION 
+SELECT fl.*, 
+       bu.rating, 
+       ARRAY_AGG(fi."imageData") AS pics
+FROM public."furniture_listing" fl
+JOIN public."business_user" bu
+  ON bu.user_id = fl."user_id"
+JOIN public."FurnitureImage" fi
+  ON fi."FurnitureListingId" = fl.id
+GROUP BY fl.id, bu.rating;`;
+    const result = await pool.query(query);
+
+    const furnitures = result.rows.map(furniture => {
+      console.log("t", furniture.pics);
+      return {
+        ...furniture,
+        pics: furniture.pics.map(pic => {
+          return `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`; // Convert each Buffer to Base64
+        }),
+      };
+    });
+    
+
+    
 
     res.json(furnitures); 
   } catch (err) {
@@ -30,16 +49,34 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  console.log("two")
+ 
   const { id } = req.params;
 
   try {
     const result = await pool.query(
-      `SELECT fl.*, bu.rating, u.name
-       FROM public."furniture_listing" fl 
-       JOIN public."business_user" bu ON bu.user_id = fl."user_id" 
-       JOIN public."User" u on u.id = fl."user_id"
-       WHERE fl.id = $1`, [id] 
+      `SELECT fl.*, 
+       bu.rating, 
+       '{}'::bytea[] AS pics, u.name
+FROM public."furniture_listing" fl
+JOIN public."business_user" bu
+  ON bu.user_id = fl."user_id"
+LEFT JOIN public."FurnitureImage" fi
+  ON fi."FurnitureListingId" = fl.id
+JOIN public."User" u on u.id = fl."user_id"
+WHERE fi."imageData" IS NULL AND fl.id = $1
+GROUP BY fl.id, bu.rating,u.name
+UNION 
+SELECT fl.*, 
+       bu.rating, 
+       ARRAY_AGG(fi."imageData") AS pics, u.name
+FROM public."furniture_listing" fl
+JOIN public."business_user" bu
+  ON bu.user_id = fl."user_id"
+JOIN public."FurnitureImage" fi
+  ON fi."FurnitureListingId" = fl.id
+ JOIN public."User" u on u.id = fl."user_id"
+WHERE fl.id = $1
+GROUP BY fl.id, bu.rating,u.name;`, [id] 
     );
 
     if (result.rows.length === 0) {
@@ -48,7 +85,7 @@ router.get('/:id', async (req, res) => {
 
     const furniture = {
       ...result.rows[0],
-      pics: result.rows[0].pics.map(pic => `data:image/jpeg;base64,${Buffer.from(pic).toString('base64')}`),
+      pics: result.rows[0].pics.map(pic => `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`),
       
     };
 
@@ -87,34 +124,42 @@ router.post('/check-or-add-user', async (req, res) => {
 
 router.post('/upload', async (req, res) => {
   try {
-
     const { price, description, condition, pics, user_id, location, colors } = req.body;
+console.log(pics);
+    // Convert colors array to JSON string for storage
+    const colorsArray = colors ? JSON.stringify(colors) : null;
 
-    const bufferPics = pics ? pics.map(pic => Buffer.from(pic, 'base64')) : [];
-
-    const colorsArray = colors ? JSON.stringify(colors) : null; 
-
+    // Insert furniture listing into the database
     const result = await pool.query(
-      `INSERT INTO furniture_listing (user_id, price, description, condition, pics, colors, location)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [
-        user_id,
-        price,
-        description,
-        condition,
-        bufferPics,
-        colorsArray,
-        location
-      ]
+      `INSERT INTO furniture_listing (user_id, price, description, condition, colors, location)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [user_id, price, description, condition, colorsArray, location]
     );
 
-    res.status(201).json(result.rows[0]);
+    const furnitureListingId = result.rows[0].id;
+    console.log("bfs", pics, Array.isArray(pics));
+    if (Array.isArray(pics) && pics.length === 0) {
+     
+    } else if (Array.isArray(pics)) { 
+      for (const pic of pics) {
+        
+        const bufferPic = [Buffer.from(pic, 'base64')];
+console.log("bf", bufferPic);
+        await pool.query(
+          `INSERT INTO "FurnitureImage" ("imageData", "FurnitureListingId")
+           VALUES ($1, $2) RETURNING id`,
+          [bufferPic, furnitureListingId]
+        );
+      }
+    }
+
+    res.status(201).json({ data: result.rows[0] });
   } catch (error) {
     console.error('Error saving furniture listing:', error);
     if (error.name === 'ValidationError') {
-      return res.status(400).json({ error: error.message }); 
+      return res.status(400).json({ error: error.message });
     }
-    res.status(500).json({ error: 'Internal server error' }); 
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -169,13 +214,14 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 router.delete('/delete/:id', async (req, res) => {
   const { id } = req.params;
   try {
   
     const result = await pool.query('DELETE FROM public."furniture_listing" WHERE id = $1 RETURNING *', [id]);
-
-    if (result.rows.length) {
+    const result1 = await pool.query('DELETE FROM public."FurnitureImage" WHERE "FurnitureListingId" = $1 RETURNING *', [id]);
+    if (result.rows.length && result1.rows.length) {
       res.json({ message: 'Listing deleted successfully' });
     } else {
       res.status(404).json({ error: 'Listing not found' });

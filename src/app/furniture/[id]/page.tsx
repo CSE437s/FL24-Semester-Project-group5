@@ -6,8 +6,11 @@ import { useEffect, useState } from 'react';
 import Maps from '../../components/map-card';
 import { getCoordinatesOfAddress } from '../../utils'; 
 import { useSession } from 'next-auth/react';
+import { Swiper, SwiperSlide } from "swiper/react";
 
-
+import "swiper/css";
+import "swiper/css/navigation";
+import { Pagination } from 'swiper/modules';
 interface ColorData {
   colors: string[] | null;
 }
@@ -116,14 +119,33 @@ const FurnitureDescriptionPage = () => {
           padding: 4,
         }}
       >
-        <CardMedia
-          component="img"
-          height="300"
-          image={furnitureItem.pics[0] || "https://via.placeholder.com/400x300"}
-          alt="Listing Image"
-          // sx={{ objectFit: 'cover' }}
-          sx={{ borderRadius: 2 }}
-        />
+             {furnitureItem.pics.length > 1 ? (
+          // Carousel for multiple images
+          <Swiper
+            spaceBetween={10}
+            pagination={true}
+            modules={[Pagination]}
+            className="h-30 w-full"
+            
+          >
+            {furnitureItem.pics.map((imageUrl, index) => (
+              <SwiperSlide key={index}>
+                <img
+                  src={imageUrl}
+                  
+                  className="h-30 w-full object-cover"
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
+          // Single image
+          <img
+            src={furnitureItem.pics[0]}
+      
+            className="h-300 w-full object-cover border-b border-gray-300"
+          />
+        )}
         <CardContent>
 
           <Typography variant="h4" component="div" gutterBottom>

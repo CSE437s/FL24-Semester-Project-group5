@@ -50,7 +50,7 @@ CREATE TABLE "furniture_listing" (
     "description" TEXT NOT NULL,
     "condition" VARCHAR(20) NOT NULL,
     "colors" JSONB,
-    "pics" BYTEA[],
+    "location" TEXT NOT NULL,
 
     CONSTRAINT "furniture_listing_pkey" PRIMARY KEY ("id")
 );
@@ -74,11 +74,22 @@ CREATE TABLE "apartment_listing" (
     "description" TEXT,
     "availability" TEXT NOT NULL,
     "policies" TEXT,
-    "pics" BYTEA[],
     "bedrooms" INTEGER,
     "bathrooms" INTEGER,
 
     CONSTRAINT "apartment_listing_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "messages" (
+    "id" SERIAL NOT NULL,
+    "sender_id" TEXT NOT NULL,
+    "recipient_id" TEXT NOT NULL,
+    "message_text" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "conversation_id" TEXT,
+
+    CONSTRAINT "messages_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -93,24 +104,25 @@ CREATE TABLE "VerificationRequest" (
     CONSTRAINT "VerificationRequest_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE IF NOT EXISTS messages
-(
-    id integer NOT NULL DEFAULT nextval('messages_id_seq'::regclass),
-    sender_id text COLLATE pg_catalog."default" NOT NULL,
-    recipient_id text COLLATE pg_catalog."default" NOT NULL,
-    message_text text COLLATE pg_catalog."default" NOT NULL,
-    "timestamp" timestamp with time zone DEFAULT now(),
-    conversation_id text COLLATE pg_catalog."default",
-    CONSTRAINT messages_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_recipient_id_fkey FOREIGN KEY (recipient_id)
-        REFERENCES public."User" (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id)
-        REFERENCES public."User" (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-)
+-- CreateTable
+CREATE TABLE "FurnitureImage" (
+    "id" SERIAL NOT NULL,
+    "imageData" BYTEA[],
+    "imageType" TEXT NOT NULL,
+    "FurnitureListingId" INTEGER NOT NULL,
+
+    CONSTRAINT "FurnitureImage_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ApartmentImage" (
+    "id" SERIAL NOT NULL,
+    "imageData" BYTEA[],
+    "imageType" TEXT NOT NULL,
+    "ApartmentListingId" INTEGER NOT NULL,
+
+    CONSTRAINT "ApartmentImage_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Account_providerId_providerAccountId_key" ON "Account"("providerId", "providerAccountId");
@@ -144,3 +156,15 @@ ALTER TABLE "business_user" ADD CONSTRAINT "business_user_user_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "apartment_listing" ADD CONSTRAINT "apartment_listing_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "messages" ADD CONSTRAINT "messages_sender_id_fkey" FOREIGN KEY ("sender_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "messages" ADD CONSTRAINT "messages_recipient_id_fkey" FOREIGN KEY ("recipient_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FurnitureImage" ADD CONSTRAINT "FurnitureImage_FurnitureListingId_fkey" FOREIGN KEY ("FurnitureListingId") REFERENCES "furniture_listing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ApartmentImage" ADD CONSTRAINT "ApartmentImage_ApartmentListingId_fkey" FOREIGN KEY ("ApartmentListingId") REFERENCES "apartment_listing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

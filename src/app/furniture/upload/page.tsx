@@ -15,6 +15,7 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
 import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
+import CardMedia from '@mui/material/CardMedia';
 import * as Yup from 'yup';
 import LocationDropdown from '../../components/location-dropdown';
 
@@ -22,6 +23,8 @@ export default function ListingUpload() {
   const [files, setFiles] = React.useState<File[]>([]);
   const [fileNames, setFileNames] = React.useState<string[]>([]);
   const [location, setLocation] = React.useState('');
+  const [imagePreview, setImagePreview] = React.useState<string[]>([]);
+
 
   const { data: session, status } = useSession();  
     const router = useRouter();
@@ -54,7 +57,9 @@ export default function ListingUpload() {
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
+      console.log('setFiles',  files);
       const byteArrays = await convertFilesToByteArray();
+      console.log("b",byteArrays);
       const payload = {
         ...values,
         pics: byteArrays,
@@ -95,18 +100,29 @@ export default function ListingUpload() {
     },
   });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const selectedFiles = Array.from(event.target.files);
-      const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
-      if (oversizedFiles.length > 0) {
-        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64 KB.`);
-        return;
-      }
-      setFiles(selectedFiles);
-      setFileNames(selectedFiles.map((file) => file.name));
+const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  if (event.target.files) {
+    const newFiles = Array.from(event.target.files);
+
+    // Filter out files that exceed the maximum file size
+    const oversizedFiles = newFiles.filter(file => file.size > MAX_FILE_SIZE);
+    if (oversizedFiles.length > 0) {
+      alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64 KB.`);
+      return;
     }
-  };
+
+    // Append new files to the existing ones
+    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    
+    // Generate previews for all files
+    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+    setImagePreview((prevPreviews) => [...prevPreviews, ...newPreviews]);
+
+    // Append new file names to the existing list
+    setFileNames((prevFileNames) => [...prevFileNames, ...newFiles.map(file => file.name)]);
+  }
+};
+
 
   const convertFilesToByteArray = async () => {
     const byteArrays: string[] = await Promise.all(
@@ -124,6 +140,12 @@ export default function ListingUpload() {
     );
     return byteArrays;
   };
+
+  React.useEffect(() => {
+    return () => {
+      imagePreview.forEach(preview => URL.revokeObjectURL(preview));
+    };
+  }, [imagePreview]);
 
   return (
     <form onSubmit={formik.handleSubmit} className="flex flex-col items-center gap-4 p-6 w-full max-w-2xl mx-auto bg-white shadow-lg rounded-lg">
@@ -203,7 +225,19 @@ export default function ListingUpload() {
         )}
       </FormControl>
       <LocationDropdown onLocationSelect={(selectedLocation) => setLocation(selectedLocation)} />
-
+      {imagePreview.length > 0 && (
+  <Box className="flex flex-wrap gap-4">
+    {imagePreview.map((preview, index) => (
+      <CardMedia
+        key={index}
+        component="img"
+        className="h-56 object-cover w-[200px] border border-gray-300 rounded-md"
+        image={preview}
+        alt={`Preview ${index + 1}`}
+      />
+    ))}
+  </Box>
+)}
       <Button variant="contained" component="label" className="w-full mt-4">
         {fileNames.length > 0 ? `Uploaded Files: ${fileNames.join(', ')}` : 'Upload Image'}
         <input

@@ -81,26 +81,28 @@ const FurniturePage = () => {
     return isInPriceRange && isTagged && isInRating && isColorMatch;
   });
 
-
+console.log(filteredItems);
   return (
+
+    
     <div className="flex flex-col lg:flex-row gap-6 p-5 mx-10">
     {/* Grid container */}
     <div className="flex-grow">
-      <Grid container spacing={4}>
-        {filteredItems.map((item) => (
-          <Grid item key={item.id} xs={12} sm={6} md={4}>
-            <FurnitureCard
-              title={item.description} 
-              price={`$${item.price}`}
-              imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
-              linkDestination={item.user_id === session?.user.id 
-                ? `/furniture/edit/${item.id}` : 
-                `/furniture/${item.id}`
-              }
-            />
-          </Grid>
-        ))}
-      </Grid>
+    <Grid container spacing={4}>
+  {filteredItems.map((item) => (
+    <Grid item key={item.id} xs={12} sm={6} md={4}>
+      <FurnitureCard
+        title={item.description} 
+        price={`$${item.price}`}
+        images={item.pics && item.pics.length > 0 ? item.pics : ["https://via.placeholder.com/345x140"]}
+        linkDestination={item.user_id === session?.user.id 
+          ? `/furniture/edit/${item.id}` 
+          : `/furniture/${item.id}`
+        }
+      />
+    </Grid>
+  ))}
+</Grid>
     </div>
   
     {/* Filter container */}

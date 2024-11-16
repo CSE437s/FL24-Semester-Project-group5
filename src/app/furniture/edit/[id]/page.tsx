@@ -16,7 +16,7 @@ export default function EditListing() {
   const [originalPics, setOriginalPics] = useState<string[]>([]);
   const [files, setFiles] = React.useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  
+  const MAX_FILE_SIZE = 65 * 1024;
 
   const formik = useFormik({
     initialValues: {
@@ -87,6 +87,11 @@ export default function EditListing() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selectedFiles = Array.from(event.target.files);
+      const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
+      if (oversizedFiles.length > 0) {
+        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64 KB.`);
+        return;
+      }
       setFiles(selectedFiles);
       setFileNames(selectedFiles.map((file) => file.name));
       

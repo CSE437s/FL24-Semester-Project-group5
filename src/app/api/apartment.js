@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
          ON bu.user_id = al."user_id";`;
 
     const result = await pool.query(query, user_id ? [user_id] : []);
-
+  
     const apartments = result.rows.map(apartment => ({
       ...apartment,
       pics: apartment.pics.map(pic => `data:image/jpeg;base64,${Buffer.from(pic).toString('base64')}`),
@@ -69,10 +69,10 @@ router.post('/upload', async (req, res) => {
 
 
     const { price, location, amenities, description, availability, policies, pics, bedrooms, bathrooms, user_id } = req.body;
-
+    console.log(pics);
     // Ensure pics are processed correctly
     const bufferPics = pics ? pics.map(pic => Buffer.from(pic, 'base64')) : [];
-
+    console.log("Buffer size:", bufferPics);
     const result = await pool.query(
       `INSERT INTO apartment_listing (user_id, price, location, amenities, description, availability, policies, pics, bedrooms, bathrooms)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,

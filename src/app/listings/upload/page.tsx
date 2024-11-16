@@ -67,7 +67,9 @@ export default function ListingUpload() {
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
+      console.log('setFiles',  files);
       const byteArrays = await convertFilesToByteArray();
+      console.log("b",byteArrays);
       const payload = {
         ...values,
         pics: byteArrays,
