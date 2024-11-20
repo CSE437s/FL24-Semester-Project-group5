@@ -1,52 +1,85 @@
 "use client";
 
-import * as React from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import CardMedia from '@mui/material/CardMedia';
-import { Box, TextField, InputLabel, OutlinedInput, InputAdornment, Button, Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
-import { useEffect, useState } from 'react';
+import * as React from "react";
+import { useRouter, useParams } from "next/navigation";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import {
+  Box,
+  TextField,
+  InputLabel,
+  Typography,
+  CardActions,
+  OutlinedInput,
+  InputAdornment,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  CircularProgress,
+  Card,
+  CardMedia,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 
 export default function EditListing() {
-  const { id } = useParams();  
+  const { id } = useParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(true); 
-  const [fileNames, setFileNames] = React.useState<string[]>([]);
-  const [originalPics, setOriginalPics] = useState<string[]>([]);
-  const [files, setFiles] = React.useState<File[]>([]);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [files, setFiles] = useState<File[]>([]);
+  const [imagePreview, setImagePreview] = useState<string[]>([]);
   const MAX_FILE_SIZE = 65 * 1024;
 
   const formik = useFormik({
     initialValues: {
-      price: '',
-      description: '',
-      condition: '',
+      price: "",
+      description: "",
+      condition: "",
       colors: [],
-      location: '',
+      location: "",
     },
     validationSchema: Yup.object({
-      description: Yup.string().min(5, 'Description must be at least 5 characters').required('Description is required'),
-      price: Yup.number().min(0, 'Price must be at least 0').max(500, 'Price cannot exceed $500').required('Price is required'),
-      condition: Yup.string().min(3, 'Condition must be at least 3 characters').required('Condition is required'),
-      colors: Yup.array().min(1, 'At least one color must be selected').required('Color is required'),
+      description: Yup.string()
+        .min(5, "Description must be at least 5 characters")
+        .required("Description is required"),
+      price: Yup.number()
+        .min(0, "Price must be at least 0")
+        .max(500, "Price cannot exceed $500")
+        .required("Price is required"),
+      condition: Yup.string()
+        .min(3, "Condition must be at least 3 characters")
+        .required("Condition is required"),
+      colors: Yup.array()
+        .min(1, "At least one color must be selected")
+        .required("Color is required"),
     }),
     onSubmit: async (values) => {
       try {
-        const byteArrays = await convertFilesToByteArray();
+        const newFilesByteArrays = await convertFilesToByteArray(files);
+        const existingImagesByteArrays = imagePreview
+        .map((url) => url.split(",")[1])
+        .filter((byteArray) => byteArray !== undefined && byteArray !== null);
+        let allByteArrays;
+        if (existingImagesByteArrays[0] != undefined){
+           allByteArrays = [...existingImagesByteArrays, ...newFilesByteArrays];
+        }else{
+           allByteArrays = newFilesByteArrays;
+        }
+        
+        console.log(existingImagesByteArrays,newFilesByteArrays,allByteArrays );
         const payload = {
           ...values,
-          pics: byteArrays
+          pics: allByteArrays,
         };
+
         const response = await fetch(`http://localhost:5001/api/furniture/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
         if (response.ok) {
-          router.push('/profile');
+          router.push("/profile");
         } else {
           console.error("Failed to update listing:", response.statusText);
         }
@@ -69,8 +102,8 @@ export default function EditListing() {
             colors: data.colors,
             location: data.location,
           });
-          setOriginalPics(data.pics);
-          setImagePreview(data.pics[0]);
+
+          setImagePreview(data.pics); // Assuming `data.pics` contains base64 strings
         } else {
           console.error("Failed to fetch listing data");
         }
@@ -87,49 +120,53 @@ export default function EditListing() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selectedFiles = Array.from(event.target.files);
-      const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
+      const oversizedFiles = selectedFiles.filter((file) => file.size > MAX_FILE_SIZE);
+
       if (oversizedFiles.length > 0) {
-        alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64 KB.`);
+        alert(
+          `The following files are too large: ${oversizedFiles
+            .map((file) => file.name)
+            .join(", ")}. Each file must be under 64 KB.`
+        );
         return;
       }
-      setFiles(selectedFiles);
-      setFileNames(selectedFiles.map((file) => file.name));
-      
-     
-      const previewUrl = URL.createObjectURL(selectedFiles[0]);
-      setImagePreview(previewUrl);
 
-      return () => URL.revokeObjectURL(previewUrl);
+      setFiles((prev) => [...prev, ...selectedFiles]);
+      const previewUrls = selectedFiles.map((file) => URL.createObjectURL(file));
+      setImagePreview((prev) => [...prev, ...previewUrls]);
     }
   };
 
-  const convertFilesToByteArray = async () => {
-    const byteArrays = files.length > 0
-      ? await Promise.all(
-          files.map(file => {
-            return new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const byteString = reader.result as string;
-                resolve(byteString.split(',')[1]);
-              };
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            });
-          })
-        )
-      : originalPics.map(pic => pic.split(',')[1]);; 
+  const convertFilesToByteArray = async (fileList: File[]) => {
+    const byteArrays = await Promise.all(
+      fileList.map((file) => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const byteString = reader.result as string;
+            resolve(byteString.split(",")[1]); // Extract base64 part
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      })
+    );
     return byteArrays;
   };
+
+  const handleDeletePic = (imageUrl: string) => {
+    setImagePreview((prev) => prev.filter((image) => image !== imageUrl));
+  };
+
   const handleDelete = async () => {
     const confirmDelete = confirm("Are you sure you want to delete this listing?");
     if (confirmDelete) {
       try {
         const response = await fetch(`http://localhost:5001/api/furniture/delete/${id}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
         if (response.ok) {
-          router.push('/furniture');
+          router.push("/furniture");
         } else {
           console.error("Failed to delete listing data");
         }
@@ -139,11 +176,11 @@ export default function EditListing() {
     }
   };
 
-
   if (loading) return <CircularProgress />;
 
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
+
       <TextField
         label="Description"
         variant="outlined"
@@ -202,29 +239,38 @@ export default function EditListing() {
           ))}
         </Select>
       </FormControl>
+      {/* Image Previews */}
+      <Box display="flex" flexWrap="wrap" gap={2}>
+        {imagePreview.map((imageUrl, index) => (
+          <Card key={index} sx={{ width: 200, padding: 1 }}>
+            <CardMedia
+              component="img"
+              image={imageUrl}
+              alt={`Image ${index + 1}`}
+              sx={{ height: 120, objectFit: "cover" }}
+            />
+            <Typography variant="body2" sx={{ textAlign: "center", mt: 1 }}>
+              Image {index + 1}
+            </Typography>
+            <CardActions>
+              <Button variant="outlined" color="error" onClick={() => handleDeletePic(imageUrl)}>
+                Delete
+              </Button>
+            </CardActions>
+          </Card>
+        ))}
+      </Box>
 
-      {imagePreview && (
-        <CardMedia
-          component="img"
-          className="h-56 object-cover w-[400px] border-b border-gray-300 "
-          image={imagePreview}
-          alt="Apartment preview"
-        />
-      )}
       <Button variant="contained" component="label">
-        {imagePreview ? `Change Image` : 'Upload Image'}
-        <input
-          type="file"
-          hidden
-          onChange={handleFileChange}
-          multiple
-        />
-
+        Upload Images
+        <input type="file" hidden onChange={handleFileChange} multiple />
       </Button>
       <Button variant="contained" color="secondary" onClick={handleDelete}>
         Delete Listing
       </Button>
-      <Button type="submit" variant="contained">Save Changes</Button>
+      <Button type="submit" variant="contained">
+        Save Changes
+      </Button>
     </Box>
   );
 }

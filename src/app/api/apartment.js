@@ -10,23 +10,39 @@ router.get('/', async (req, res) => {
   const { user_id } = req.query;
 
   try {
-    const query = user_id
-      ? `SELECT al.*, bu.rating 
-         FROM public."apartment_listing" al 
-         JOIN public."business_user" bu 
-         ON bu.user_id = al."user_id"
-         WHERE al."user_id" = $1;`
-      : `SELECT al.*, bu.rating 
-         FROM public."apartment_listing" al 
-         JOIN public."business_user" bu 
-         ON bu.user_id = al."user_id";`;
+    const query =  await pool.query(`SELECT fl.*, 
+       bu.rating, 
+       '{}'::bytea[] AS pics
+FROM public."apartment_listing" fl
+JOIN public."business_user" bu
+  ON bu.user_id = fl."user_id"
+LEFT JOIN public."ApartmentImage" fi
+  ON fi."ApartmentListingId" = fl.id
+WHERE fi."imageData" IS NULL
+GROUP BY fl.id, bu.rating
+UNION 
+SELECT fl.*, 
+       bu.rating, 
+       ARRAY_AGG(fi."imageData") AS pics
+FROM public."apartment_listing" fl
+JOIN public."business_user" bu
+  ON bu.user_id = fl."user_id"
+JOIN public."ApartmentImage" fi
+  ON fi."ApartmentListingId" = fl.id
+GROUP BY fl.id, bu.rating;
+`,[user_id]);
 
-    const result = await pool.query(query, user_id ? [user_id] : []);
-  
-    const apartments = result.rows.map(apartment => ({
-      ...apartment,
-      pics: apartment.pics.map(pic => `data:image/jpeg;base64,${Buffer.from(pic).toString('base64')}`),
-    }));
+const result = await pool.query(query);
+
+const apartments = result.rows.map(apartment => {
+ 
+  return {
+    ...apartment,
+    pics: apartment.pics.map(pic => {
+      return `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`; 
+    }),
+  };
+});
     
     res.json(apartments); 
   } catch (err) {
@@ -41,10 +57,29 @@ router.get('/:id', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT al.*, bu.rating 
-       FROM public.apartment_listing al 
-       JOIN public."business_user" bu ON bu.user_id = al.user_id 
-       WHERE al.id = $1`, [id] // Use parameterized queries
+      `SELECT fl.*, 
+       bu.rating, 
+       '{}'::bytea[] AS pics, u.name
+FROM public."apartment_listing" fl
+JOIN public."business_user" bu
+  ON bu.user_id = fl."user_id"
+LEFT JOIN public."ApartmentImage" fi
+  ON fi."ApartmentListingId" = fl.id
+JOIN public."User" u on u.id = fl."user_id"
+WHERE fi."imageData" IS NULL AND fl.id = $1
+GROUP BY fl.id, bu.rating,u.name
+UNION 
+SELECT fl.*, 
+       bu.rating, 
+       ARRAY_AGG(fi."imageData") AS pics, u.name
+FROM public."apartment_listing" fl
+JOIN public."business_user" bu
+  ON bu.user_id = fl."user_id"
+JOIN public."ApartmentImage" fi
+  ON fi."ApartmentListingId" = fl.id
+ JOIN public."User" u on u.id = fl."user_id"
+ WHERE fl.id = $1
+GROUP BY fl.id, bu.rating,u.name;`, [id]
     );
 
     if (result.rows.length === 0) {

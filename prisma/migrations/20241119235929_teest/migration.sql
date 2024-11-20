@@ -108,7 +108,6 @@ CREATE TABLE "VerificationRequest" (
 CREATE TABLE "FurnitureImage" (
     "id" SERIAL NOT NULL,
     "imageData" BYTEA[],
-    "imageType" TEXT NOT NULL,
     "FurnitureListingId" INTEGER NOT NULL,
 
     CONSTRAINT "FurnitureImage_pkey" PRIMARY KEY ("id")
@@ -118,7 +117,6 @@ CREATE TABLE "FurnitureImage" (
 CREATE TABLE "ApartmentImage" (
     "id" SERIAL NOT NULL,
     "imageData" BYTEA[],
-    "imageType" TEXT NOT NULL,
     "ApartmentListingId" INTEGER NOT NULL,
 
     CONSTRAINT "ApartmentImage_pkey" PRIMARY KEY ("id")
@@ -162,9 +160,3 @@ ALTER TABLE "messages" ADD CONSTRAINT "messages_sender_id_fkey" FOREIGN KEY ("se
 
 -- AddForeignKey
 ALTER TABLE "messages" ADD CONSTRAINT "messages_recipient_id_fkey" FOREIGN KEY ("recipient_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "FurnitureImage" ADD CONSTRAINT "FurnitureImage_FurnitureListingId_fkey" FOREIGN KEY ("FurnitureListingId") REFERENCES "furniture_listing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ApartmentImage" ADD CONSTRAINT "ApartmentImage_ApartmentListingId_fkey" FOREIGN KEY ("ApartmentListingId") REFERENCES "apartment_listing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

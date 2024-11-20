@@ -114,7 +114,7 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Append new files to the existing ones
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
     
-    // Generate previews for all files
+    // Generate previews for all files 
     const newPreviews = newFiles.map(file => URL.createObjectURL(file));
     setImagePreview((prevPreviews) => [...prevPreviews, ...newPreviews]);
 

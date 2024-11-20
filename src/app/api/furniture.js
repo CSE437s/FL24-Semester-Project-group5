@@ -29,7 +29,7 @@ GROUP BY fl.id, bu.rating;`;
     const result = await pool.query(query);
 
     const furnitures = result.rows.map(furniture => {
-      console.log("t", furniture.pics);
+     
       return {
         ...furniture,
         pics: furniture.pics.map(pic => {
@@ -37,8 +37,6 @@ GROUP BY fl.id, bu.rating;`;
         }),
       };
     });
-    
-
     
 
     res.json(furnitures); 
@@ -193,16 +191,34 @@ console.log(user_id);
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { price, description, condition, colors, location, pics } = req.body;
-  const bufferPics = pics ? pics.map(pic => Buffer.from(pic, 'base64')) : [];
+  
   try {
     const colorsArray = colors ? JSON.stringify(colors) : null;
 
     const result = await pool.query(
       `UPDATE public."furniture_listing"
-       SET price = $1, description = $2, condition = $3, colors = $4, location = $5, pics = $6
-       WHERE id = $7 RETURNING *`,
-      [price, description, condition, colorsArray, location, bufferPics, id]
+       SET price = $1, description = $2, condition = $3, colors = $4, location = $5
+       WHERE id = $6 RETURNING *`,
+      [price, description, condition, colorsArray, location, id]
     );
+  const result1 = await pool.query(
+    `Delete FROM public."FurnitureImage"
+       WHERE "FurnitureListingId" = $1 `,
+      [id]
+  );  
+  if (Array.isArray(pics) && pics.length > 0) { 
+      for (const pic of pics) {
+        console.log(pic);
+        const bufferPic = [Buffer.from(pic, 'base64')];
+console.log("bf", bufferPic);
+        await pool.query(
+          `INSERT INTO "FurnitureImage" ("imageData", "FurnitureListingId")
+           VALUES ($1, $2) RETURNING id`,
+          [bufferPic, id]
+        );
+      }
+    }
+
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Listing not found" });
