@@ -18,7 +18,7 @@ interface FurnitureCardProps {
 }
 import { Pagination } from 'swiper/modules';
 const FurnitureCard = ({ title, price, images, linkDestination }: FurnitureCardProps) => {
-  console.log("hi",images[0]);
+  
   return (
     <Link href={linkDestination} passHref>
       <Card className="w-full sm:w-52 md:w-60 lg:w-72  border border-gray-300 rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">

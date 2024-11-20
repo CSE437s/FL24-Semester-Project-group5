@@ -184,7 +184,7 @@ const ProfileContent = () => {
                 title={item.description}
                 address={item.location}
                 price={`$${item.price}`}
-                imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+                images={item.pics || ["https://via.placeholder.com/345x140"]}
                 linkDestination={`/listings/${item.id}`}
               />
             </Grid>
@@ -208,7 +208,7 @@ const ProfileContent = () => {
             <FurnitureCard
               title={item.description}
               price={`$${item.price}`}
-              imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+              images={item.pics || ["https://via.placeholder.com/345x140"]}
               linkDestination={`/furniture/edit/${item.id}`}
             />
           </Grid>
@@ -231,7 +231,7 @@ const ProfileContent = () => {
               title={item.description}
               address={item.location}
               price={`$${item.price}`}
-              imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+              images={item.pics || ["https://via.placeholder.com/345x140"]}
               linkDestination={`/listings/edit/${item.id}`}
             />
           </Grid>

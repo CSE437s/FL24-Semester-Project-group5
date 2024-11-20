@@ -123,8 +123,8 @@ router.post('/check-or-add-user', async (req, res) => {
 router.post('/upload', async (req, res) => {
   try {
     const { price, description, condition, pics, user_id, location, colors } = req.body;
-console.log(pics);
-    // Convert colors array to JSON string for storage
+
+   
     const colorsArray = colors ? JSON.stringify(colors) : null;
 
     // Insert furniture listing into the database
@@ -142,7 +142,7 @@ console.log(pics);
       for (const pic of pics) {
         
         const bufferPic = [Buffer.from(pic, 'base64')];
-console.log("bf", bufferPic);
+
         await pool.query(
           `INSERT INTO "FurnitureImage" ("imageData", "FurnitureListingId")
            VALUES ($1, $2) RETURNING id`,

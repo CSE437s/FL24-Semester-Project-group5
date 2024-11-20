@@ -11,6 +11,7 @@ import Button from '@mui/material/Button';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
+import CardMedia from '@mui/material/CardMedia';
 import * as Yup from 'yup';
 import LocationDropdown from '../../components/location-dropdown';
 
@@ -20,6 +21,7 @@ export default function ListingUpload() {
   const { data: session } = useSession();
   const [location, setLocation] = React.useState('');
   const router = useRouter();
+  const [imagePreview, setImagePreview] = React.useState<string[]>([]);
   const MAX_FILE_SIZE = 65 * 1024;
 
   // Validation schema for Formik using Yup
@@ -116,15 +118,22 @@ export default function ListingUpload() {
   // Handle file input change and update file names
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const selectedFiles = Array.from(event.target.files);
-      const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
+      const newFiles = Array.from(event.target.files);
+      const oversizedFiles = newFiles.filter(file => file.size > MAX_FILE_SIZE);
       if (oversizedFiles.length > 0) {
         alert(`The following files are too large: ${oversizedFiles.map(file => file.name).join(', ')}. Each file must be under 64KB.`);
 
         return;
       }
-      setFiles(selectedFiles);
-      setFileNames(selectedFiles.map((file) => file.name));
+    // Append new files to the existing ones
+    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    
+    // Generate previews for all files 
+    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+    setImagePreview((prevPreviews) => [...prevPreviews, ...newPreviews]);
+
+    // Append new file names to the existing list
+    setFileNames((prevFileNames) => [...prevFileNames, ...newFiles.map(file => file.name)]);
     }
   };
 
@@ -145,7 +154,11 @@ export default function ListingUpload() {
     );
     return byteArrays;
   };
-
+  React.useEffect(() => {
+    return () => {
+      imagePreview.forEach(preview => URL.revokeObjectURL(preview));
+    };
+  }, [imagePreview]);
   return (
     <form
       onSubmit={formik.handleSubmit}
@@ -259,13 +272,21 @@ export default function ListingUpload() {
         error={formik.touched.policies && Boolean(formik.errors.policies)}
         helperText={formik.touched.policies && formik.errors.policies}
       />
-  
-      <Button
-        variant="contained"
-        component="label"
-        className="w-full mt-4"
-      >
-        {fileNames.length > 0 ? `Uploaded File: ${fileNames.join(', ')}` : 'Upload Image'}
+{imagePreview.length > 0 && (
+  <Box className="flex flex-wrap gap-4">
+    {imagePreview.map((preview, index) => (
+      <CardMedia
+        key={index}
+        component="img"
+        className="h-56 object-cover w-[200px] border border-gray-300 rounded-md"
+        image={preview}
+        alt={`Preview ${index + 1}`}
+      />
+    ))}
+  </Box>
+)}
+      <Button variant="contained" component="label" className="w-full mt-4">
+        {fileNames.length > 0 ? `Uploaded Files: ${fileNames.join(', ')}` : 'Upload Image'}
         <input
           type="file"
           hidden
@@ -274,15 +295,7 @@ export default function ListingUpload() {
         />
       </Button>
   
-      {files.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {files.map((file, index) => (
-            <div key={index} className="w-24 h-24 rounded-md overflow-hidden shadow-sm">
-              <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
-            </div>
-          ))}
-        </div>
-      )}
+
   
       <Button
         type="submit"

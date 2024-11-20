@@ -5,17 +5,17 @@ import { useRouter, useParams } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import CardMedia from '@mui/material/CardMedia';
-import { Box, TextField, InputLabel, OutlinedInput, InputAdornment, Button, FormControl, CircularProgress } from '@mui/material';
+import { Box, TextField, CardActions, Card,Typography, InputLabel, OutlinedInput, InputAdornment, Button, FormControl, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 export default function EditApartmentListing() {
   const { id } = useParams();  
   const router = useRouter();
   const [loading, setLoading] = useState(true); 
-  const [fileNames, setFileNames] = React.useState<string[]>([]);
-  const [originalPics, setOriginalPics] = useState<string[]>([]);
-  const [files, setFiles] = React.useState<File[]>([]);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const MAX_FILE_SIZE = 65 * 1024;
+
   const formik = useFormik({
     initialValues: {
       price: '',
@@ -39,10 +39,21 @@ export default function EditApartmentListing() {
     }),
     onSubmit: async (values) => {
       try {
-        const byteArrays = await convertFilesToByteArray();
+        const newFilesByteArrays = await convertFilesToByteArray();
+        const existingImagesByteArrays = imagePreview
+        .map((url) => url.split(",")[1])
+        .filter((byteArray) => byteArray !== undefined && byteArray !== null);
+        let allByteArrays;
+        if (existingImagesByteArrays[0] != undefined){
+           allByteArrays = [...existingImagesByteArrays, ...newFilesByteArrays];
+        }else{
+           allByteArrays = newFilesByteArrays;
+        }
+        
+        console.log(existingImagesByteArrays,newFilesByteArrays,allByteArrays );
         const payload = {
           ...values,
-          pics: byteArrays
+          pics: allByteArrays
         };
         const response = await fetch(`http://localhost:5001/api/apartment/${id}`, {
           method: 'PUT',
@@ -78,8 +89,8 @@ export default function EditApartmentListing() {
             policies: data.policies,
 
           });
-          setOriginalPics(data.pics);
-          setImagePreview(data.pics[0]);
+        
+          setImagePreview(data.pics);
           
         } else {
           console.error("Failed to fetch listing data");
@@ -97,21 +108,27 @@ export default function EditApartmentListing() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const selectedFiles = Array.from(event.target.files);
-      setFiles(selectedFiles);
-      setFileNames(selectedFiles.map((file) => file.name));
-      
-     
-      const previewUrl = URL.createObjectURL(selectedFiles[0]);
-      setImagePreview(previewUrl);
 
-      return () => URL.revokeObjectURL(previewUrl);
+      const selectedFiles = Array.from(event.target.files);
+      const oversizedFiles = selectedFiles.filter((file) => file.size > MAX_FILE_SIZE);
+
+      if (oversizedFiles.length > 0) {
+        alert(
+          `The following files are too large: ${oversizedFiles
+            .map((file) => file.name)
+            .join(", ")}. Each file must be under 64 KB.`
+        );
+        return;
+      }
+
+      setFiles((prev) => [...prev, ...selectedFiles]);
+      const previewUrls = selectedFiles.map((file) => URL.createObjectURL(file));
+      setImagePreview((prev) => [...prev, ...previewUrls]);
     }
   };
 
   const convertFilesToByteArray = async () => {
-    const byteArrays = files.length > 0
-      ? await Promise.all(
+    const byteArrays =  await Promise.all(
           files.map(file => {
             return new Promise<string>((resolve, reject) => {
               const reader = new FileReader();
@@ -123,9 +140,11 @@ export default function EditApartmentListing() {
               reader.readAsDataURL(file);
             });
           })
-        )
-      : originalPics.map(pic => pic.split(',')[1]);; 
+        ) 
     return byteArrays;
+  };
+  const handleDeletePic = (imageUrl: string) => {
+    setImagePreview((prev) => prev.filter((image) => image !== imageUrl));
   };
 
   const handleDelete = async () => {
@@ -147,7 +166,7 @@ export default function EditApartmentListing() {
   };
 
   if (loading) return <CircularProgress />;
-
+console.log(imagePreview);
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <TextField
@@ -234,23 +253,32 @@ export default function EditApartmentListing() {
         error={formik.touched.policies && Boolean(formik.errors.policies)}
         helperText={formik.touched.policies && formik.errors.policies}
       />
-      {imagePreview && (
-        <CardMedia
-          component="img"
-          className="h-56 object-cover w-[400px] border-b border-gray-300 "
-          image={imagePreview}
-          alt="Apartment preview"
-        />
-      )}
+      <Box display="flex" flexWrap="wrap" gap={2}>
+        {imagePreview.map((imageUrl, index) => (
+          <Card key={index} sx={{ width: 200, padding: 1 }}>
+            <CardMedia
+              component="img"
+              image={imageUrl}
+              alt={`Image ${index + 1}`}
+              sx={{ height: 120, objectFit: "cover" }}
+            />
+            <Typography variant="body2" sx={{ textAlign: "center", mt: 1 }}>
+              Image {index + 1}
+            </Typography>
+            <CardActions>
+              <Button variant="outlined" color="error" onClick={() => handleDeletePic(imageUrl)}>
+                Delete
+              </Button>
+            </CardActions>
+          </Card>
+        ))}
+      </Box>
+
       <Button variant="contained" component="label">
-        {imagePreview ? `Change Image` : 'Upload Image'}
-        <input
-          type="file"
-          hidden
-          onChange={handleFileChange}
-          multiple
-        />
+        Upload Images
+        <input type="file" hidden onChange={handleFileChange} multiple />
       </Button>
+
       <Button variant="contained" color="secondary" onClick={handleDelete}>
         Delete Listing
       </Button>

@@ -103,7 +103,7 @@ export default function EditListing() {
             location: data.location,
           });
 
-          setImagePreview(data.pics); // Assuming `data.pics` contains base64 strings
+          setImagePreview(data.pics); 
         } else {
           console.error("Failed to fetch listing data");
         }
@@ -239,7 +239,7 @@ export default function EditListing() {
           ))}
         </Select>
       </FormControl>
-      {/* Image Previews */}
+    
       <Box display="flex" flexWrap="wrap" gap={2}>
         {imagePreview.map((imageUrl, index) => (
           <Card key={index} sx={{ width: 200, padding: 1 }}>

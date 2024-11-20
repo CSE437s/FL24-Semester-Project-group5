@@ -161,7 +161,7 @@ const Listings = () => {
               title={item.description || "Apartment"}
               address={item.location}
               price={`$${item.price}`}
-              imageUrl={item.pics[0] || "https://via.placeholder.com/345x140"}
+              images={item.pics|| ["https://via.placeholder.com/345x140"]}
               
               linkDestination= {item.user_id === session?.user.id 
                 ? `/listings/edit/${item.id}` 

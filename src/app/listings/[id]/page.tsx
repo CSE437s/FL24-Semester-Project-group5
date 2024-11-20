@@ -6,6 +6,10 @@ import { Card, CardContent, CardMedia, Typography, Box, Grid, Button, Rating, Ci
 import { getCoordinatesOfAddress } from '../../utils';
 import Maps from '../../components/map-card';
 import { useSession } from 'next-auth/react';
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import { Pagination } from 'swiper/modules';
 interface ApartmentItem {
   id: number;
   user_id: number;
@@ -68,7 +72,7 @@ const ApartmentDescriptionPage = () => {
       fetchApartmentItem();
     }
   }, [id]);
-
+console.log(apartmentItem);
   if (loading) return <div>
     <Box sx={{ position:'absolute', top:'50%', left:'50%'}}>
   <CircularProgress size='4rem'/>
@@ -87,140 +91,159 @@ const ApartmentDescriptionPage = () => {
       router.push(`/messages?recipientId=${apartmentItem?.user_id}&sellerId=${session?.user?.id}`);
     }
   };
-
+console.log(apartmentItem);
 
   return (
-    <Box sx={{ padding: '20px', maxWidth: '1200px', margin: '20px auto' }}>
-      <Card
-        sx={{boxShadow: 6,
-          borderRadius: 2,
-          minHeight: '80vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: 4}}
-      >
-        <Grid container spacing={2}>
-            <CardMedia
-              component="img"
-              height="100"
-              image={apartmentItem.pics[0] || "https://via.placeholder.com/400x300"}
-              alt="Apartment Listing Image"
-              sx={{ objectFit: 'cover', borderRadius: 5 }}
-            />
-         
-
-          {/* Info Card on the right */}
-          {/* <Grid item xs={12} md={5}>
-            <Card sx={{
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              padding: '20px',
-              border: '1px solid rbg(54,119,204)'
-            }}> */}
-              <CardContent>
-                <Typography variant="h4" component="div" gutterBottom>
-                  {apartmentItem.description}
-                </Typography>
-                <Typography variant="h6">OVERVIEW:</Typography>
-
-                <Typography variant="body1" color="text.secondary" sx={{paddingBottom:'1rem' ,display:'flex', flexDirection:'row'}}>
-                  {/* Rating: {apartmentItem.rating} */}
-                  Rating:  <Rating sx={{}} name="listing-rating" value={apartmentItem.rating} readOnly />
-                </Typography>
-                <Card sx={{padding:4, borderRadius:10, minWidth:300}}>
-
-                
-                <Grid item xs={6}
-                  sx={{display:'flex', flexDirection:'row'}}
-                >
-                <Typography variant="h6" color="text.secondary" sx={{paddingBottom:'1rem'}}>
-                  Price: $ {apartmentItem.price} / per month
-                </Typography>
-                </Grid>
-
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                <Typography variant="h6" color="text.secondary">
-                  Location: {apartmentItem.location}
-                </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                <Typography variant="h6" color="text.secondary">
-                  {apartmentItem.bedrooms} Bedroom
-                </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                <Typography variant="h6" color="text.secondary">
-                   {apartmentItem.bathrooms} Bathroom
-                </Typography>
-                </Grid>
-
-
-                <Grid item xs={6}>
-                <Typography variant="h6" color="text.secondary">
-                  Amenities: {apartmentItem.amenities}
-                </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                <Typography variant="h6" color="text.secondary">
-                  Availability: {apartmentItem.availability}
-                </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                <Typography variant="h6" color="text.secondary">
-                  Policies: {apartmentItem.policies}
-                </Typography>
-                </Grid>
-
-                <Grid item xs={6}>
-                  {locations.length > 0 ? (
-                    <Box sx={{ height: '300px', marginTop: '10px' }}>
-                      <Maps locations={locations} names={address} />
-                    </Box>
-                  ) : (
-                    <Typography variant="h6" color="text.secondary">
-                      Location Unknown
-                    </Typography>
-                  )}
-                  </Grid>
-                  <Grid item xs={6}>
-                  <Typography variant="h6" color="text.secondary" sx={{paddingBottom:1}}>
-                  Seller:
-                </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => router.push(`../profile?userId=${apartmentItem.user_id}`)}
-                  >
-                    View Profile
-                  </Button>
-                    <Button 
-              variant="contained" 
-              color="secondary" 
-              onClick={handleContactLister}
-              sx={{ marginLeft: '10px' }}
-            >
-              Contact Lister
-            </Button>
-                  </Grid>
-                </Grid>
-         
-                </Card>
-              </CardContent>
-
-        </Grid>
-        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-          <Button variant="contained" color="primary" onClick={() => router.back()}>
-            Back to Listings
-          </Button>
-        </Box>
-
-      </Card>
-    </Box>
-  );
+         <Box sx={{ padding: '20px', maxWidth: '1200px', margin: '20px auto' }}>
+         <Card
+           sx={{boxShadow: 6,
+             borderRadius: 2,
+             minHeight: '80vh',
+             display: 'flex',
+             flexDirection: 'column',
+             justifyContent: 'center',
+             padding: 4}}
+         >
+           <Grid container spacing={2}>
+           {apartmentItem.pics.length > 1 ? (
+          // Carousel for multiple images
+          <Swiper
+            spaceBetween={10}
+            pagination={true}
+            modules={[Pagination]}
+            className="h-30 w-full"
+            
+          >
+            {apartmentItem.pics.map((imageUrl, index) => (
+              <SwiperSlide key={index}>
+                <img
+                  src={imageUrl}
+                  
+                  className="h-30 w-full object-cover"
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
+          // Single image
+          <img
+            src={apartmentItem.pics[0]}
+      
+            className="h-300 w-full object-cover border-b border-gray-300"
+          />
+        )}
+   
+             {/* Info Card on the right */}
+             {/* <Grid item xs={12} md={5}>
+               <Card sx={{
+                 height: '100%',
+                 display: 'flex',
+                 flexDirection: 'column',
+                 justifyContent: 'center',
+                 padding: '20px',
+                 border: '1px solid rbg(54,119,204)'
+               }}> */}
+                 <CardContent>
+                   <Typography variant="h4" component="div" gutterBottom>
+                     {apartmentItem.description}
+                   </Typography>
+                   <Typography variant="h6">OVERVIEW:</Typography>
+   
+                   <Typography variant="body1" color="text.secondary" sx={{paddingBottom:'1rem' ,display:'flex', flexDirection:'row'}}>
+                     {/* Rating: {apartmentItem.rating} */}
+                     Rating:  <Rating sx={{}} name="listing-rating" value={apartmentItem.rating} readOnly />
+                   </Typography>
+                   <Card sx={{padding:4, borderRadius:10, minWidth:300}}>
+   
+                   
+                   <Grid item xs={6}
+                     sx={{display:'flex', flexDirection:'row'}}
+                   >
+                   <Typography variant="h6" color="text.secondary" sx={{paddingBottom:'1rem'}}>
+                     Price: $ {apartmentItem.price} / per month
+                   </Typography>
+                   </Grid>
+   
+                   <Grid container spacing={2}>
+                     <Grid item xs={6}>
+                   <Typography variant="h6" color="text.secondary">
+                     Location: {apartmentItem.location}
+                   </Typography>
+                   </Grid>
+                   <Grid item xs={6}>
+                   <Typography variant="h6" color="text.secondary">
+                     {apartmentItem.bedrooms} Bedroom
+                   </Typography>
+                   </Grid>
+                   <Grid item xs={6}>
+                   <Typography variant="h6" color="text.secondary">
+                      {apartmentItem.bathrooms} Bathroom
+                   </Typography>
+                   </Grid>
+   
+   
+                   <Grid item xs={6}>
+                   <Typography variant="h6" color="text.secondary">
+                     Amenities: {apartmentItem.amenities}
+                   </Typography>
+                   </Grid>
+                   <Grid item xs={6}>
+                   <Typography variant="h6" color="text.secondary">
+                     Availability: {apartmentItem.availability}
+                   </Typography>
+                   </Grid>
+                   <Grid item xs={6}>
+                   <Typography variant="h6" color="text.secondary">
+                     Policies: {apartmentItem.policies}
+                   </Typography>
+                   </Grid>
+   
+                   <Grid item xs={6}>
+                     {locations.length > 0 ? (
+                       <Box sx={{ height: '300px', marginTop: '10px' }}>
+                         <Maps locations={locations} names={address} />
+                       </Box>
+                     ) : (
+                       <Typography variant="h6" color="text.secondary">
+                         Location Unknown
+                       </Typography>
+                     )}
+                     </Grid>
+                     <Grid item xs={6}>
+                     <Typography variant="h6" color="text.secondary" sx={{paddingBottom:1}}>
+                     Seller:
+                   </Typography>
+                     <Button
+                       variant="contained"
+                       color="primary"
+                       onClick={() => router.push(`../profile?userId=${apartmentItem.user_id}`)}
+                     >
+                       View Profile
+                     </Button>
+                       <Button 
+                 variant="contained" 
+                 color="secondary" 
+                 onClick={handleContactLister}
+                 sx={{ marginLeft: '10px' }}
+               >
+                 Contact Lister
+               </Button>
+                     </Grid>
+                   </Grid>
+            
+                   </Card>
+                 </CardContent>
+   
+           </Grid>
+           <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+             <Button variant="contained" color="primary" onClick={() => router.back()}>
+               Back to Listings
+             </Button>
+           </Box>
+   
+         </Card>
+       </Box>
+     );
 };
 
 export default ApartmentDescriptionPage;

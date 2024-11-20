@@ -46,9 +46,6 @@ model User {
   accounts      Account[]
   sessions      Session[]
   bio           String?
-  furnitureListings FurnitureListing[]  // Relation to furniture listings
-  businessUsers     BusinessUser[]      // Relation to business users
-  apartmentListings ApartmentListing[]  // Relation to apartment listings
   sentMessages     messages[]  @relation("SentMessages")
   receivedMessages messages[]  @relation("ReceivedMessages")
 }
@@ -61,8 +58,6 @@ model FurnitureListing {
   condition   String  @db.VarChar(20)
   colors      Json?
   location    String
-  // Foreign key relation to users
-  user        User    @relation(fields: [user_id], references: [id])
 
   @@map("furniture_listing")
 }
@@ -70,11 +65,7 @@ model FurnitureListing {
 model BusinessUser {
   id      Int  @id @default(autoincrement())
   user_id String
-  rating  Int
-
-  // Foreign key relation to users
-  user    User @relation(fields: [user_id], references: [id])
-
+  rating  Int 
   @@map("business_user")
 }
 
@@ -89,9 +80,6 @@ model ApartmentListing {
   policies    String?
   bedrooms    Int?
   bathrooms   Int?
-
-  // Foreign key relation to users
-  user        User @relation(fields: [user_id], references: [id])
 
   @@map("apartment_listing")
 }
