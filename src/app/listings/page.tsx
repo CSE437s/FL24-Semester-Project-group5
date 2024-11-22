@@ -1,11 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Grid from '@mui/material/Grid2';
 import { ApartmentCard } from '../components/apartment-card';
 import ApartmentFilter from '../components/apartment-filter-card';
 import Maps from '../components/map-card';
-import Button from '@mui/material/Button';
 import { getCoordinatesOfAddress, haversineDistance } from './utils';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -23,6 +21,7 @@ interface ApartmentItems {
   policies: string;
   pics: string[];
   rating: number;
+  favorite: boolean;
 }
 
 interface Location {
@@ -40,7 +39,7 @@ const Listings = () => {
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
   const [bedNum, setBedNum] = useState<string>("Any");
   const [bathNum, setBathNum] = useState<string>("Any");
-  const { data: session, status } = useSession();  // Get session and status
+  const { data: session, status } = useSession();  
   const router = useRouter();
 
   const handleAddListing = () => {
@@ -57,7 +56,17 @@ const Listings = () => {
   useEffect(() => {
     const fetchApartmentItems = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/apartment');
+        let response;
+        if (session?.user?.id) {
+          
+          response = await fetch(`http://localhost:5001/api/apartment?user_id=${session.user.id}`);
+        } else if (status === "unauthenticated") {
+    
+          response = await fetch('http://localhost:5001/api/apartment');
+        } else {
+          return;
+        }
+       
         const text = await response.text();
         if (response.ok) {
           const data = JSON.parse(text);
@@ -85,8 +94,10 @@ const Listings = () => {
       }
     };
 
-    fetchApartmentItems();
-  }, []);
+    if (status !== "loading") {
+      fetchApartmentItems();
+    }
+  }, [session, status]);
 
   useEffect(() => {
     //massive filter proccess
@@ -130,6 +141,27 @@ const Listings = () => {
     hi.push(item.location);
   });
 
+
+  const toggleFavorite = (id: number) => {
+    if (session){ 
+      const updatedItems = apartmentItems.map((item) =>
+        item.id === id ? { ...item, favorite: !item.favorite } : item
+      );
+    setApartmentItems(updatedItems);
+    fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "apartment", favorite: updatedItems.find((item) => item.id === id)?.favorite}),
+    });
+  }else{
+    const res = confirm("You must be logged in to heart a apartment listing. Do you want to log in or sign up?");
+    if(res){
+      router.push('/login'); 
+    }
+  }
+  };
+
+
   return (
     <div className="flex flex-col  lg:flex-row p-8 space-x-0 lg:space-x-4">
   {/* Map Section */}
@@ -166,6 +198,8 @@ const Listings = () => {
               linkDestination= {item.user_id === session?.user.id 
                 ? `/listings/edit/${item.id}` 
                 : `/listings/${item.id}`}
+                favorite={item.favorite}
+                onFavoriteToggle={() => toggleFavorite(item.id)}
             />
           </div>
         ))}

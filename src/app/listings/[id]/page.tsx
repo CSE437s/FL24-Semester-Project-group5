@@ -2,10 +2,12 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardMedia, Typography, Box, Grid, Button, Rating, CircularProgress} from '@mui/material';
+import { Card, CardContent, IconButton,Typography, Box, Grid, Button, Rating, CircularProgress} from '@mui/material';
 import { getCoordinatesOfAddress } from '../../utils';
 import Maps from '../../components/map-card';
 import { useSession } from 'next-auth/react';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -23,6 +25,7 @@ interface ApartmentItem {
   policies: string;
   pics: string[];
   rating: number;
+  favorite: boolean;
 }
 
 interface Location {
@@ -91,7 +94,29 @@ console.log(apartmentItem);
       router.push(`/messages?recipientId=${apartmentItem?.user_id}&sellerId=${session?.user?.id}`);
     }
   };
-console.log(apartmentItem);
+  const toggleFavorite = (id: number) => {
+    if (session){ 
+      const updatedFavoriteStatus = !apartmentItem?.favorite;
+
+      // Update the favorite status locally
+      setApartmentItem((prev) =>
+        prev ? { ...prev, favorite: updatedFavoriteStatus } : null
+      );
+    fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "apartment", favorite: updatedFavoriteStatus}),
+    });
+  }else{
+    const res = confirm("You must be logged in to heart a furniture listing. Do you want to log in or sign up?");
+    if(res){
+      router.push('/login'); 
+    }
+  }
+  };
+
+
+
 
   return (
          <Box sx={{ padding: '20px', maxWidth: '1200px', margin: '20px auto' }}>
@@ -133,20 +158,13 @@ console.log(apartmentItem);
           />
         )}
    
-             {/* Info Card on the right */}
-             {/* <Grid item xs={12} md={5}>
-               <Card sx={{
-                 height: '100%',
-                 display: 'flex',
-                 flexDirection: 'column',
-                 justifyContent: 'center',
-                 padding: '20px',
-                 border: '1px solid rbg(54,119,204)'
-               }}> */}
                  <CardContent>
-                   <Typography variant="h4" component="div" gutterBottom>
-                     {apartmentItem.description}
-                   </Typography>
+                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h4">{apartmentItem.description}</Typography>
+            <IconButton onClick={() => toggleFavorite(apartmentItem.id)}>
+              {apartmentItem.favorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+            </IconButton>
+          </Box>
                    <Typography variant="h6">OVERVIEW:</Typography>
    
                    <Typography variant="body1" color="text.secondary" sx={{paddingBottom:'1rem' ,display:'flex', flexDirection:'row'}}>

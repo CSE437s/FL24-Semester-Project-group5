@@ -4,8 +4,6 @@ import React, { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
 import FurnitureCard from '../components/furniture-card';
 import Filter from '../components/furniture-filter-card';
-import Button from '@mui/material/Button';
-import Link from 'next/link'; 
 import { useSession } from 'next-auth/react';  
 import { useRouter } from 'next/navigation';
 
@@ -21,6 +19,7 @@ interface FurnitureItem {
   rating: number;
   colors: ColorData; 
   pics: string[];
+  favorite: boolean;
 }
 
 const FurniturePage = () => {
@@ -42,12 +41,20 @@ const FurniturePage = () => {
     } else  {
       router.push('/furniture/upload'); 
     }
-  };
-
-  useEffect(() => {
+  };  useEffect(() => {
     const fetchFurnitureItems = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/furniture'); 
+        let response;
+        if (session?.user?.id) {
+          
+          response = await fetch(`http://localhost:5001/api/furniture?user_id=${session.user.id}`);
+        } else if (status === "unauthenticated") {
+    
+          response = await fetch('http://localhost:5001/api/furniture');
+        } else {
+          return;
+        }
+
         const text = await response.text();
         if (response.ok) {
           const data = JSON.parse(text);
@@ -60,8 +67,10 @@ const FurniturePage = () => {
       }
     };
 
-    fetchFurnitureItems();
-  }, []);
+    if (status !== "loading") {
+      fetchFurnitureItems();
+    }
+  }, [session, status]);
 
   const filteredItems = furnitureItems.filter(item => {
     const isInPriceRange = item.price >= priceRange[0] && item.price <= priceRange[1];
@@ -81,7 +90,25 @@ const FurniturePage = () => {
     return isInPriceRange && isTagged && isInRating && isColorMatch;
   });
 
-console.log(filteredItems);
+  const toggleFavorite = (id: number) => {
+    if (session){ 
+      const updatedItems = furnitureItems.map((item) =>
+        item.id === id ? { ...item, favorite: !item.favorite } : item
+      );
+    setFurnitureItems(updatedItems);
+    fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "furniture", favorite: updatedItems.find((item) => item.id === id)?.favorite}),
+    });
+  }else{
+    const res = confirm("You must be logged in to heart a furniture listing. Do you want to log in or sign up?");
+    if(res){
+      router.push('/login'); 
+    }
+  }
+  };
+
   return (
 
     
@@ -91,15 +118,16 @@ console.log(filteredItems);
     <Grid container spacing={4}>
   {filteredItems.map((item) => (
     <Grid item key={item.id} xs={12} sm={6} md={4}>
-      <FurnitureCard
-        title={item.description} 
-        price={`$${item.price}`}
-        images={item.pics && item.pics.length > 0 ? item.pics : ["https://via.placeholder.com/345x140"]}
-        linkDestination={item.user_id === session?.user.id 
-          ? `/furniture/edit/${item.id}` 
-          : `/furniture/${item.id}`
-        }
-      />
+<FurnitureCard
+    title={item.description}
+    price={`$${item.price}`}
+    images={item.pics && item.pics.length > 0 ? item.pics : ["https://via.placeholder.com/345x140"]}
+    linkDestination={item.user_id === session?.user.id 
+      ? `/furniture/edit/${item.id}` 
+      : `/furniture/${item.id}`}
+    favorite={item.favorite}
+    onFavoriteToggle={() => toggleFavorite(item.id)}
+/>
     </Grid>
   ))}
 </Grid>

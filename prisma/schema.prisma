@@ -1,10 +1,10 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model Account {
@@ -35,27 +35,27 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  password      String?
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  bio           String?
-  sentMessages     messages[]  @relation("SentMessages")
-  receivedMessages messages[]  @relation("ReceivedMessages")
+  id               String     @id @default(cuid())
+  name             String?
+  email            String?    @unique
+  password         String?
+  emailVerified    DateTime?
+  image            String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  bio              String?
+  accounts         Account[]
+  sessions         Session[]
+  receivedMessages messages[] @relation("ReceivedMessages")
+  sentMessages     messages[] @relation("SentMessages")
 }
 
 model FurnitureListing {
-  id          Int     @id @default(autoincrement())
-  user_id     String  // Foreign key reference to User
+  id          Int    @id @default(autoincrement())
+  user_id     String
   price       Int
   description String
-  condition   String  @db.VarChar(20)
+  condition   String @db.VarChar(20)
   colors      Json?
   location    String
 
@@ -63,23 +63,24 @@ model FurnitureListing {
 }
 
 model BusinessUser {
-  id      Int  @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   user_id String
-  rating  Int 
+  rating  Int
+
   @@map("business_user")
 }
 
 model ApartmentListing {
-  id          Int      @id @default(autoincrement())
-  user_id     String
-  price       Int
-  location    String
-  amenities   String
-  description String?
+  id           Int     @id @default(autoincrement())
+  user_id      String
+  price        Int
+  location     String
+  amenities    String
+  description  String?
   availability String
-  policies    String?
-  bedrooms    Int?
-  bathrooms   Int?
+  policies     String?
+  bedrooms     Int?
+  bathrooms    Int?
 
   @@map("apartment_listing")
 }
@@ -91,9 +92,8 @@ model messages {
   message_text    String   @map("message_text")
   timestamp       DateTime @default(now()) @map("timestamp")
   conversation_id String?  @map("conversation_id")
-
-  sender          User     @relation("SentMessages", fields: [sender_id], references: [id])
   recipient       User     @relation("ReceivedMessages", fields: [recipient_id], references: [id])
+  sender          User     @relation("SentMessages", fields: [sender_id], references: [id])
 
   @@map("messages")
 }
@@ -109,15 +109,23 @@ model VerificationRequest {
   @@unique([identifier, token])
 }
 
-
 model FurnitureImage {
-  id               Int               @id @default(autoincrement())
-  imageData        Bytes[]                      
+  id                 Int     @id @default(autoincrement())
+  imageData          Bytes[]
   FurnitureListingId Int
 }
 
 model ApartmentImage {
-  id               Int               @id @default(autoincrement())
-  imageData        Bytes[]                        
+  id                 Int     @id @default(autoincrement())
+  imageData          Bytes[]
   ApartmentListingId Int
+}
+
+
+model favorites {
+  id           Int    @id @default(autoincrement())
+  user_id      String
+  listing_id   Int
+  listing_type String
+
 }

@@ -3,30 +3,45 @@ const router = express.Router();
 const pool = require('../../../db'); 
 
 router.get('/', async (req, res) => {
+  const { user_id } = req.query;
 
   try {
-    const query =
-    `SELECT fl.*, 
-       bu.rating, 
-       '{}'::bytea[] AS pics
-FROM public."furniture_listing" fl
-JOIN public."business_user" bu
-  ON bu.user_id = fl."user_id"
-LEFT JOIN public."FurnitureImage" fi
-  ON fi."FurnitureListingId" = fl.id
-WHERE fi."imageData" IS NULL
-GROUP BY fl.id, bu.rating
-UNION 
-SELECT fl.*, 
-       bu.rating, 
-       ARRAY_AGG(fi."imageData") AS pics
-FROM public."furniture_listing" fl
-JOIN public."business_user" bu
-  ON bu.user_id = fl."user_id"
-JOIN public."FurnitureImage" fi
-  ON fi."FurnitureListingId" = fl.id
-GROUP BY fl.id, bu.rating;`;
-    const result = await pool.query(query);
+    const query = `
+      SELECT fl.*, 
+             bu.rating, 
+             '{}'::bytea[] AS pics,
+             CASE 
+               WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
+               ELSE false 
+             END AS favorite
+      FROM public."furniture_listing" fl
+      JOIN public."business_user" bu
+        ON bu.user_id = fl."user_id"
+      LEFT JOIN public."FurnitureImage" fi
+        ON fi."FurnitureListingId" = fl.id
+      LEFT JOIN public.favorites fa
+        ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
+      WHERE fi."imageData" IS NULL
+      GROUP BY fl.id, bu.rating, fa.user_id
+      UNION 
+      SELECT fl.*, 
+             bu.rating, 
+             ARRAY_AGG(fi."imageData") AS pics,
+             CASE 
+               WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
+               ELSE false 
+             END AS favorite
+      FROM public."furniture_listing" fl
+      JOIN public."business_user" bu
+        ON bu.user_id = fl."user_id"
+      JOIN public."FurnitureImage" fi
+        ON fi."FurnitureListingId" = fl.id
+      LEFT JOIN public.favorites fa
+        ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
+      GROUP BY fl.id, bu.rating, fa.user_id;
+    `;
+
+    const result = await pool.query(query, [user_id]);
 
     const furnitures = result.rows.map(furniture => {
      
@@ -47,34 +62,40 @@ GROUP BY fl.id, bu.rating;`;
 });
 
 router.get('/:id', async (req, res) => {
- 
+  const { user_id } = req.query;
   const { id } = req.params;
 
   try {
     const result = await pool.query(
       `SELECT fl.*, 
        bu.rating, 
-       '{}'::bytea[] AS pics, u.name
+       '{}'::bytea[] AS pics, u.name,
+       CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $2 THEN true ELSE false END AS favorite
 FROM public."furniture_listing" fl
 JOIN public."business_user" bu
   ON bu.user_id = fl."user_id"
 LEFT JOIN public."FurnitureImage" fi
   ON fi."FurnitureListingId" = fl.id
 JOIN public."User" u on u.id = fl."user_id"
+LEFT JOIN public.favorites fa
+  ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
 WHERE fi."imageData" IS NULL AND fl.id = $1
-GROUP BY fl.id, bu.rating,u.name
+GROUP BY fl.id, bu.rating,u.name,fa.user_id 
 UNION 
 SELECT fl.*, 
        bu.rating, 
-       ARRAY_AGG(fi."imageData") AS pics, u.name
+       ARRAY_AGG(fi."imageData") AS pics, u.name,
+       CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $2 THEN true ELSE false END AS favorite
 FROM public."furniture_listing" fl
 JOIN public."business_user" bu
   ON bu.user_id = fl."user_id"
 JOIN public."FurnitureImage" fi
   ON fi."FurnitureListingId" = fl.id
  JOIN public."User" u on u.id = fl."user_id"
+ LEFT JOIN public.favorites fa
+  ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
 WHERE fl.id = $1
-GROUP BY fl.id, bu.rating,u.name;`, [id] 
+GROUP BY fl.id, bu.rating,u.name, fa.user_id ;`, [id, user_id] 
     );
 
     if (result.rows.length === 0) {
@@ -233,11 +254,14 @@ console.log("bf", bufferPic);
 
 router.delete('/delete/:id', async (req, res) => {
   const { id } = req.params;
+  const type = "furniture";
   try {
   
     const result = await pool.query('DELETE FROM public."furniture_listing" WHERE id = $1 RETURNING *', [id]);
     const result1 = await pool.query('DELETE FROM public."FurnitureImage" WHERE "FurnitureListingId" = $1 RETURNING *', [id]);
-    if (result.rows.length && result1.rows.length) {
+    const result2 = await pool.query('DELETE FROM public."favorites" WHERE "listing_id" = $1 AND "listing_type" = $2 RETURNING *', [id, type]);
+
+    if (result.rows.length && result1.rows.length && result2.rows.length) {
       res.json({ message: 'Listing deleted successfully' });
     } else {
       res.status(404).json({ error: 'Listing not found' });
@@ -247,5 +271,77 @@ router.delete('/delete/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+router.patch('/:id/favorite', async (req, res) => { 
+  try{
+    const {user_id, listing_id, listing_type, favorite} = req.body;
+    let result;
+    if (favorite){ 
+    result = await pool.query('INSERT INTO "favorites" (user_id, listing_id, listing_type) VALUES ($1,$2,$3)', [user_id, listing_id, listing_type]);
+  }else{
+    result = await pool.query('DELETE FROM "favorites" WHERE user_id = $1 AND listing_id = $2 AND listing_type = $3', [user_id, listing_id, listing_type]);
+  }
+  return res.status(200).json({ message: 'Favorite status updated successfully' });
+
+  }catch (error){
+    console.log(error);
+    res.status(500).json({error: "could not insert to favorites"});
+  }
+  });
+
+  router.get('/mylistings/:user_id', async (req, res) => {
+    const { user_id } = req.params;
+    try {
+      const query = await pool.query(`SELECT fl.*, 
+             bu.rating, 
+             '{}'::bytea[] AS pics,
+             CASE 
+               WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
+               ELSE false 
+             END AS favorite
+      FROM public."furniture_listing" fl
+      JOIN public."business_user" bu
+        ON bu.user_id = fl."user_id"
+      LEFT JOIN public."FurnitureImage" fi
+        ON fi."FurnitureListingId" = fl.id
+      LEFT JOIN public.favorites fa
+        ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
+      WHERE fi."imageData" IS NULL AND fl.user_id = $1
+      GROUP BY fl.id, bu.rating,fa.user_id
+      UNION 
+      SELECT fl.*, 
+             bu.rating, 
+             ARRAY_AGG(fi."imageData") AS pics,
+             CASE 
+               WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
+               ELSE false 
+             END AS favorite
+      FROM public."furniture_listing" fl
+      JOIN public."business_user" bu
+        ON bu.user_id = fl."user_id"
+      JOIN public."FurnitureImage" fi
+        ON fi."FurnitureListingId" = fl.id
+      LEFT JOIN public.favorites fa
+        ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
+		WHERE fl.user_id = $1
+      GROUP BY fl.id, bu.rating,fa.user_id ;
+      `,[user_id]);
+  
+
+      const furnitures = query.rows.map(furniture => ({
+        ...furniture,
+        pics: furniture.pics.map(pic =>
+          `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`
+        ),
+      }));
+  
+      res.json(furnitures);
+    } catch (error) {
+      console.error('Error fetching favorite items:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
 
 module.exports = router; 

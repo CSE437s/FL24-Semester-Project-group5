@@ -1,13 +1,14 @@
 "use client";
 
-import { Card, CardContent, CardMedia, Typography, Box, Grid, Button, Paper, Rating, CircularProgress } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, Box, Grid, Button, IconButton, Rating, CircularProgress } from '@mui/material';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Maps from '../../components/map-card';
 import { getCoordinatesOfAddress } from '../../utils'; 
 import { useSession } from 'next-auth/react';
 import { Swiper, SwiperSlide } from "swiper/react";
-
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import "swiper/css";
 import "swiper/css/navigation";
 import { Pagination } from 'swiper/modules';
@@ -26,6 +27,7 @@ interface FurnitureItem {
   colors: ColorData | null;
   pics: string[];
   name: string;
+  favorite: boolean;
 }
 
 interface Location {
@@ -49,11 +51,12 @@ const FurnitureDescriptionPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const user_id = session?.user.id;
     if (id) {
-      console.log('id', id)
+
       const fetchFurnitureItem = async () => {
         try {
-          const response = await fetch(`http://localhost:5001/api/furniture/${id}`);
+          const response = await fetch(`http://localhost:5001/api/furniture/${id}?user_id=${user_id}`);
           const data = await response.json();
           if (response.ok) {
             if (data.location) {
@@ -105,6 +108,27 @@ const FurnitureDescriptionPage = () => {
     }
   };
 
+  const toggleFavorite = (id: number) => {
+    if (session){ 
+      const updatedFavoriteStatus = !furnitureItem?.favorite;
+
+      // Update the favorite status locally
+      setFurnitureItem((prev) =>
+        prev ? { ...prev, favorite: updatedFavoriteStatus } : null
+      );
+    fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "furniture", favorite: updatedFavoriteStatus}),
+    });
+  }else{
+    const res = confirm("You must be logged in to heart a furniture listing. Do you want to log in or sign up?");
+    if(res){
+      router.push('/login'); 
+    }
+  }
+  };
+
   return (
     <Box sx={{ padding: '20px', maxWidth: '1200px', margin: '20px auto' }}>
       <Card
@@ -147,10 +171,13 @@ const FurnitureDescriptionPage = () => {
           />
         )}
         <CardContent>
-
-          <Typography variant="h4" component="div" gutterBottom>
-            {furnitureItem.description}
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h4">{furnitureItem.description}</Typography>
+            <IconButton onClick={() => toggleFavorite(furnitureItem.id)}>
+              {furnitureItem.favorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+            </IconButton>
+          </Box>
+ 
           <Grid item xs={9}>
             <Typography variant="h6" color="text.secondary">
               Rating:
@@ -173,7 +200,7 @@ const FurnitureDescriptionPage = () => {
 
               <Typography variant="h6">${furnitureItem.price}</Typography>
 
-<Button 
+        <Button 
               variant="contained" 
               color="secondary" 
               onClick={handleContactLister}
