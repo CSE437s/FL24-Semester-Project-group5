@@ -61,6 +61,77 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/suggestions', async (req, res) => {
+  const { user_id } = req.query;
+
+  console.log('Received request for suggestions for user_id:', user_id);
+
+  try {
+    // Fetch the user's favorites
+    const favoriteQuery = `
+      SELECT fl.description, fl.colors
+      FROM public.favorites f
+      JOIN public.furniture_listing fl ON f.listing_id = fl.id
+      WHERE f.user_id = $1 AND f.listing_type = 'furniture'
+    `;
+    const favorites = await pool.query(favoriteQuery, [user_id]);
+
+    console.log('Favorites fetched:', favorites.rows);
+
+    if (favorites.rows.length === 0) {
+      console.log('No favorites found for user_id:', user_id);
+      return res.json([]);
+    }
+
+    const keywords = favorites.rows
+      .map((row) => row.description.split(' '))
+      .flat()
+      .map((word) => word.toLowerCase());
+    const colors = favorites.rows
+      .map((row) => row.colors || [])
+      .flat();
+
+    console.log('Extracted keywords:', keywords);
+    console.log('Extracted colors:', colors);
+
+    const suggestionQuery = `
+      SELECT fl.*
+      FROM public.furniture_listing fl
+      WHERE (
+        LOWER(fl.description) SIMILAR TO $1
+        OR fl.colors::text SIMILAR TO $2
+      )
+      AND fl.id NOT IN (
+        SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+      )
+      LIMIT 10;
+    `;
+    const keywordPattern = `%(${keywords.join('|')})%`;
+    const colorPattern = `%(${colors.join('|')})%`;
+
+    console.log('Keyword pattern for query:', keywordPattern);
+    console.log('Color pattern for query:', colorPattern);
+
+    const suggestions = await pool.query(suggestionQuery, [
+      keywordPattern,
+      colorPattern,
+      user_id,
+    ]);
+
+    console.log('Suggestions fetched:', suggestions.rows);
+
+    const randomSuggestions = suggestions.rows.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+    console.log('Randomized suggestions:', randomSuggestions);
+
+    res.json(randomSuggestions);
+  } catch (error) {
+    console.error('Error fetching suggestions:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 router.get('/:id', async (req, res) => {
   const { user_id } = req.query;
   const { id } = req.params;
@@ -342,6 +413,8 @@ router.patch('/:id/favorite', async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });
+
+  
   
 
 module.exports = router; 
