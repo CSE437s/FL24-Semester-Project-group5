@@ -95,34 +95,38 @@ router.get('/suggestions', async (req, res) => {
     // console.log('Extracted colors:', colors);
 
     const suggestionQuery = `
-SELECT fl.*,
-'{}'::bytea[] AS pics
-FROM public.furniture_listing fl
-LEFT JOIN public."FurnitureImage" fi
-ON fi."FurnitureListingId" = fl.id
-WHERE (
-LOWER(fl.description) SIMILAR TO $1
-OR fl.colors::text SIMILAR TO $2
-)
-AND fl.id NOT IN (
-SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
-)
-AND fi."imageData" IS NULL
-UNION 
-SELECT fl.*,
-ARRAY_AGG(fi."imageData") AS pics
-FROM public.furniture_listing fl
-JOIN public."FurnitureImage" fi
-ON fi."FurnitureListingId" = fl.id
-WHERE (
-LOWER(fl.description) SIMILAR TO $1
-OR fl.colors::text SIMILAR TO $2
-)
-AND fl.id NOT IN (
-SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
-)
-GROUP BY fl.id
-LIMIT 10;
+    SELECT fl.*,
+    '{}'::bytea[] AS pics,
+    ((LOWER(fl.description) SIMILAR TO $1)::int + 
+    (fl.colors::text SIMILAR TO $2)::int) AS match_score
+    FROM public.furniture_listing fl
+    LEFT JOIN public."FurnitureImage" fi
+    ON fi."FurnitureListingId" = fl.id
+    WHERE (
+    LOWER(fl.description) SIMILAR TO $1
+    OR fl.colors::text SIMILAR TO $2
+    )
+    AND fl.id NOT IN (
+    SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+    )
+    AND fi."imageData" IS NULL
+    UNION 
+    SELECT fl.*,
+    ARRAY_AGG(fi."imageData") AS pics,
+    ((LOWER(fl.description) SIMILAR TO $1)::int + 
+    (fl.colors::text SIMILAR TO $2)::int) AS match_score
+    FROM public.furniture_listing fl
+    JOIN public."FurnitureImage" fi
+    ON fi."FurnitureListingId" = fl.id
+    WHERE (
+    LOWER(fl.description) SIMILAR TO $1
+    OR fl.colors::text SIMILAR TO $2
+    )
+    AND fl.id NOT IN (
+    SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+    )
+    GROUP BY fl.id ORDER BY match_score DESC
+    LIMIT 3;
     `;
     const keywordPattern = `%(${keywords.join('|')})%`;
     const colorPattern = `%(${colors.join('|')})%`;
@@ -138,7 +142,6 @@ LIMIT 10;
 
     // console.log('Suggestions fetched:', suggestions.rows);
     const suggestions = result.rows.map(suggestion => {
-    
       return {
         ...suggestion,
         pics: suggestion.pics.map(pic => {
@@ -148,12 +151,8 @@ LIMIT 10;
     });
 
 
-    if (suggestions.length > 1){
-      const randomSuggestions = suggestions.rows.sort(() => 0.5 - Math.random()).slice(0, 3);
-      res.json(randomSuggestions);
-    }else{
       res.json(suggestions);
-    }
+    
     
 
     // console.log('Randomized suggestions:', randomSuggestions);
