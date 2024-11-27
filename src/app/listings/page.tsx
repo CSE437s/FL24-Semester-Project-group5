@@ -45,6 +45,8 @@ const Listings = () => {
 
   const fetchSuggestions = async () => {
     if (!session?.user?.id) return;
+  const fetchSuggestions = async () => {
+    if (!session?.user?.id) return;
 
     try {
       const response = await fetch(

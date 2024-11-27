@@ -95,16 +95,34 @@ router.get('/suggestions', async (req, res) => {
     // console.log('Extracted colors:', colors);
 
     const suggestionQuery = `
-      SELECT fl.*
-      FROM public.furniture_listing fl
-      WHERE (
-        LOWER(fl.description) SIMILAR TO $1
-        OR fl.colors::text SIMILAR TO $2
-      )
-      AND fl.id NOT IN (
-        SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
-      )
-      LIMIT 10;
+SELECT fl.*,
+'{}'::bytea[] AS pics
+FROM public.furniture_listing fl
+LEFT JOIN public."FurnitureImage" fi
+ON fi."FurnitureListingId" = fl.id
+WHERE (
+LOWER(fl.description) SIMILAR TO $1
+OR fl.colors::text SIMILAR TO $2
+)
+AND fl.id NOT IN (
+SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+)
+AND fi."imageData" IS NULL
+UNION 
+SELECT fl.*,
+ARRAY_AGG(fi."imageData") AS pics
+FROM public.furniture_listing fl
+JOIN public."FurnitureImage" fi
+ON fi."FurnitureListingId" = fl.id
+WHERE (
+LOWER(fl.description) SIMILAR TO $1
+OR fl.colors::text SIMILAR TO $2
+)
+AND fl.id NOT IN (
+SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+)
+GROUP BY fl.id
+LIMIT 10;
     `;
     const keywordPattern = `%(${keywords.join('|')})%`;
     const colorPattern = `%(${colors.join('|')})%`;
@@ -112,19 +130,35 @@ router.get('/suggestions', async (req, res) => {
     // console.log('Keyword pattern for query:', keywordPattern);
     // console.log('Color pattern for query:', colorPattern);
 
-    const suggestions = await pool.query(suggestionQuery, [
+    const result = await pool.query(suggestionQuery, [
       keywordPattern,
       colorPattern,
       user_id,
     ]);
 
     // console.log('Suggestions fetched:', suggestions.rows);
+    const suggestions = result.rows.map(suggestion => {
+    
+      return {
+        ...suggestion,
+        pics: suggestion.pics.map(pic => {
+          return `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`; // Convert each Buffer to Base64
+        }),
+      };
+    });
 
-    const randomSuggestions = suggestions.rows.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+    if (suggestions.length > 1){
+      const randomSuggestions = suggestions.rows.sort(() => 0.5 - Math.random()).slice(0, 3);
+      res.json(randomSuggestions);
+    }else{
+      res.json(suggestions);
+    }
+    
 
     // console.log('Randomized suggestions:', randomSuggestions);
 
-    res.json(randomSuggestions);
+    
   } catch (error) {
     console.error('Error fetching suggestions:', error);
     res.status(500).json({ error: 'Internal Server Error' });
