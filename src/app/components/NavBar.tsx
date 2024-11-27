@@ -7,19 +7,9 @@ import { AppBar, Box, CssBaseline, Divider, IconButton, Drawer, List, ListItem, 
 import { handleSignOut } from '../utils/auth/signOutHandler'; 
 import Image from 'next/image';
 
-
 const drawerWidth = 240;
-const navItems = [
-  { text: 'Furniture', href: '/furniture' }, 
-  { text: 'Listings', href: '/listings' },
-  { text: 'Profile', href: '/profile' },
-  { text: 'Messages', href: '/messages' },
-  { text: 'Login', href: '/login' },   
-  { text: 'Sign Out', href: '#' }
-];
 
 export default function DrawerAppBar(props: { window?: () => Window }) {
-
   const { data: session } = useSession();
   const { window } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -28,18 +18,29 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
     setMobileOpen((prevState) => !prevState);
   };
 
-  const filteredItems = navItems.filter(item => {
-    if (item.text === 'Login' && session) return false;   
-    if (item.text === 'Sign Out' && !session) return false; 
-    if ((item.text === 'Profile' || item.text === 'Messages') && !session) return false;
-    return true;
-  });
-
   const isAdmin = session?.user?.email === 'subletify@wustl.edu';
 
-  if (isAdmin) {
-    filteredItems.push({ text: 'Admin', href: '/admin' });
-  }
+  const baseNavItems = [
+    { text: 'Furniture', href: '/furniture' },
+    { text: 'Listings', href: '/listings' },
+    { text: 'Profile', href: '/profile' },
+    { text: 'Messages', href: '/messages' },
+    { text: 'Login', href: '/login' },
+  ];
+
+  const dynamicNavItems = [
+    ...(isAdmin ? [{ text: 'Pending', href: '/admin' }] : []), 
+    { text: 'Sign Out', href: '#' },
+  ];
+
+  const filteredItems = [
+    ...baseNavItems.filter((item) => {
+      if (item.text === 'Login' && session) return false; 
+      if ((item.text === 'Profile' || item.text === 'Messages') && !session) return false;
+      return true;
+    }),
+    ...(session ? dynamicNavItems : []),
+  ];
 
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
@@ -48,10 +49,13 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
       </Typography>
       <Divider />
       <List>
-        {navItems.map((item) => (
+        {filteredItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <Link href={item.href} passHref>
-              <ListItemButton sx={{ textAlign: 'center' }} onClick={item.text === 'Sign Out' ? handleSignOut : undefined}>
+              <ListItemButton
+                sx={{ textAlign: 'center' }}
+                onClick={item.text === 'Sign Out' ? handleSignOut : undefined}
+              >
                 <ListItemText primary={item.text} />
               </ListItemButton>
             </Link>
@@ -64,7 +68,7 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
   const container = window !== undefined ? () => window().document.body : undefined;
 
   return (
-    <Box className="flex h-20" >
+    <Box className="flex h-20">
       <CssBaseline />
       <AppBar component="nav">
         <Toolbar>
@@ -94,8 +98,14 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
           </Box>
           <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
             {filteredItems.map((item) => (
-              <Button key={item.text} sx={{ color: '#fff' }} onClick={item.text === 'Sign Out' ? handleSignOut : undefined}>
-                {item.text === 'Sign Out' ? item.text : (
+              <Button
+                key={item.text}
+                sx={{ color: '#fff' }}
+                onClick={item.text === 'Sign Out' ? handleSignOut : undefined}
+              >
+                {item.text === 'Sign Out' ? (
+                  item.text
+                ) : (
                   <Link href={item.href} passHref>
                     {item.text}
                   </Link>
@@ -112,7 +122,7 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true, 
+            keepMounted: true,
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },

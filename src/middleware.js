@@ -1,23 +1,23 @@
 import { NextResponse } from 'next/server';
-// Remove 'type' keyword
-import { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export function middleware(req) {
+export async function middleware(req) {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
   const url = req.nextUrl.clone();
 
-  // Example: Redirect unauthorized users from /admin to /login
   if (url.pathname.startsWith('/admin')) {
-    const userEmail = req.cookies.get('next-auth.session-token')?.value;
 
-    if (!userEmail || userEmail !== 'subletify@wustl.edu') {
-      url.pathname = '/403'; // Redirect to a forbidden page
-      return NextResponse.redirect(url);
+    if (!token || token.email !== 'subletify@wustl.edu') {
+      url.pathname = 'redirects/403';
+      return NextResponse.rewrite(url); 
     }
+
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*'], // Apply middleware to /admin and its subroutes
+  matcher: ['/admin/:path*'], 
 };
