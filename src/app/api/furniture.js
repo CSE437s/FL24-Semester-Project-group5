@@ -76,10 +76,10 @@ router.get('/suggestions', async (req, res) => {
     `;
     const favorites = await pool.query(favoriteQuery, [user_id]);
 
-    console.log('Favorites fetched:', favorites.rows);
+    // console.log('Favorites fetched:', favorites.rows);
 
     if (favorites.rows.length === 0) {
-      console.log('No favorites found for user_id:', user_id);
+      // console.log('No favorites found for user_id:', user_id);
       return res.json([]);
     }
 
@@ -91,8 +91,8 @@ router.get('/suggestions', async (req, res) => {
       .map((row) => row.colors || [])
       .flat();
 
-    console.log('Extracted keywords:', keywords);
-    console.log('Extracted colors:', colors);
+    // console.log('Extracted keywords:', keywords);
+    // console.log('Extracted colors:', colors);
 
     const suggestionQuery = `
       SELECT fl.*
@@ -109,8 +109,8 @@ router.get('/suggestions', async (req, res) => {
     const keywordPattern = `%(${keywords.join('|')})%`;
     const colorPattern = `%(${colors.join('|')})%`;
 
-    console.log('Keyword pattern for query:', keywordPattern);
-    console.log('Color pattern for query:', colorPattern);
+    // console.log('Keyword pattern for query:', keywordPattern);
+    // console.log('Color pattern for query:', colorPattern);
 
     const suggestions = await pool.query(suggestionQuery, [
       keywordPattern,
@@ -118,11 +118,11 @@ router.get('/suggestions', async (req, res) => {
       user_id,
     ]);
 
-    console.log('Suggestions fetched:', suggestions.rows);
+    // console.log('Suggestions fetched:', suggestions.rows);
 
     const randomSuggestions = suggestions.rows.sort(() => 0.5 - Math.random()).slice(0, 3);
 
-    console.log('Randomized suggestions:', randomSuggestions);
+    // console.log('Randomized suggestions:', randomSuggestions);
 
     res.json(randomSuggestions);
   } catch (error) {

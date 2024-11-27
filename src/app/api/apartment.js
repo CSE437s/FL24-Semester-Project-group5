@@ -55,6 +55,73 @@ const apartments = result.rows.map(apartment => {
 });
 
 
+// router.get('/suggestions', async (req, res) => {
+//   const { user_id } = req.query;
+
+//   console.log('Received request for apartment suggestions for user_id:', user_id);
+
+//   try {
+//     // Fetch user's favorite apartments
+//     const favoriteQuery = `
+//       SELECT al.description, al.bedrooms
+//       FROM public.favorites f
+//       JOIN public.apartment_listing al ON f.listing_id = al.id
+//       WHERE f.user_id = $1 AND f.listing_type = 'apartment'
+//     `;
+//     const favorites = await pool.query(favoriteQuery, [user_id]);
+
+//     console.log('Favorites fetched:', favorites.rows);
+
+//     if (favorites.rows.length === 0) {
+//       console.log('No favorites found for user_id:', user_id);
+//       return res.json([]);
+//     }
+
+//     // Extract keywords from descriptions and bedroom counts
+//     const keywords = favorites.rows
+//       .map((row) => row.description?.split(' ') || [])
+//       .flat()
+//       .map((word) => word.toLowerCase());
+//     const bedrooms = favorites.rows.map((row) => row.bedrooms);
+
+//     console.log('Extracted keywords:', keywords);
+//     console.log('Extracted bedrooms:', bedrooms);
+
+//     // SQL query for suggestions
+//     const suggestionQuery = `
+//       SELECT al.*
+//       FROM public.apartment_listing al
+//       WHERE (
+//         -- Match any of the description keywords
+//         LOWER(al.description) SIMILAR TO $1
+//         OR al.bedrooms = ANY($2)
+//       )
+//       AND al.id NOT IN (
+//         SELECT listing_id
+//         FROM public.favorites
+//         WHERE user_id = $3 AND listing_type = 'apartment'
+//       )
+//       LIMIT 10;
+//     `;
+//     const keywordPattern = `%(${keywords.join('|')})%`;
+//     const suggestions = await pool.query(suggestionQuery, [
+//       keywordPattern,
+//       bedrooms,
+//       user_id,
+//     ]);
+
+//     console.log('Suggestions fetched:', suggestions.rows);
+
+//     res.json(suggestions.rows);
+//   } catch (error) {
+//     console.error('Error fetching apartment suggestions:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
+
+
+
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params; 
   const { user_id } = req.query;

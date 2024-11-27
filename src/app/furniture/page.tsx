@@ -33,6 +33,25 @@ const FurniturePage = () => {
   const { data: session, status } = useSession(); 
   const router = useRouter();
 
+  const fetchSuggestions = async () => {
+    console.log("FETCH SUGGESTIONS CALLED")
+    try {
+      if (session?.user?.id) {
+        const response = await fetch(
+          `http://localhost:5001/api/furniture/suggestions?user_id=${session.user.id}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestions(data);
+        } else {
+          console.error("Error fetching suggestions.");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    }
+  };
+
   const handleAddFurniture = () => {
     if (status === 'unauthenticated') {
       const res = confirm("You must be logged in to add a furniture listing. Do you want to log in or sign up?");
@@ -68,25 +87,6 @@ const FurniturePage = () => {
       }
     };
 
-    const fetchSuggestions = async () => {
-      console.log("FETCH SUGGESTIONS CALLED")
-      try {
-        if (session?.user?.id) {
-          const response = await fetch(
-            `http://localhost:5001/api/furniture/suggestions?user_id=${session.user.id}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            setSuggestions(data);
-          } else {
-            console.error("Error fetching suggestions.");
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-      }
-    };
-
     if (status !== "loading") {
       fetchFurnitureItems();
       fetchSuggestions();
@@ -111,24 +111,46 @@ const FurniturePage = () => {
     return isInPriceRange && isTagged && isInRating && isColorMatch;
   });
 
-  const toggleFavorite = (id: number) => {
-    if (session){ 
+  const toggleFavorite = async (id: number) => {
+    if (session) {
+      // Update favorite state locally
       const updatedItems = furnitureItems.map((item) =>
         item.id === id ? { ...item, favorite: !item.favorite } : item
       );
-    setFurnitureItems(updatedItems);
-    fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "furniture", favorite: updatedItems.find((item) => item.id === id)?.favorite}),
-    });
-  }else{
-    const res = confirm("You must be logged in to heart a furniture listing. Do you want to log in or sign up?");
-    if(res){
-      router.push('/login'); 
+      setFurnitureItems(updatedItems);
+  
+      // Send favorite update to the backend
+      try {
+        const response = await fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: session.user.id,
+            listing_id: id,
+            listing_type: "furniture",
+            favorite: updatedItems.find((item) => item.id === id)?.favorite,
+          }),
+        });
+  
+        if (response.ok) {
+          // Fetch updated suggestions
+          fetchSuggestions();
+        } else {
+          console.error("Failed to update favorite on the backend.");
+        }
+      } catch (error) {
+        console.error("Error updating favorite:", error);
+      }
+    } else {
+      const res = confirm(
+        "You must be logged in to heart a furniture listing. Do you want to log in or sign up?"
+      );
+      if (res) {
+        router.push("/login");
+      }
     }
-  }
   };
+  
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-5 mx-10">
