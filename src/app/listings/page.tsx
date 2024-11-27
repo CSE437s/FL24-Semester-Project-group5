@@ -235,7 +235,7 @@ const Listings = () => {
     
     {/* Centered Grid of Apartment Cards */}
     <div>
-        <h2 className="text-2xl font-semibold mb-4">Other Listings</h2>
+        <h2 className="text-2xl font-semibold mb-4">{aptSuggestions.length > 0  ? 'Other Listings' : 'Listings'}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 p-1">
           {filteredItems.map((item) => (
             <div key={item.id} className="auto">

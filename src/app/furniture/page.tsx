@@ -184,7 +184,7 @@ const FurniturePage = () => {
         {/* Filtered Listings Section */}
         <div>
           <h2 className="text-2xl font-semibold mb-4">
-            Other Furniture Listings
+            {suggestions.length > 0 ? 'Other Furniture Listings' : 'Furniture Listings'}
           </h2>
           <Grid container spacing={4}>
             {filteredItems.map((item) => (
