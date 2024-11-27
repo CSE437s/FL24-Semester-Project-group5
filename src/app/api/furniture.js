@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../../../db'); 
 
 router.get('/', async (req, res) => {
+  console.log("in 1")
   const { user_id } = req.query;
 
   try {
@@ -21,7 +22,7 @@ router.get('/', async (req, res) => {
         ON fi."FurnitureListingId" = fl.id
       LEFT JOIN public.favorites fa
         ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
-      WHERE fi."imageData" IS NULL
+      WHERE fi."imageData" IS NULL AND fl.approved = TRUE
       GROUP BY fl.id, bu.rating, fa.user_id
       UNION 
       SELECT fl.*, 
@@ -38,6 +39,7 @@ router.get('/', async (req, res) => {
         ON fi."FurnitureListingId" = fl.id
       LEFT JOIN public.favorites fa
         ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
+      WHERE fl.approved = TRUE
       GROUP BY fl.id, bu.rating, fa.user_id;
     `;
 
@@ -61,7 +63,39 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/pending', async (req, res) => {
+  console.log("in 2")
+
+  try {
+    console.log('Fetching pending furniture listings...');
+      
+    const pendingListings = await pool.query(`
+      SELECT fl.*, 
+             '{}'::bytea[] AS pics
+      FROM furniture_listing fl
+      LEFT JOIN "FurnitureImage" fi ON fi."FurnitureListingId" = fl.id
+      WHERE approved = FALSE
+      GROUP BY fl.id;
+    `);
+      
+    const listings = pendingListings.rows.map((listing) => ({
+      ...listing,
+      pics: listing.pics.map((pic) => 
+        `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`
+      ),
+    }));
+      
+    res.json(listings);
+  } catch (error) {
+    console.error('Error fetching pending listings:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 router.get('/suggestions', async (req, res) => {
+  console.log("in 3")
+
   const { user_id } = req.query;
 
   console.log('Received request for suggestions for user_id:', user_id);
@@ -106,6 +140,7 @@ router.get('/suggestions', async (req, res) => {
     LOWER(fl.description) SIMILAR TO $1
     OR fl.colors::text SIMILAR TO $2
     )
+    AND fl.approved = TRUE
     AND fl.id NOT IN (
     SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
     )
@@ -122,6 +157,7 @@ router.get('/suggestions', async (req, res) => {
     LOWER(fl.description) SIMILAR TO $1
     OR fl.colors::text SIMILAR TO $2
     )
+    AND fl.approved = TRUE
     AND fl.id NOT IN (
     SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
     )
@@ -166,6 +202,8 @@ router.get('/suggestions', async (req, res) => {
 
 
 router.get('/:id', async (req, res) => {
+  console.log("in 4")
+
   const { user_id } = req.query;
   const { id } = req.params;
 
@@ -214,6 +252,7 @@ GROUP BY fl.id, bu.rating,u.name, fa.user_id ;`, [id, user_id]
 
     res.json(furniture); 
   } catch (err) {
+    console.log("hello")
     console.error(`Error fetching furniture item:`, err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -221,6 +260,8 @@ GROUP BY fl.id, bu.rating,u.name, fa.user_id ;`, [id, user_id]
 
 
 router.post('/check-or-add-user', async (req, res) => {
+  console.log("in 5")
+
   const { user_id } = req.body;
 
   try {
@@ -246,6 +287,8 @@ router.post('/check-or-add-user', async (req, res) => {
 });
 
 router.post('/upload', async (req, res) => {
+  console.log("in 6")
+
   try {
     const { price, description, condition, pics, user_id, location, colors } = req.body;
 
@@ -255,7 +298,7 @@ router.post('/upload', async (req, res) => {
     // Insert furniture listing into the database
     const result = await pool.query(
       `INSERT INTO furniture_listing (user_id, price, description, condition, colors, location)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+       VALUES ($1, $2, $3, $4, $5, $6, FALSE) RETURNING *`,
       [user_id, price, description, condition, colorsArray, location]
     );
 
@@ -288,6 +331,8 @@ router.post('/upload', async (req, res) => {
 
 
 router.post('/check-or-add-user', async (req, res) => {
+  console.log("in 7")
+
   const { user_id } = req.body;
 console.log(user_id);
   try {
@@ -314,6 +359,8 @@ console.log(user_id);
 });
 
 router.put('/:id', async (req, res) => {
+  console.log("in 8")
+
   const { id } = req.params;
   const { price, description, condition, colors, location, pics } = req.body;
   
@@ -357,6 +404,8 @@ console.log("bf", bufferPic);
 });
 
 router.delete('/delete/:id', async (req, res) => {
+  console.log("in 9")
+
   const { id } = req.params;
   const type = "furniture";
   try {
@@ -378,6 +427,8 @@ router.delete('/delete/:id', async (req, res) => {
 
 
 router.patch('/:id/favorite', async (req, res) => { 
+  console.log("in 10")
+
   try{
     const {user_id, listing_id, listing_type, favorite} = req.body;
     let result;
@@ -395,6 +446,8 @@ router.patch('/:id/favorite', async (req, res) => {
   });
 
   router.get('/mylistings/:user_id', async (req, res) => {
+    console.log("in 11")
+
     const { user_id } = req.params;
     try {
       const query = await pool.query(`SELECT fl.*, 
@@ -447,6 +500,39 @@ router.patch('/:id/favorite', async (req, res) => {
     }
   });
 
+
+  router.patch('/:id/approve', async (req, res) => {
+    const { id } = req.params;
+  
+    // Validate ID
+    if (isNaN(parseInt(id, 10))) {
+      console.error(`Invalid ID provided: ${id}`);
+      return res.status(400).json({ error: 'Invalid ID' });
+    }
+  
+    console.log('Attempting to approve listing with ID:', id);
+  
+    try {
+      const result = await pool.query(
+        `UPDATE furniture_listing SET approved = TRUE WHERE id = $1 RETURNING *`,
+        [id]
+      );
+  
+      console.log('Query result:', result.rows);
+  
+      if (result.rowCount === 0) {
+        console.log('Listing not found for ID:', id);
+        return res.status(404).json({ error: 'Listing not found' });
+      }
+  
+      console.log('Listing approved successfully:', result.rows[0]);
+  
+      res.json({ message: 'Listing approved successfully', listing: result.rows[0] });
+    } catch (error) {
+      console.error('Error approving listing:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
   
   
 

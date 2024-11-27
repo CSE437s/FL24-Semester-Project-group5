@@ -18,6 +18,7 @@ interface FurnitureCardProps {
   linkDestination: string;
   favorite: boolean;
   onFavoriteToggle: () => void; 
+  approveButton?: React.ReactNode;
 }
 
 const FurnitureCard = ({ 
@@ -26,7 +27,9 @@ const FurnitureCard = ({
   images, 
   linkDestination, 
   favorite, 
-  onFavoriteToggle 
+  onFavoriteToggle,
+  approveButton 
+
 }: FurnitureCardProps) => {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -90,6 +93,11 @@ const FurnitureCard = ({
               {price}
             </Typography>
           </Box>
+          {approveButton && (
+            <Box className="mt-2">
+              {approveButton}
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Link>

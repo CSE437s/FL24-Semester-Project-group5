@@ -51,6 +51,9 @@ const FurniturePage = () => {
       console.error("Error fetching suggestions:", error);
     }
   };
+  useEffect(()=>{
+    console.log('furnitureItems', furnitureItems)
+  },[furnitureItems])
 
   const handleAddFurniture = () => {
     if (status === 'unauthenticated') {

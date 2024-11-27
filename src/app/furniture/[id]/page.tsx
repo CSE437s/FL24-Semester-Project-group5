@@ -28,6 +28,7 @@ interface FurnitureItem {
   pics: string[];
   name: string;
   favorite: boolean;
+  approved?: boolean;
 }
 
 interface Location {
@@ -44,11 +45,33 @@ const FurnitureDescriptionPage = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const address = [''];
   const { data: session, status } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+
   
 
   const [furnitureItem, setFurnitureItem] = useState<FurnitureItem | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdmin = () => {
+      const adminEmails = ["subletify@wustl.edu"]; 
+      if (session?.user?.email && adminEmails.includes(session.user.email)) {
+        setIsAdmin(true)
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdmin();
+  }, [session]);
+
+  useEffect(() => {
+    console.log('furnitureItem', furnitureItem)
+  }, [furnitureItem]);
+
+  
 
   useEffect(() => {
     const user_id = session?.user.id;
@@ -127,6 +150,27 @@ const FurnitureDescriptionPage = () => {
       router.push('/login'); 
     }
   }
+  };
+
+  const approveListing = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/furniture/${id}/approve`,
+        {
+          method: "PATCH",
+        }
+      );
+      if (response.ok) {
+        alert("Listing approved successfully!");
+        setFurnitureItem((prev) =>
+          prev ? { ...prev, approved: true } : prev // Update the local state to reflect the approval
+        );
+      } else {
+        alert("Failed to approve the listing.");
+      }
+    } catch (error) {
+      console.error("Error approving the listing:", error);
+    }
   };
 
   return (
@@ -253,6 +297,18 @@ const FurnitureDescriptionPage = () => {
               </Grid>
               </Grid>
           </Card>
+          {!furnitureItem.approved && isAdmin && ( 
+            <Box sx={{ textAlign: "center", marginTop: "20px" }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={approveListing}
+              >
+                Approve Listing
+              </Button>
+            </Box>
+          )}
+
           <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '10px', paddingTop:'1rem'}}>
             <Button variant="contained" color="primary" onClick={() => router.back()}>
               Back to Listings

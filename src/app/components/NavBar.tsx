@@ -35,6 +35,12 @@ export default function DrawerAppBar(props: { window?: () => Window }) {
     return true;
   });
 
+  const isAdmin = session?.user?.email === 'subletify@wustl.edu';
+
+  if (isAdmin) {
+    filteredItems.push({ text: 'Admin', href: '/admin' });
+  }
+
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
       <Typography variant="h6" sx={{ my: 2 }}>
