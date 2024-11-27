@@ -55,6 +55,105 @@ const apartments = result.rows.map(apartment => {
 });
 
 
+router.get('/suggestions-apt', async (req, res) => {
+  const { user_id } = req.query;
+
+  console.log('Received request for apartment suggestions for user_id:', user_id);
+
+  try {
+    // Fetch user's favorite apartments
+    const favoriteQuery = `
+      SELECT al.description, al.bedrooms
+      FROM public.favorites f
+      JOIN public.apartment_listing al ON f.listing_id = al.id
+      WHERE f.user_id = $1 AND f.listing_type = 'apartment'
+    `;
+    const favorites = await pool.query(favoriteQuery, [user_id]);
+
+    console.log('Favorites fetched:', favorites.rows);
+
+    if (favorites.rows.length === 0) {
+      console.log('No favorites found for user_id:', user_id);
+      return res.json([]);
+    }
+
+    // Extract keywords from descriptions and bedroom counts
+    const keywords = favorites.rows
+      .map((row) => row.description?.split(' ') || [])
+      .flat()
+      .map((word) => word.toLowerCase());
+    const bedrooms = favorites.rows.map((row) => row.bedrooms);
+
+    console.log('Extracted keywords:', keywords);
+    console.log('Extracted bedrooms:', bedrooms);
+
+    // SQL query for suggestions
+    const suggestionQuery = `
+      SELECT al.*,
+      '{}'::bytea[] AS pics,
+      ( (LOWER(al.description) SIMILAR TO $1)::int +
+      (al.bedrooms = ANY($2))::int) as match_score
+      FROM public.apartment_listing al
+      LEFT JOIN public."ApartmentImage" fi
+      ON fi."ApartmentListingId" = al.id
+      WHERE (
+        -- Match any of the description keywords
+        LOWER(al.description) SIMILAR TO $1
+        OR al.bedrooms = ANY($2)
+      )
+      AND al.id NOT IN (
+        SELECT listing_id
+        FROM public.favorites
+        WHERE user_id = $3 AND listing_type = 'apartment'
+      )
+      AND fi."imageData" IS NULL
+      UNION
+      SELECT al.*,
+      ARRAY_AGG(fi."imageData") AS pics,
+      ( (LOWER(al.description) SIMILAR TO $1)::int +
+        2* (al.bedrooms = ANY($2))::int) as match_score
+      FROM public.apartment_listing al
+      JOIN public."ApartmentImage" fi
+      ON fi."ApartmentListingId" = al.id
+      WHERE (
+        -- Match any of the description keywords
+        LOWER(al.description) SIMILAR TO $1
+        OR al.bedrooms = ANY($2)
+      )
+      AND al.id NOT IN (
+        SELECT listing_id
+        FROM public.favorites
+        WHERE user_id = $3 AND listing_type = 'apartment'
+      )
+      GROUP BY al.id ORDER BY match_score DESC
+      LIMIT 3;
+    `;
+    const keywordPattern = `%(${keywords.join('|')})%`;
+
+    const result = await pool.query(suggestionQuery, [
+      keywordPattern,
+      bedrooms,
+      user_id,
+    ]);
+
+    const suggestions = result.rows.map(suggestion => {
+      return {
+        ...suggestion,
+        pics: suggestion.pics.map(pic => {
+          return `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`; 
+        }),
+      };
+    });
+
+      res.json(suggestions);
+    
+  } catch (error) {
+    console.error('Error fetching apartment suggestions:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params; 
   const { user_id } = req.query;

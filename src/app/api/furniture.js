@@ -61,6 +61,110 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/suggestions', async (req, res) => {
+  const { user_id } = req.query;
+
+  console.log('Received request for suggestions for user_id:', user_id);
+
+  try {
+    // Fetch the user's favorites
+    const favoriteQuery = `
+      SELECT fl.description, fl.colors
+      FROM public.favorites f
+      JOIN public.furniture_listing fl ON f.listing_id = fl.id
+      WHERE f.user_id = $1 AND f.listing_type = 'furniture'
+    `;
+    const favorites = await pool.query(favoriteQuery, [user_id]);
+
+    // console.log('Favorites fetched:', favorites.rows);
+
+    if (favorites.rows.length === 0) {
+      // console.log('No favorites found for user_id:', user_id);
+      return res.json([]);
+    }
+
+    const keywords = favorites.rows
+      .map((row) => row.description.split(' '))
+      .flat()
+      .map((word) => word.toLowerCase());
+    const colors = favorites.rows
+      .map((row) => row.colors || [])
+      .flat();
+
+    // console.log('Extracted keywords:', keywords);
+    // console.log('Extracted colors:', colors);
+
+    const suggestionQuery = `
+    SELECT fl.*,
+    '{}'::bytea[] AS pics,
+    ((LOWER(fl.description) SIMILAR TO $1)::int + 
+    (fl.colors::text SIMILAR TO $2)::int) AS match_score
+    FROM public.furniture_listing fl
+    LEFT JOIN public."FurnitureImage" fi
+    ON fi."FurnitureListingId" = fl.id
+    WHERE (
+    LOWER(fl.description) SIMILAR TO $1
+    OR fl.colors::text SIMILAR TO $2
+    )
+    AND fl.id NOT IN (
+    SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+    )
+    AND fi."imageData" IS NULL
+    UNION 
+    SELECT fl.*,
+    ARRAY_AGG(fi."imageData") AS pics,
+    2*((LOWER(fl.description) SIMILAR TO $1)::int + 
+    (fl.colors::text SIMILAR TO $2)::int) AS match_score
+    FROM public.furniture_listing fl
+    JOIN public."FurnitureImage" fi
+    ON fi."FurnitureListingId" = fl.id
+    WHERE (
+    LOWER(fl.description) SIMILAR TO $1
+    OR fl.colors::text SIMILAR TO $2
+    )
+    AND fl.id NOT IN (
+    SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+    )
+    GROUP BY fl.id ORDER BY match_score DESC
+    LIMIT 3;
+    `;
+    const keywordPattern = `%(${keywords.join('|')})%`;
+    const colorPattern = `%(${colors.join('|')})%`;
+
+    // console.log('Keyword pattern for query:', keywordPattern);
+    // console.log('Color pattern for query:', colorPattern);
+
+    const result = await pool.query(suggestionQuery, [
+      keywordPattern,
+      colorPattern,
+      user_id,
+    ]);
+
+    // console.log('Suggestions fetched:', suggestions.rows);
+    const suggestions = result.rows.map(suggestion => {
+      return {
+        ...suggestion,
+        pics: suggestion.pics.map(pic => {
+          return `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`; // Convert each Buffer to Base64
+        }),
+      };
+    });
+
+
+      res.json(suggestions);
+    
+    
+
+    // console.log('Randomized suggestions:', randomSuggestions);
+
+    
+  } catch (error) {
+    console.error('Error fetching suggestions:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 router.get('/:id', async (req, res) => {
   const { user_id } = req.query;
   const { id } = req.params;
@@ -342,6 +446,8 @@ router.patch('/:id/favorite', async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });
+
+  
   
 
 module.exports = router; 

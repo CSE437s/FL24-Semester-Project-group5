@@ -32,6 +32,7 @@ interface Location {
 
 const Listings = () => {
   const [apartmentItems, setApartmentItems] = useState<ApartmentItems[]>([]);
+  const [aptSuggestions, setAptSuggestions] = useState<ApartmentItems[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
   const [distRange, setDistRange] = useState<number[]>([0, 3]);
@@ -41,6 +42,25 @@ const Listings = () => {
   const [bathNum, setBathNum] = useState<string>("Any");
   const { data: session, status } = useSession();  
   const router = useRouter();
+
+  const fetchSuggestions = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/apartment/suggestions-apt?user_id=${session.user.id}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setAptSuggestions(data);
+      } else {
+        console.error("Error fetching suggestions");
+      }
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    }
+  };
 
   const handleAddListing = () => {
     if (status === 'unauthenticated') {
@@ -96,6 +116,7 @@ const Listings = () => {
 
     if (status !== "loading") {
       fetchApartmentItems();
+      fetchSuggestions();
     }
   }, [session, status]);
 
@@ -153,6 +174,7 @@ const Listings = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "apartment", favorite: updatedItems.find((item) => item.id === id)?.favorite}),
     });
+    fetchSuggestions();
   }else{
     const res = confirm("You must be logged in to heart a apartment listing. Do you want to log in or sign up?");
     if(res){
@@ -182,32 +204,64 @@ const Listings = () => {
       setBathrooms={setBathNum}
       handleAddApartment={handleAddListing}
     />
+    {aptSuggestions.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">Suggested Listings</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 p-1">
+            {aptSuggestions.map((item) => (
+              <div key={item.id} className="auto">
+                <ApartmentCard
+                  title={item.description || "Apartment"}
+                  address={item.location}
+                  price={`$${item.price}`}
+                  images={
+                    item.pics?.length > 0
+                      ? item.pics
+                      : ["https://via.placeholder.com/345x140"]
+                  }
+                  linkDestination={
+                    item.user_id === session?.user.id
+                      ? `/listings/edit/${item.id}`
+                      : `/listings/${item.id}`
+                  }
+                  favorite={item.favorite}
+                  onFavoriteToggle={() => toggleFavorite(item.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     
     {/* Centered Grid of Apartment Cards */}
-    <div className="flex justify-center w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 p-1">
-        {filteredItems.map((item) => (
-          <div key={item.id} className="auto">
-        
-            <ApartmentCard
-              title={item.description || "Apartment"}
-              address={item.location}
-              price={`$${item.price}`}
-              images={item.pics|| ["https://via.placeholder.com/345x140"]}
-              
-              linkDestination= {item.user_id === session?.user.id 
-                ? `/listings/edit/${item.id}` 
-                : `/listings/${item.id}`}
+    <div>
+        <h2 className="text-2xl font-semibold mb-4">{aptSuggestions.length > 0  ? 'Other Listings' : 'Listings'}</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 p-1">
+          {filteredItems.map((item) => (
+            <div key={item.id} className="auto">
+              <ApartmentCard
+                title={item.description || "Apartment"}
+                address={item.location}
+                price={`$${item.price}`}
+                images={
+                  item.pics?.length > 0
+                    ? item.pics
+                    : ["https://via.placeholder.com/345x140"]
+                }
+                linkDestination={
+                  item.user_id === session?.user.id
+                    ? `/listings/edit/${item.id}`
+                    : `/listings/${item.id}`
+                }
                 favorite={item.favorite}
                 onFavoriteToggle={() => toggleFavorite(item.id)}
-            />
-          </div>
-        ))}
-
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   </div>
-</div>
 
   );
 };
