@@ -113,7 +113,7 @@ router.get('/suggestions', async (req, res) => {
     UNION 
     SELECT fl.*,
     ARRAY_AGG(fi."imageData") AS pics,
-    ((LOWER(fl.description) SIMILAR TO $1)::int + 
+    2*((LOWER(fl.description) SIMILAR TO $1)::int + 
     (fl.colors::text SIMILAR TO $2)::int) AS match_score
     FROM public.furniture_listing fl
     JOIN public."FurnitureImage" fi

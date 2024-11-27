@@ -111,7 +111,7 @@ router.get('/suggestions-apt', async (req, res) => {
       SELECT al.*,
       ARRAY_AGG(fi."imageData") AS pics,
       ( (LOWER(al.description) SIMILAR TO $1)::int +
-        (al.bedrooms = ANY($2))::int) as match_score
+        2* (al.bedrooms = ANY($2))::int) as match_score
       FROM public.apartment_listing al
       JOIN public."ApartmentImage" fi
       ON fi."ApartmentListingId" = al.id
