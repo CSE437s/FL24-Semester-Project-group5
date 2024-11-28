@@ -53,7 +53,6 @@ export default function ListingUpload() {
     policies: Yup.string()
       .min(5, 'Policies must be at least 5 characters')
       .required('Policies are required'),
-    location: Yup.string().required('Location is required'),
   });
 
   // Formik setup
@@ -67,7 +66,6 @@ export default function ListingUpload() {
       bathrooms: 0,
       amenities: '',
       policies: '',
-      location: '',
     },
     validationSchema: validationSchema,
     validateOnBlur: true, // Enable validation on blur
@@ -212,14 +210,8 @@ export default function ListingUpload() {
         error={formik.touched.description && Boolean(formik.errors.description)}
         helperText={formik.touched.description && formik.errors.description}
       />
-      <LocationDropdown
-        onLocationSelect={(selectedLocation) => {
-          if (formik.values.location !== selectedLocation) { // Prevent unnecessary updates
-            formik.setFieldValue('location', selectedLocation);
-            formik.setFieldTouched('location', true);
-          }
-        }}
-      />
+      <LocationDropdown onLocationSelect={(selectedLocation) => setLocation(selectedLocation)} />
+
       <TextField
         label="Availability"
         variant="outlined"

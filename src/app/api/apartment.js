@@ -4,9 +4,10 @@ const pool = require('../../../db');
 
 router.get('/', async (req, res) => {
   const { user_id } = req.query;
+  console.log("hit")
 
   try {
-    const result =  await pool.query(
+    const result =  await pool.query( 
 `SELECT fl.*, 
        bu.rating, 
        '{}'::bytea[] AS pics,
