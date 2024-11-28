@@ -36,6 +36,8 @@ type ApartmentListing = {
   pics: string[];
   location: string;
   favorite: boolean;
+  approved: boolean;
+
 };
 
 
