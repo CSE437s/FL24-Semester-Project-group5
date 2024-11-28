@@ -183,7 +183,6 @@ const ApartmentDescriptionPage = () => {
           position: "relative",
         }}
       >
-        {/* Left Arrow Button */}
         <IconButton
           onClick={() => router.back()}
           sx={{
@@ -201,7 +200,7 @@ const ApartmentDescriptionPage = () => {
           <ArrowBackIcon />
         </IconButton>
 
-        <Box sx={{ flex: 1, height: "100%" }}>
+        <Box sx={{ flex: 1, height: "100%", width: '50%' }}>
           {apartmentItem.pics.length > 1 ? (
             <Swiper
               spaceBetween={10}

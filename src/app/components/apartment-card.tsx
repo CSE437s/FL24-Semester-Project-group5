@@ -21,16 +21,22 @@ interface ApartmentCardProps {
   linkDestination: string;
   favorite: boolean;
   onFavoriteToggle: () => void;
-  approveButton?: React.ReactNode;
+  approveListing?: () => void;
   showPendingLabel?: boolean;
   approved?: boolean;
 }
 
-export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, approveButton, showPendingLabel = false, approved }: ApartmentCardProps) => {
+export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, approveListing, showPendingLabel = false, approved }: ApartmentCardProps) => {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     onFavoriteToggle();
+  };
+
+  const handleApproveClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); 
+    e.preventDefault();
+    approveListing?.();
   };
   return (
     <Link href={linkDestination} passHref>
@@ -60,7 +66,7 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
           />
         )}
         <CardContent className="relative flex flex-col px-4 py-2">
-          {!approveButton && (
+          {!approveListing && (
             <IconButton
               className="absolute top-2 right-4"
               size="small"
@@ -106,12 +112,16 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
             >
               {price}
             </Typography>
-            {approveButton && (
-              <CheckCircleIcon
-                color="success"
-                fontSize="large"
-                className="text-green-600 hover:text-green-800"
-              />
+            {approveListing && !approved && (
+              <Box className="flex justify-end">
+                <IconButton onClick={handleApproveClick}>
+                  <CheckCircleIcon
+                    color="success"
+                    fontSize="large"
+                    className="text-green-600 hover:text-green-800"
+                  />
+                </IconButton>
+              </Box>
             )}
           </Box>
 

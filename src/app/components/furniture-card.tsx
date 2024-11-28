@@ -19,7 +19,7 @@ interface FurnitureCardProps {
   linkDestination: string;
   favorite: boolean;
   onFavoriteToggle: () => void;
-  approveButton?: React.ReactNode;
+  approveListing?: () => void;
   showPendingLabel?: boolean;
   approved?: boolean;
 }
@@ -31,7 +31,7 @@ const FurnitureCard = ({
   linkDestination,
   favorite,
   onFavoriteToggle,
-  approveButton,
+  approveListing,
   showPendingLabel = false,
   approved,
 
@@ -43,6 +43,12 @@ const FurnitureCard = ({
     onFavoriteToggle();
   };
   console.log("CHECK HERE", approved)
+
+  const handleApproveClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); 
+    e.preventDefault();
+    approveListing?.();
+  };
 
   return (
     <Link href={linkDestination} passHref>
@@ -73,7 +79,7 @@ const FurnitureCard = ({
 
         )}
         <CardContent className="relative flex flex-col px-4 py-2">
-          {!approveButton && (
+          {!approveListing && (
             <IconButton
               className="absolute top-2 right-4"
               size="small"
@@ -112,15 +118,17 @@ const FurnitureCard = ({
             >
               {price}
             </Typography>
-            {approveButton && (
-            <Box className="flex justify-end">
-            <CheckCircleIcon
-              color="success"
-              fontSize="large"
-              className="text-green-600 hover:text-green-800"
-            />
-          </Box>
-          )}
+            {approveListing && !approved && (
+              <Box className="flex justify-end">
+                <IconButton onClick={handleApproveClick}>
+                  <CheckCircleIcon
+                    color="success"
+                    fontSize="large"
+                    className="text-green-600 hover:text-green-800"
+                  />
+                </IconButton>
+              </Box>
+            )}
           </Box>
           
         </CardContent>

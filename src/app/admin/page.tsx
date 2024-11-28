@@ -95,25 +95,18 @@ const AdminPage = () => {
       <Grid container spacing={4}>
         {pendingFurniture.map((item) => (
           <Grid item key={item.id} xs={6} sm={4} lg={3} className='mb-4'>
-            <FurnitureCard
+            <FurnitureCard 
               title={item.description}
               price={`$${item.price}`}
               images={
                 item.pics && item.pics.length > 0
                   ? item.pics
                   : ["https://via.placeholder.com/345x140"]
-              }
+              } 
               linkDestination={`/furniture/${item.id}`}
               favorite={item.favorite}
               onFavoriteToggle={() => {}}
-              approveButton={
-                <button
-                  className="bg-green-500 text-white px-4 py-2 rounded"
-                  onClick={() => approveFurnitureListing(item.id)}
-                >
-                  Approve
-                </button>
-              }
+              approveListing={() => approveFurnitureListing(item.id)}
             />
           </Grid>
         ))}
@@ -135,14 +128,7 @@ const AdminPage = () => {
               linkDestination={`/listings/${item.id}`}
               favorite={item.favorite}
               onFavoriteToggle={() => {}}
-              approveButton={
-                <button
-                  className="bg-green-500 text-white px-4 py-2 rounded"
-                  onClick={() => approveApartmentListing(item.id)}
-                >
-                  Approve
-                </button>
-              }
+              approveListing={() => approveApartmentListing(item.id)}
             />
           </Grid>
         ))}

@@ -212,7 +212,7 @@ const FurnitureDescriptionPage = () => {
           <ArrowBackIcon />
         </IconButton>
   
-        <Box sx={{ flex: 1, height: '100%' }}>
+        <Box sx={{ flex: 1, height: '100%', width: '50%' }}>
           {furnitureItem.pics.length > 1 ? (
             <Swiper
               spaceBetween={10}
@@ -245,7 +245,7 @@ const FurnitureDescriptionPage = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            overflowY: 'auto', // Enable vertical scrolling for this section
+            overflowY: 'auto', 
           }}
         >
           {/* Furniture Info */}
@@ -264,20 +264,20 @@ const FurnitureDescriptionPage = () => {
               </Typography>
             </Box>
   
-            <Typography variant="h6" color="text.secondary" sx={{ marginTop: 2 }}>
+            <Typography variant="h6" color="text.secondary" sx={{ marginTop: 0}} className='text-lg'>
               Rating:
             </Typography>
             <Rating name="furniture-rating" value={furnitureItem.rating} readOnly />
   
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, marginTop: 0 }}>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Typography variant="h6" color="text.secondary">
+                <Typography variant="h6" color="text.secondary" className='text-lg'>
                   Condition:
                 </Typography>
                 <Typography variant="body1">{furnitureItem.condition}</Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Typography variant="h6" color="text.secondary">
+                <Typography variant="h6" color="text.secondary" className='text-lg'>
                   Colors:
                 </Typography>
                 <Typography variant="body1">{colorList}</Typography>
@@ -315,7 +315,7 @@ const FurnitureDescriptionPage = () => {
           {/* Admin Approval */}
           {!furnitureItem.approved && isAdmin && (
             <Box sx={{ marginTop: 3, textAlign: 'center' }}>
-              <Button variant="contained" color="success" onClick={approveListing}>
+              <Button variant="contained" color="success" onClick={approveListing} className="rounded-3xl p-3 w-1/2">
                 Approve Listing
               </Button>
             </Box>
