@@ -151,8 +151,8 @@ export default function ListingUpload() {
   return (
     <Box className="flex flex-wrap md:flex-nowrap gap-16 p-6 w-full max-w-7xl mx-auto bg-white shadow-lg rounded-lg mt-10 border border-gray-200 text-gray-700">
   <Box className="flex flex-col items-center w-full md:w-1/2 gap-4">
-    <h3 className="text-lg font-semibold">Image Preview</h3>
-    <Box className="w-full h-full">
+    <h3 className="text-2xl font-semibold">Image Preview</h3>
+    <Box className="w-full h-full mt-2">
       {imagePreview.length > 0 ? (
         <Swiper
           spaceBetween={10}
