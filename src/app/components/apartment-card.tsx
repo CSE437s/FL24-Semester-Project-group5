@@ -82,22 +82,23 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
           >
             {title}
           </Typography>
-          <Typography
-            variant="body2"
-            className="text-gray-600 text-left"
-          >
-            {address}
-          </Typography>
-          {showPendingLabel && (
+                    {showPendingLabel && (
             <Typography
               variant="body2"
-              className={`absolute top-8 left-4 font-semibold mt-2 ${
+              className={`font-semibold mb-2 ${
                 approved ? "text-green-600" : "text-red-600"
               }`}
             >
               {approved ? "Approved" : "Pending"}
             </Typography>
           )}
+          <Typography
+            variant="body2"
+            className="text-gray-600 text-left"
+          >
+            {address}
+          </Typography>
+         
           <Box className="mt-2 flex justify-between items-center">
             <Typography
               variant="h6"
@@ -113,6 +114,7 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
               />
             )}
           </Box>
+
         </CardContent>
       </Card>
     </Link>

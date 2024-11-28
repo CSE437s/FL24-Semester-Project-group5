@@ -72,7 +72,7 @@ const FurnitureCard = ({
           />
 
         )}
-        <CardContent className="relative flex flex-col gap-2 px-4 py-2">
+        <CardContent className="relative flex flex-col px-4 py-2">
           {!approveButton && (
             <IconButton
               className="absolute top-2 right-4"
@@ -98,7 +98,7 @@ const FurnitureCard = ({
           {showPendingLabel && (
             <Typography
               variant="body2"
-              className={`absolute top-8 left-4 font-semibold mt-2 ${
+              className={`font-semibold ${
                 approved ? "text-green-600" : "text-red-600"
               }`}
             >
