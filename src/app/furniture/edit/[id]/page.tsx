@@ -8,19 +8,19 @@ import {
   Box,
   TextField,
   InputLabel,
-  Typography,
-  CardActions,
   OutlinedInput,
   InputAdornment,
   Button,
   Select,
   MenuItem,
   FormControl,
-  CircularProgress,
-  Card,
-  CardMedia,
+  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 export default function EditListing() {
   const { id } = useParams();
@@ -57,16 +57,13 @@ export default function EditListing() {
       try {
         const newFilesByteArrays = await convertFilesToByteArray(files);
         const existingImagesByteArrays = imagePreview
-        .map((url) => url.split(",")[1])
-        .filter((byteArray) => byteArray !== undefined && byteArray !== null);
-        let allByteArrays;
-        if (existingImagesByteArrays[0] != undefined){
-           allByteArrays = [...existingImagesByteArrays, ...newFilesByteArrays];
-        }else{
-           allByteArrays = newFilesByteArrays;
-        }
-        
-        console.log(existingImagesByteArrays,newFilesByteArrays,allByteArrays );
+          .map((url) => url.split(",")[1])
+          .filter((byteArray) => byteArray !== undefined && byteArray !== null);
+        const allByteArrays =
+          existingImagesByteArrays[0] !== undefined
+            ? [...existingImagesByteArrays, ...newFilesByteArrays]
+            : newFilesByteArrays;
+
         const payload = {
           ...values,
           pics: allByteArrays,
@@ -102,8 +99,7 @@ export default function EditListing() {
             colors: data.colors,
             location: data.location,
           });
-
-          setImagePreview(data.pics); 
+          setImagePreview(data.pics);
         } else {
           console.error("Failed to fetch listing data");
         }
@@ -154,123 +150,122 @@ export default function EditListing() {
     return byteArrays;
   };
 
-  const handleDeletePic = (imageUrl: string) => {
-    setImagePreview((prev) => prev.filter((image) => image !== imageUrl));
-  };
-
-  const handleDelete = async () => {
-    const confirmDelete = confirm("Are you sure you want to delete this listing?");
-    if (confirmDelete) {
-      try {
-        const response = await fetch(`http://localhost:5001/api/furniture/delete/${id}`, {
-          method: "DELETE",
-        });
-        if (response.ok) {
-          router.push("/furniture");
-        } else {
-          console.error("Failed to delete listing data");
-        }
-      } catch (error) {
-        console.error("Error deleting listing:", error);
-      }
-    }
-  };
-
-  if (loading) return <CircularProgress />;
-
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-
-      <TextField
-        label="Description"
-        variant="outlined"
-        name="description"
-        value={formik.values.description}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        error={formik.touched.description && Boolean(formik.errors.description)}
-        helperText={formik.touched.description && formik.errors.description}
-      />
-      <FormControl>
-        <InputLabel htmlFor="price">Price</InputLabel>
-        <OutlinedInput
-          id="price"
-          name="price"
-          type="number"
-          startAdornment={<InputAdornment position="start">$</InputAdornment>}
-          value={formik.values.price}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          error={formik.touched.price && Boolean(formik.errors.price)}
-        />
-      </FormControl>
-      <TextField
-        label="Condition"
-        name="condition"
-        multiline
-        rows={4}
-        value={formik.values.condition}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        error={formik.touched.condition && Boolean(formik.errors.condition)}
-        helperText={formik.touched.condition && formik.errors.condition}
-      />
-      <TextField
-        label="Location"
-        name="location"
-        value={formik.values.location}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        error={formik.touched.location && Boolean(formik.errors.location)}
-        helperText={formik.touched.location && formik.errors.location}
-      />
-      <FormControl>
-        <InputLabel>Colors</InputLabel>
-        <Select
-          multiple
-          value={formik.values.colors}
-          onChange={formik.handleChange}
-          name="colors"
-        >
-          {['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Black', 'Grey'].map(color => (
-            <MenuItem key={color} value={color}>
-              {color}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    
-      <Box display="flex" flexWrap="wrap" gap={2}>
-        {imagePreview.map((imageUrl, index) => (
-          <Card key={index} sx={{ width: 200, padding: 1 }}>
-            <CardMedia
-              component="img"
-              image={imageUrl}
-              alt={`Image ${index + 1}`}
-              sx={{ height: 120, objectFit: "cover" }}
-            />
-            <Typography variant="body2" sx={{ textAlign: "center", mt: 1 }}>
-              Image {index + 1}
-            </Typography>
-            <CardActions>
-              <Button variant="outlined" color="error" onClick={() => handleDeletePic(imageUrl)}>
-                Delete
-              </Button>
-            </CardActions>
-          </Card>
-        ))}
+    <Box className="flex flex-wrap md:flex-nowrap gap-16 p-6 w-full max-w-7xl mx-auto bg-white shadow-lg rounded-lg mt-10 border border-gray-200 text-gray-700">
+      {/* Left Column: Image Preview */}
+      <Box className="flex flex-col items-center w-full md:w-1/2 gap-4">
+        <h3 className="text-2xl font-semibold">Image Preview</h3>
+        <Box className="w-full h-full mt-2">
+          {imagePreview.length > 0 ? (
+            <Swiper
+              spaceBetween={10}
+              pagination={{ clickable: true }}
+              modules={[Pagination]}
+              className="h-full max-h-[400px] w-full"
+            >
+              {imagePreview.map((preview, index) => (
+                <SwiperSlide key={index} className="h-full w-full">
+                  <img
+                    src={preview}
+                    className="h-full w-full object-cover border border-gray-300 rounded-md"
+                    alt={`Preview ${index + 1}`}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <Box className="h-full w-full flex items-center justify-center border border-dashed border-gray-400 rounded-md">
+              <p className="text-gray-500">No images uploaded</p>
+            </Box>
+          )}
+        </Box>
+        <Button variant="contained" component="label" className="bg-black p-3 rounded-3xl mt-3 w-full">
+          Upload Image
+          <input type="file" hidden onChange={handleFileChange} multiple />
+        </Button>
       </Box>
 
-      <Button variant="contained" component="label">
-        Upload Images
-        <input type="file" hidden onChange={handleFileChange} multiple />
-      </Button>
-      <Button variant="contained" color="secondary" onClick={handleDelete}>
-        Delete Listing
-      </Button>
-      <Button type="submit" variant="contained">
-        Save Changes
-      </Button>
+      {/* Right Column: Form */}
+      <form onSubmit={formik.handleSubmit} className="flex flex-col items-center gap-4 w-full md:w-1/2">
+        <h2 className="text-2xl font-semibold mb-4">Edit Furniture Listing</h2>
+
+        <TextField
+          id="outlined-description"
+          label="Description"
+          variant="outlined"
+          name="description"
+          fullWidth
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.description}
+          error={formik.touched.description && Boolean(formik.errors.description)}
+          helperText={formik.touched.description && formik.errors.description}
+        />
+
+        <FormControl fullWidth>
+          <InputLabel htmlFor="outlined-adornment-price">Price</InputLabel>
+          <OutlinedInput
+            id="outlined-adornment-price"
+            startAdornment={<InputAdornment position="start">$</InputAdornment>}
+            label="Price"
+            name="price"
+            type="number"
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            value={formik.values.price}
+            error={formik.touched.price && Boolean(formik.errors.price)}
+          />
+        </FormControl>
+
+        <TextField
+          id="outlined-condition"
+          label="Condition"
+          variant="outlined"
+          fullWidth
+          multiline
+          rows={4}
+          name="condition"
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.condition}
+          error={formik.touched.condition && Boolean(formik.errors.condition)}
+          helperText={formik.touched.condition && formik.errors.condition}
+        />
+
+        <FormControl fullWidth>
+          <InputLabel>Colors</InputLabel>
+          <Select
+            multiple
+            value={formik.values.colors}
+            onChange={formik.handleChange}
+            name="colors"
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Black", "Grey"].map((color) => (
+              <MenuItem key={color} value={color}>
+                {color}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <TextField
+          id="outlined-location"
+          label="Location"
+          variant="outlined"
+          name="location"
+          fullWidth
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.location}
+          error={formik.touched.location && Boolean(formik.errors.location)}
+          helperText={formik.touched.location && formik.errors.location}
+        />
+
+        <Button type="submit" variant="contained" className="w-full bg-black p-3 rounded-3xl mt-3 text-white">
+          Save Changes
+        </Button>
+      </form>
     </Box>
   );
 }

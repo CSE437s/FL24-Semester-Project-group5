@@ -297,11 +297,11 @@ const ProfileContent = () => {
                 <Box sx={{ marginTop: "20px" }}>
                   {activeTab === 0 ? (
                     <>
-                      <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 2 }}>
+                      <Typography variant="h5" className="text-gray-700 font-bold mb-4" sx={{ mt: 2 }}>
                         Your Furniture Listings
                       </Typography>
                       {listings.length > 0 ? (
-                        <Grid container spacing={4} className='mt-2'>
+                        <Grid container spacing={4} className=''>
                           {listings.map((item) => (
                             <Grid item key={item.id} xs={6} sm={4} lg={3}>
                               <FurnitureCard
@@ -323,11 +323,11 @@ const ProfileContent = () => {
                         </Typography>
                       )}
   
-                      <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 4 }}>
+                      <Typography variant="h5" className="text-gray-700 font-bold mb-4" sx={{ mt: 4 }}>
                         Your Apartment Listings
                       </Typography>
                       {apartmentListings.length > 0 ? (
-                        <Grid container spacing={4} className='mt-2'>
+                        <Grid container spacing={4} className='mb-10'>
                           {apartmentListings.map((item) => (
                             <Grid item key={item.id} xs={6} sm={4} lg={3}>
                               <ApartmentCard
@@ -345,7 +345,7 @@ const ProfileContent = () => {
                           ))}
                         </Grid>
                       ) : (
-                        <Typography variant="body1" className="text-gray-700" sx={{ mt: 2 }}>
+                        <Typography variant="body1" className="text-gray-700 mb-4" sx={{ mt: 2 }}>
                           You have no apartment listings.
                         </Typography>
                       )}
@@ -410,8 +410,7 @@ const ProfileContent = () => {
       </Box>
     </Container>
   );
-  
-                      }  
+  }  
 
 
 const Profile = () => (
