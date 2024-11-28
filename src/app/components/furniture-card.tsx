@@ -10,6 +10,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { Pagination } from 'swiper/modules';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface FurnitureCardProps {
   title: string;
@@ -69,9 +70,10 @@ const FurnitureCard = ({
             alt={title}
             className="h-52 w-full object-cover border-b border-gray-300"
           />
+
         )}
-        <CardContent className="relative flex flex-col gap-0.5 px-4 py-2">
-          {!approveButton &&
+        <CardContent className="relative flex flex-col gap-2 px-4 py-2">
+          {!approveButton && (
             <IconButton
               className="absolute top-2 right-4"
               size="small"
@@ -84,39 +86,47 @@ const FurnitureCard = ({
                 <FavoriteBorderIcon />
               )}
             </IconButton>
-          }
-          <Typography gutterBottom variant="h5" component="div">
+          )}
+          <Typography
+            gutterBottom
+            variant="h5"
+            component="div"
+            className="font-medium text-gray-800"
+          >
             {title}
           </Typography>
           {showPendingLabel && (
             <Typography
               variant="body2"
-              color={approved ? "success" : "error"}
-
-              className="absolute top-8 left-4 font-semibold"
+              className={`absolute top-8 left-4 font-semibold mt-2 ${
+                approved ? "text-green-600" : "text-red-600"
+              }`}
             >
               {approved ? "Approved" : "Pending"}
             </Typography>
           )}
-
-          <Box className="text-left">
+          <Box className="mt-2 flex justify-between">
             <Typography
               variant="h6"
-              color="primary"
-              className="text-blue-800 text-lg p-0 m-0 font-medium"
+              className="text-black text-lg font-semibold"
             >
               {price}
             </Typography>
+            {approveButton && (
+            <Box className="flex justify-end">
+            <CheckCircleIcon
+              color="success"
+              fontSize="large"
+              className="text-green-600"
+            />
           </Box>
-          {approveButton && (
-            <Box className="mt-2">
-              {approveButton}
-            </Box>
           )}
+          </Box>
+          
         </CardContent>
       </Card>
     </Link>
   );
-};
+}
 
 export default FurnitureCard;
