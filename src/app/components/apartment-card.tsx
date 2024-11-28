@@ -110,7 +110,7 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
               <CheckCircleIcon
                 color="success"
                 fontSize="large"
-                className="text-green-600"
+                className="text-green-600 hover:text-green-800"
               />
             )}
           </Box>
