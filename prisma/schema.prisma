@@ -51,13 +51,14 @@ model User {
 }
 
 model FurnitureListing {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   user_id     String
   price       Int
   description String
-  condition   String @db.VarChar(20)
+  condition   String   @db.VarChar(20)
   colors      Json?
   location    String
+  approved    Boolean? @default(false)
 
   @@map("furniture_listing")
 }
@@ -71,7 +72,7 @@ model BusinessUser {
 }
 
 model ApartmentListing {
-  id           Int     @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   user_id      String
   price        Int
   location     String
@@ -81,6 +82,7 @@ model ApartmentListing {
   policies     String?
   bedrooms     Int?
   bathrooms    Int?
+  approved     Boolean? @default(false)
 
   @@map("apartment_listing")
 }
@@ -121,11 +123,9 @@ model ApartmentImage {
   ApartmentListingId Int
 }
 
-
 model favorites {
   id           Int    @id @default(autoincrement())
   user_id      String
   listing_id   Int
   listing_type String
-
 }
