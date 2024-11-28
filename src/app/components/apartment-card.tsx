@@ -19,9 +19,11 @@ interface ApartmentCardProps {
   favorite: boolean;
   onFavoriteToggle: () => void;
   approveButton?: React.ReactNode;
+  showPendingLabel?: boolean;
+  approved?: boolean;
 }
 
-export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, approveButton }: ApartmentCardProps) => {
+export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, approveButton, showPendingLabel = false, approved }: ApartmentCardProps) => {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -46,7 +48,7 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
                   className="h-52 w-full object-cover"
                 />
               </SwiperSlide>
-            ))}
+            ))} 
           </Swiper>
         ) : (
           // Single image
@@ -78,6 +80,16 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
           <Typography variant="body2" color="text.secondary" className="text-left text-gray-600">
             {address}
           </Typography>
+          {showPendingLabel && (
+            <Typography
+              variant="body2"
+              color={approved ? "success" : "error"}
+
+              className="absolute top-8 left-4 font-semibold"
+            >
+              {approved ? "Approved" : "Pending"}
+            </Typography>
+          )}
           <Box mt={2}>
             <Typography variant="h6" color="primary" className="text-blue-800 text-lg p-0 m-0 font-medium">
               {price}

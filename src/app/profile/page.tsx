@@ -325,6 +325,8 @@ const ProfileContent = () => {
                               linkDestination={`/listings/edit/${item.id}`}
                               favorite={item.favorite}
                               onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
+                              approved={item.approved}
+                              showPendingLabel={true}
                             />
                           </Grid>
                         ))}
