@@ -297,7 +297,7 @@ router.post('/upload', async (req, res) => {
 
     // Insert furniture listing into the database
     const result = await pool.query(
-      `INSERT INTO furniture_listing (user_id, price, description, condition, colors, location)
+      `INSERT INTO furniture_listing (user_id, price, description, condition, colors, location, approved)
        VALUES ($1, $2, $3, $4, $5, $6, FALSE) RETURNING *`,
       [user_id, price, description, condition, colorsArray, location]
     );
@@ -456,7 +456,8 @@ router.patch('/:id/favorite', async (req, res) => {
              CASE 
                WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
                ELSE false 
-             END AS favorite
+             END AS favorite,
+             fl.approved
       FROM public."furniture_listing" fl
       JOIN public."business_user" bu
         ON bu.user_id = fl."user_id"
@@ -473,7 +474,8 @@ router.patch('/:id/favorite', async (req, res) => {
              CASE 
                WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
                ELSE false 
-             END AS favorite
+             END AS favorite,
+             fl.approved
       FROM public."furniture_listing" fl
       JOIN public."business_user" bu
         ON bu.user_id = fl."user_id"
@@ -492,6 +494,8 @@ router.patch('/:id/favorite', async (req, res) => {
           `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`
         ),
       }));
+
+      console.log("furnitures", furnitures);
   
       res.json(furnitures);
     } catch (error) {

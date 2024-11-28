@@ -17,26 +17,31 @@ interface FurnitureCardProps {
   images: string[];
   linkDestination: string;
   favorite: boolean;
-  onFavoriteToggle: () => void; 
+  onFavoriteToggle: () => void;
   approveButton?: React.ReactNode;
+  showPendingLabel?: boolean;
+  approved?: boolean;
 }
 
-const FurnitureCard = ({ 
-  title, 
-  price, 
-  images, 
-  linkDestination, 
-  favorite, 
+const FurnitureCard = ({
+  title,
+  price,
+  images,
+  linkDestination,
+  favorite,
   onFavoriteToggle,
-  approveButton 
+  approveButton,
+  showPendingLabel = false,
+  approved,
 
 }: FurnitureCardProps) => {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     e.preventDefault();
-    onFavoriteToggle(); 
+    onFavoriteToggle();
   };
+  console.log("CHECK HERE", approved)
 
   return (
     <Link href={linkDestination} passHref>
@@ -83,7 +88,16 @@ const FurnitureCard = ({
           <Typography gutterBottom variant="h5" component="div">
             {title}
           </Typography>
- 
+          {showPendingLabel && (
+            <Typography
+              variant="body2"
+              color={approved ? "success" : "error"}
+
+              className="absolute top-8 left-4 font-semibold"
+            >
+              {approved ? "Approved" : "Pending"}
+            </Typography>
+          )}
 
           <Box className="text-left">
             <Typography
