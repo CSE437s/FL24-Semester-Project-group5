@@ -7,7 +7,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import IconButton from '@mui/material/IconButton';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';
+import 'swiper/css'; 
 import 'swiper/css/pagination';
 import { Pagination } from 'swiper/modules';
 interface ApartmentCardProps {
@@ -18,9 +18,10 @@ interface ApartmentCardProps {
   linkDestination: string;
   favorite: boolean;
   onFavoriteToggle: () => void; 
+  approveButton?: React.ReactNode;
 }
 
-export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle }: ApartmentCardProps) => {
+export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, approveButton }: ApartmentCardProps) => {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); 
     e.preventDefault();
@@ -80,6 +81,11 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
             {price}
           </Typography>
           </Box>
+          {approveButton && (
+            <Box className="mt-2">
+              {approveButton}
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Link>

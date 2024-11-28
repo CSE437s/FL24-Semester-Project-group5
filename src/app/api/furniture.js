@@ -369,7 +369,7 @@ router.put('/:id', async (req, res) => {
 
     const result = await pool.query(
       `UPDATE public."furniture_listing"
-       SET price = $1, description = $2, condition = $3, colors = $4, location = $5
+       SET price = $1, description = $2, condition = $3, colors = $4, location = $5, approved = FALSE
        WHERE id = $6 RETURNING *`,
       [price, description, condition, colorsArray, location, id]
     );

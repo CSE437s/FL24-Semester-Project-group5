@@ -18,7 +18,7 @@ LEFT JOIN public."ApartmentImage" fi
   ON fi."ApartmentListingId" = fl.id
 LEFT JOIN public.favorites fa
   ON fa.listing_id = fl.id AND fa.listing_type = 'apartment'
-WHERE fi."imageData" IS NULL
+WHERE fi."imageData" IS NULL AND fl.approved = TRUE
 GROUP BY fl.id, bu.rating, fa.user_id
 UNION 
 SELECT fl.*, 
@@ -32,6 +32,7 @@ JOIN public."ApartmentImage" fi
   ON fi."ApartmentListingId" = fl.id
 LEFT JOIN public.favorites fa
   ON fa.listing_id = fl.id AND fa.listing_type = 'apartment'
+WHERE fl.approved = TRUE
 GROUP BY fl.id, bu.rating, fa.user_id;
 `,[user_id]);
 
@@ -54,6 +55,31 @@ const apartments = result.rows.map(apartment => {
   }
 });
 
+router.get('/pending', async (req, res) => {
+  try {
+    console.log('Fetching pending apartment listings...');
+    const pendingListings = await pool.query(`
+      SELECT al.*, 
+             '{}'::bytea[] AS pics
+      FROM public."apartment_listing" al
+      LEFT JOIN public."ApartmentImage" ai ON ai."ApartmentListingId" = al.id
+      WHERE al.approved = FALSE
+      GROUP BY al.id;
+    `);
+
+    const listings = pendingListings.rows.map((listing) => ({
+      ...listing,
+      pics: listing.pics.map((pic) =>
+        `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`
+      ),
+    }));
+
+    res.json(listings);
+  } catch (error) {
+    console.error('Error fetching pending apartment listings:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 router.get('/suggestions-apt', async (req, res) => {
   const { user_id } = req.query;
@@ -101,6 +127,7 @@ router.get('/suggestions-apt', async (req, res) => {
         LOWER(al.description) SIMILAR TO $1
         OR al.bedrooms = ANY($2)
       )
+      AND al.approved = TRUE
       AND al.id NOT IN (
         SELECT listing_id
         FROM public.favorites
@@ -120,6 +147,7 @@ router.get('/suggestions-apt', async (req, res) => {
         LOWER(al.description) SIMILAR TO $1
         OR al.bedrooms = ANY($2)
       )
+      AND al.approved = TRUE
       AND al.id NOT IN (
         SELECT listing_id
         FROM public.favorites
@@ -257,7 +285,7 @@ router.put('/:id', async (req, res) => {
     const result = await pool.query(
       `UPDATE public."apartment_listing"
        SET description = $1, price = $2, location = $3, availability = $4, 
-           bedrooms = $5, bathrooms = $6, amenities = $7, policies = $8
+           bedrooms = $5, bathrooms = $6, amenities = $7, policies = $8, approved = FALSE
        WHERE id = $9 RETURNING *`,
       [description, price, location, availability, bedrooms, bathrooms, amenities, policies,  id]
     );
@@ -363,6 +391,30 @@ router.get('/mylistings/:user_id', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+router.patch('/:id/approve', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `UPDATE public."apartment_listing"
+       SET approved = TRUE
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Apartment listing not found' });
+    }
+
+    res.json({ message: 'Apartment listing approved successfully', listing: result.rows[0] });
+  } catch (error) {
+    console.error('Error approving apartment listing:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 
 

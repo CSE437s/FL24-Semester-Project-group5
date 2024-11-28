@@ -312,7 +312,7 @@ const ProfileContent = () => {
                           price={`$${item.price}`}
                           address = {item.location}
                           images={item.pics || ["https://via.placeholder.com/345x140"]}
-                          linkDestination={`/apartment/edit/${item.id}`}
+                          linkDestination={`/listings/edit/${item.id}`}
                           favorite={item.favorite}
                           onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
                         />

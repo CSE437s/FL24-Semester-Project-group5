@@ -15,7 +15,7 @@ import { Pagination } from 'swiper/modules';
 interface ColorData {
   colors: string[] | null;
 }
-
+ 
 interface FurnitureItem {
   id: number;
   user_id: number;

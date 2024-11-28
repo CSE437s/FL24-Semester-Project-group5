@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
 import FurnitureCard from '../components/furniture-card';
-import { useSession } from 'next-auth/react';  
+import ApartmentCard from '../components/apartment-card'; // Import ApartmentCard for apartments
+import { useSession } from 'next-auth/react';
 
 interface FurnitureItem {
   id: number;
@@ -16,51 +17,84 @@ interface FurnitureItem {
   favorite: boolean;
 }
 
-const AdminFurniturePage = () => {
-  const [pendingItems, setPendingItems] = useState<FurnitureItem[]>([]);
+interface ApartmentItem {
+  id: number;
+  user_id: number;
+  price: number;
+  location: string;
+  amenities: string;
+  description: string;
+  availability: string;
+  bedrooms: number;
+  bathrooms: number;
+  policies: string;
+  pics: string[];
+  favorite: boolean;
+}
+
+const AdminPage = () => {
+  const [pendingFurniture, setPendingFurniture] = useState<FurnitureItem[]>([]);
+  const [pendingApartments, setPendingApartments] = useState<ApartmentItem[]>([]);
   const { data: session } = useSession();
 
   useEffect(() => {
     const fetchPendingListings = async () => {
-        try {
-          const response = await fetch('http://localhost:5001/api/furniture/pending');
-          console.log('API Response:', response);
-          const data = await response.json();
-          console.log('Parsed Data:', data);
-          setPendingItems(data);
-        } catch (error) {
-          console.error('Error fetching pending furniture:', error);
-        }
-      };
+      try {
+        // Fetch furniture listings
+        const furnitureResponse = await fetch('http://localhost:5001/api/furniture/pending');
+        const furnitureData = await furnitureResponse.json();
+        setPendingFurniture(furnitureData);
+
+        // Fetch apartment listings
+        const apartmentResponse = await fetch('http://localhost:5001/api/apartment/pending');
+        const apartmentData = await apartmentResponse.json();
+        setPendingApartments(apartmentData);
+      } catch (error) {
+        console.error('Error fetching pending listings:', error);
+      }
+    };
 
     fetchPendingListings();
   }, []);
 
-  const approveListing = async (id: number) => {
+  const approveFurnitureListing = async (id: number) => {
     try {
       const response = await fetch(`http://localhost:5001/api/furniture/${id}/approve`, {
         method: 'PATCH',
       });
 
       if (response.ok) {
-        setPendingItems((prevItems) => prevItems.filter((item) => item.id !== id));
+        setPendingFurniture((prevItems) => prevItems.filter((item) => item.id !== id));
       } else {
-        console.error('Error approving listing');
+        console.error('Error approving furniture listing');
       }
     } catch (error) {
-      console.error('Error approving listing:', error);
+      console.error('Error approving furniture listing:', error);
     }
   };
 
-  useEffect(() =>{
-    console.log("pending", pendingItems);
-  },[pendingItems])
+  const approveApartmentListing = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/apartment/${id}/approve`, {
+        method: 'PATCH',
+      });
+
+      if (response.ok) {
+        setPendingApartments((prevItems) => prevItems.filter((item) => item.id !== id));
+      } else {
+        console.error('Error approving apartment listing');
+      }
+    } catch (error) {
+      console.error('Error approving apartment listing:', error);
+    }
+  };
 
   return (
     <div>
+      {/* Furniture Listings */}
       <h2>Pending Furniture Listings</h2>
       <Grid container spacing={4}>
-        {pendingItems.map((item) => (
+        {pendingFurniture.map((item) => (
           <Grid item key={item.id} xs={12} sm={6} md={4}>
             <FurnitureCard
               title={item.description}
@@ -70,20 +104,48 @@ const AdminFurniturePage = () => {
                   ? item.pics
                   : ["https://via.placeholder.com/345x140"]
               }
-                linkDestination={`/furniture/${item.id}`}
-                favorite={item.favorite}
-                onFavoriteToggle={() => {}}
-                approveButton={
-                    <button
-                      className="bg-green-500 text-white px-4 py-2 rounded"
-                      onClick={() => approveListing(item.id)}
-                    >
-                      Approve
-                    </button>
-                  }
+              linkDestination={`/furniture/${item.id}`}
+              favorite={item.favorite}
+              onFavoriteToggle={() => {}}
+              approveButton={
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  onClick={() => approveFurnitureListing(item.id)}
+                >
+                  Approve
+                </button>
+              }
             />
-            <button onClick={() => {}/*approveListing(item.id)*/}>Approve</button>
+          </Grid>
+        ))}
+      </Grid>
 
+      {/* Apartment Listings */}
+      <h2>Pending Apartment Listings</h2>
+      <Grid container spacing={4}>
+        {pendingApartments.map((item) => (
+          <Grid item key={item.id} xs={12} sm={6} md={4}>
+            <ApartmentCard
+              title={item.description}
+              address={item.location}
+              price={`$${item.price}`}
+              images={
+                item.pics && item.pics.length > 0
+                  ? item.pics
+                  : ["https://via.placeholder.com/345x140"]
+              }
+              linkDestination={`/listings/${item.id}`}
+              favorite={item.favorite}
+              onFavoriteToggle={() => {}}
+              approveButton={
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  onClick={() => approveApartmentListing(item.id)}
+                >
+                  Approve
+                </button>
+              }
+            />
           </Grid>
         ))}
       </Grid>
@@ -91,4 +153,4 @@ const AdminFurniturePage = () => {
   );
 };
 
-export default AdminFurniturePage;
+export default AdminPage;

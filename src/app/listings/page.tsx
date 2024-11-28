@@ -163,18 +163,30 @@ const Listings = () => {
   });
 
 
-  const toggleFavorite = (id: number) => {
+  const toggleFavorite = async (id: number) => {
     if (session){ 
       const updatedItems = apartmentItems.map((item) =>
         item.id === id ? { ...item, favorite: !item.favorite } : item
       );
     setApartmentItems(updatedItems);
-    fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "apartment", favorite: updatedItems.find((item) => item.id === id)?.favorite}),
-    });
-    fetchSuggestions();
+
+    try{
+      const response = await fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "apartment", favorite: updatedItems.find((item) => item.id === id)?.favorite}),
+      });
+      if (response.ok) {
+        // Fetch updated suggestions
+        fetchSuggestions();
+      } else {
+        console.error("Failed to update favorite on the backend.");
+      }
+    }catch (error){
+      console.error("Error updating favorite:", error);
+
+    }
+    
   }else{
     const res = confirm("You must be logged in to heart a apartment listing. Do you want to log in or sign up?");
     if(res){

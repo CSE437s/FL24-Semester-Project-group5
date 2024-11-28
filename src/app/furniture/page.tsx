@@ -133,7 +133,7 @@ const FurniturePage = () => {
             listing_type: "furniture",
             favorite: updatedItems.find((item) => item.id === id)?.favorite,
           }),
-        });
+        }); 
   
         if (response.ok) {
           // Fetch updated suggestions
