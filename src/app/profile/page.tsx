@@ -209,200 +209,209 @@ const ProfileContent = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {userId ? 'Seller Profile' : 'Your Profile'}
-      </Typography>
-      <Box sx={{ mt: 3 }}>
-        <Typography variant="h6">Email:</Typography>
-        <Typography>{profile?.email || 'Not available'}</Typography>
-
-        <Typography variant="h6" sx={{ mt: 2 }}>Full Name:</Typography>
-        <Typography>{profile?.name || 'Not provided'}</Typography>
-
-        <Typography variant="h6" sx={{ mt: 2 }}>Bio:</Typography>
-        <Typography>{profile?.bio || 'Not provided'}</Typography>
-      </Box>
-      {userId ? (
-        <>
-          <Typography variant="h5" sx={{ mt: 4 }}>Seller's Furniture Listings</Typography>
-          <div style={{ flexGrow: 1 }}>
-            {listings.length > 0 ? (
-              <Grid container spacing={4}>
-                {listings.map((item) => {
-                  console.log(`Item ID: ${item.id}, Approved: ${item.approved}`); // Log approved value
-                  return (
-                    <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
-                      <FurnitureCard
-                        title={item.description}
-                        price={`$${item.price}`}
-                        images={item.pics || ["https://via.placeholder.com/345x140"]}
-                        linkDestination={`/furniture/${item.id}`}
-                        favorite={item.favorite}
-                        onFavoriteToggle={() => toggleFavorite(item.id, 'furniture', item.favorite)}
-                      />
-                    </Grid>
-                  );
-                })}
-              </Grid>
-            ) : (
-              <Typography variant="body1" sx={{ mt: 2 }}>
-                Seller has no furniture listings.
+    <Container maxWidth="xl" sx={{ mt: 5 }}>
+      <Box className="flex flex-col gap-8 w-full min-h-screen">
+        {/* Profile Card */}
+        <Box className="flex flex-col justify-center items-center bg-gray-200 p-8 rounded-lg shadow-lg border border-gray-200 w-full max-w-3xlmx-auto " >
+          <Typography variant="h4" component="h1" fontWeight="semibold" className="text-gray-700 text-center" sx={{ mb: 2 }}>
+            {userId ? "Seller Profile" : "Your Profile"}
+          </Typography>
+          <Typography variant="body1" fontWeight="bold" className="text-gray-700 text-2xl text-center" sx={{ mt: 2 }}>
+            {profile?.name || "Not provided"}
+          </Typography>
+          <Typography variant="h6" fontWeight="medium" className="text-gray-700 text-lg text-center" sx={{ mt: 2 }}>
+            {profile?.email || "Not available"}
+          </Typography>
+          <Typography variant="body2" fontWeight="light" className="text-gray-700 text-base text-center mt-4">
+            {profile?.bio || "Not provided"}
+          </Typography>
+        </Box>
+  
+        {/* Listings Section */}
+        <Box>
+          {userId ? (
+            <>
+              {/* Seller's Furniture Listings */}
+              <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 2 }}>
+                Seller's Furniture Listings
               </Typography>
-            )}
-          </div>
-
-          <Typography variant="h5" sx={{ mt: 4 }}>Seller's Apartment Listings</Typography>
-          <div style={{ flexGrow: 1 }}>
-            {apartmentListings.length > 0 ? (
-              <Grid container spacing={4}>
-                {apartmentListings.map((item) => (
-                  <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
-                    <ApartmentCard
-                      title={item.description}
-                      address={item.location}
-                      price={`$${item.price}`}
-                      images={item.pics || ["https://via.placeholder.com/345x140"]}
-                      linkDestination={`/listings/${item.id}`}
-                      favorite={item.favorite}
-                      onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
-                    />
+              <Box sx={{ flexGrow: 1, mt: 2 }}>
+                {listings.length > 0 ? (
+                  <Grid container spacing={4}>
+                    {listings.map((item) => (
+                      <Grid item key={item.id} xs={6} sm={4} lg={3}>
+                        <FurnitureCard
+                          title={item.description}
+                          price={`$${item.price}`}
+                          images={item.pics || ["https://via.placeholder.com/345x140"]}
+                          linkDestination={`/furniture/${item.id}`}
+                          favorite={item.favorite}
+                          onFavoriteToggle={() => toggleFavorite(item.id, "furniture", item.favorite)}
+                        />
+                      </Grid>
+                    ))}
                   </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Typography variant="body1" sx={{ mt: 2 }}>
-                Seller has no apartment listings.
+                ) : (
+                  <Typography variant="body1" className="text-gray-700" sx={{ mt: 2 }}>
+                    Seller has no furniture listings.
+                  </Typography>
+                )}
+              </Box>
+  
+              {/* Seller's Apartment Listings */}
+              <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 4 }}>
+                Seller's Apartment Listings
               </Typography>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <Box sx={{ mt: 4 }}>
-            <Tabs value={activeTab} onChange={handleTabChange} aria-label="Profile Listings Tabs">
-              <Tab label="My Listings" />
-              <Tab label="Favorite Listings" />
-            </Tabs>
-
-            <div style={{ marginTop: '20px' }}>
-              {activeTab === 0 ? (
-                <>
-                  <Typography variant="h5" sx={{ mt: 4 }}>Your Furniture Listings</Typography>
-                  <div style={{ flexGrow: 1 }}>
-                    {listings.length > 0 ? (
-                      <Grid container spacing={4}>
-                        {listings.map((item) => (
-                          <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
-                            <FurnitureCard
-                              title={item.description}
-                              price={`$${item.price}`}
-                              images={item.pics || ["https://via.placeholder.com/345x140"]}
-                              linkDestination={`/furniture/edit/${item.id}`}
-                              favorite={item.favorite}
-                              onFavoriteToggle={() => toggleFavorite(item.id, 'furniture', item.favorite)}
-                              approved={item.approved}
-                              showPendingLabel={true}
-                            />
-                          </Grid>
-                        ))}
+              <Box sx={{ flexGrow: 1, mt: 2 }}>
+                {apartmentListings.length > 0 ? (
+                  <Grid container spacing={4}>
+                    {apartmentListings.map((item) => (
+                      <Grid item key={item.id} xs={6} sm={4} lg={3}>
+                        <ApartmentCard
+                          title={item.description}
+                          price={`$${item.price}`}
+                          address={item.location}
+                          images={item.pics || ["https://via.placeholder.com/345x140"]}
+                          linkDestination={`/listings/${item.id}`}
+                          favorite={item.favorite}
+                          onFavoriteToggle={() => toggleFavorite(item.id, "apartment", item.favorite)}
+                        />
                       </Grid>
-                    ) : (
-                      <Typography variant="body1" sx={{ mt: 2 }}>
-                        You have no furniture listings.
+                    ))}
+                  </Grid>
+                ) : (
+                  <Typography variant="body1" className="text-gray-700" sx={{ mt: 2 }}>
+                    Seller has no apartment listings.
+                  </Typography>
+                )}
+              </Box>
+            </>
+          ) : (
+            <>
+              <Box sx={{ mt: 4 }}>
+                <Tabs value={activeTab} onChange={handleTabChange}  aria-label="Profile Listings Tabs" sx={{ '& .MuiTab-root': { fontSize: '1'} }}>
+                  <Tab label="My Listings" />
+                  <Tab label="Favorite Listings" />
+                </Tabs>
+  
+                <Box sx={{ marginTop: "20px" }}>
+                  {activeTab === 0 ? (
+                    <>
+                      <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 2 }}>
+                        Your Furniture Listings
                       </Typography>
-                    )}
-                  </div>
-                  <Typography variant="h5" sx={{ mt: 4 }}>Your Apartment Listings</Typography>
-                  <div style={{ flexGrow: 1 }}>
-                    {apartmentListings.length > 0 ? (
-                      <Grid container spacing={4}>
-                        {apartmentListings.map((item) => (
-                          <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
-                            <ApartmentCard
-                              title={item.description}
-                              price={`$${item.price}`}
-                              address={item.location}
-                              images={item.pics || ["https://via.placeholder.com/345x140"]}
-                              linkDestination={`/listings/edit/${item.id}`}
-                              favorite={item.favorite}
-                              onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
-                              approved={item.approved}
-                              showPendingLabel={true}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    ) : (
-                      <Typography variant="body1" sx={{ mt: 2 }}>
-                        You have no apartment listings.
+                      {listings.length > 0 ? (
+                        <Grid container spacing={4} className='mt-2'>
+                          {listings.map((item) => (
+                            <Grid item key={item.id} xs={6} sm={4} lg={3}>
+                              <FurnitureCard
+                                title={item.description}
+                                price={`$${item.price}`}
+                                images={item.pics || ["https://via.placeholder.com/345x140"]}
+                                linkDestination={`/furniture/edit/${item.id}`}
+                                favorite={item.favorite}
+                                onFavoriteToggle={() => toggleFavorite(item.id, "furniture", item.favorite)}
+                                approved={item.approved}
+                                showPendingLabel={true}
+                              />
+                            </Grid>
+                          ))}
+                        </Grid>
+                      ) : (
+                        <Typography variant="body1" className="text-gray-700" sx={{ mt: 2 }}>
+                          You have no furniture listings.
+                        </Typography>
+                      )}
+  
+                      <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 4 }}>
+                        Your Apartment Listings
                       </Typography>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Typography variant="h5" sx={{ mt: 4 }}>Your Favorite Furniture Listings</Typography>
-                  <div style={{ flexGrow: 1 }}>
-                    {favoriteFurnitureListings.length > 0 ? (
-                      <Grid container spacing={4}>
-                        {favoriteFurnitureListings.map((item) => (
-                          <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
-                            <FurnitureCard
-                              title={item.description}
-                              price={`$${item.price}`}
-                              images={item.pics || ["https://via.placeholder.com/345x140"]}
-                              linkDestination={`/furniture/${item.id}`}
-                              favorite={item.favorite}
-                              onFavoriteToggle={() => toggleFavorite(item.id, 'furniture', item.favorite)}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    ) : (
-                      <Typography variant="body1" sx={{ mt: 2 }}>
-                        You have no favorite furniture listings.
+                      {apartmentListings.length > 0 ? (
+                        <Grid container spacing={4} className='mt-2'>
+                          {apartmentListings.map((item) => (
+                            <Grid item key={item.id} xs={6} sm={4} lg={3}>
+                              <ApartmentCard
+                                title={item.description}
+                                price={`$${item.price}`}
+                                address={item.location}
+                                images={item.pics || ["https://via.placeholder.com/345x140"]}
+                                linkDestination={`/listings/edit/${item.id}`}
+                                favorite={item.favorite}
+                                onFavoriteToggle={() => toggleFavorite(item.id, "apartment", item.favorite)}
+                                approved={item.approved}
+                                showPendingLabel={true}
+                              />
+                            </Grid>
+                          ))}
+                        </Grid>
+                      ) : (
+                        <Typography variant="body1" className="text-gray-700" sx={{ mt: 2 }}>
+                          You have no apartment listings.
+                        </Typography>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 2 }}>
+                        Your Favorite Furniture Listings
                       </Typography>
-                    )}
-
-                  </div>
-                  <Typography variant="h5" sx={{ mt: 4 }}>Your Favorite Apartment Listings</Typography>
-                  <div style={{ flexGrow: 1 }}>
-                    {favoriteApartmentListings.length > 0 ? (
-                      <Grid container spacing={4}>
-                        {favoriteApartmentListings.map((item) => (
-                          <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
-                            <ApartmentCard
-                              title={item.description}
-                              price={`$${item.price}`}
-                              address={item.location}
-                              images={item.pics || ["https://via.placeholder.com/345x140"]}
-                              linkDestination={`/apartment/${item.id}`}
-                              favorite={item.favorite}
-                              onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    ) : (
-                      <Typography variant="body1" sx={{ mt: 2 }}>
-                        You have no favorite apartment listings.
+                      {favoriteFurnitureListings.length > 0 ? (
+                        <Grid container spacing={4}>
+                          {favoriteFurnitureListings.map((item) => (
+                            <Grid item key={item.id} xs={6} sm={4} lg={3}>
+                              <FurnitureCard
+                                title={item.description}
+                                price={`$${item.price}`}
+                                images={item.pics || ["https://via.placeholder.com/345x140"]}
+                                linkDestination={`/furniture/${item.id}`}
+                                favorite={item.favorite}
+                                onFavoriteToggle={() => toggleFavorite(item.id, "furniture", item.favorite)}
+                              />
+                            </Grid>
+                          ))}
+                        </Grid>
+                      ) : (
+                        <Typography variant="body1" className="text-gray-700" sx={{ mt: 2 }}>
+                          You have no favorite furniture listings.
+                        </Typography>
+                      )}
+  
+                      <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 4 }}>
+                        Your Favorite Apartment Listings
                       </Typography>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          </Box>
-        </>
-      )}
-
-
+                      {favoriteApartmentListings.length > 0 ? (
+                        <Grid container spacing={4}>
+                          {favoriteApartmentListings.map((item) => (
+                            <Grid item key={item.id} xs={6} sm={4} lg={3}>
+                              <ApartmentCard
+                                title={item.description}
+                                price={`$${item.price}`}
+                                address={item.location}
+                                images={item.pics || ["https://via.placeholder.com/345x140"]}
+                                linkDestination={`/apartment/${item.id}`}
+                                favorite={item.favorite}
+                                onFavoriteToggle={() => toggleFavorite(item.id, "apartment", item.favorite)}
+                              />
+                            </Grid>
+                          ))}
+                        </Grid>
+                      ) : (
+                        <Typography variant="body1" className="text-gray-700" sx={{ mt: 2 }}>
+                          You have no favorite apartment listings.
+                        </Typography>
+                      )}
+                    </>
+                  )}
+                </Box>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Box>
     </Container>
-
-
   );
-};
+  
+                      }  
 
 
 const Profile = () => (
