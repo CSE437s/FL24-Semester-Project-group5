@@ -53,6 +53,7 @@ export default function ListingUpload() {
     policies: Yup.string()
       .min(5, 'Policies must be at least 5 characters')
       .required('Policies are required'),
+    location: Yup.string().required('Location is required'),
   });
 
   // Formik setup
@@ -66,12 +67,15 @@ export default function ListingUpload() {
       bathrooms: 0,
       amenities: '',
       policies: '',
+      location: '',
     },
     validationSchema: validationSchema,
+    validateOnBlur: true, // Enable validation on blur
+    validateOnChange: true, // Enable validation on change
     onSubmit: async (values) => {
-      console.log('setFiles',  files);
+      console.log('setFiles', files);
       const byteArrays = await convertFilesToByteArray();
-      console.log("b",byteArrays);
+      console.log("b", byteArrays);
       const payload = {
         ...values,
         pics: byteArrays,
@@ -80,38 +84,38 @@ export default function ListingUpload() {
       };
 
       const checkUserResponse = await fetch('http://localhost:5001/api/furniture/check-or-add-user', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ user_id: session?.user?.id }),  
-  });
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: session?.user?.id }),
+      });
 
-  // If the user check fails, exit early
-  if (!checkUserResponse.ok) {
-    console.error('Error checking or adding user:', checkUserResponse.statusText);
-    return;
-  }
+      // If the user check fails, exit early
+      if (!checkUserResponse.ok) {
+        console.error('Error checking or adding user:', checkUserResponse.statusText);
+        return;
+      }
 
-  const checkUserData = await checkUserResponse.json();
-  console.log('User Check/Add Response for Apartment:', checkUserData);
+      const checkUserData = await checkUserResponse.json();
+      console.log('User Check/Add Response for Apartment:', checkUserData);
 
 
-  const uploadResponse = await fetch('http://localhost:5001/api/apartment/upload', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+      const uploadResponse = await fetch('http://localhost:5001/api/apartment/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-  // If the upload is successful, redirect to the listings page
-  if (uploadResponse.ok) {
-    console.log("Apartment listing uploaded successfully.");
-    router.push('/listings');
-  } else {
-    console.error("Failed to upload apartment listing:", uploadResponse.statusText);
-  }
+      // If the upload is successful, redirect to the listings page
+      if (uploadResponse.ok) {
+        console.log("Apartment listing uploaded successfully.");
+        router.push('/listings');
+      } else {
+        console.error("Failed to upload apartment listing:", uploadResponse.statusText);
+      }
     },
   });
 
@@ -125,15 +129,15 @@ export default function ListingUpload() {
 
         return;
       }
-    // Append new files to the existing ones
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    
-    // Generate previews for all files 
-    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-    setImagePreview((prevPreviews) => [...prevPreviews, ...newPreviews]);
+      // Append new files to the existing ones
+      setFiles((prevFiles) => [...prevFiles, ...newFiles]);
 
-    // Append new file names to the existing list
-    setFileNames((prevFileNames) => [...prevFileNames, ...newFiles.map(file => file.name)]);
+      // Generate previews for all files 
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setImagePreview((prevPreviews) => [...prevPreviews, ...newPreviews]);
+
+      // Append new file names to the existing list
+      setFileNames((prevFileNames) => [...prevFileNames, ...newFiles.map(file => file.name)]);
     }
   };
 
@@ -165,7 +169,7 @@ export default function ListingUpload() {
       className="flex flex-col items-center gap-4 p-8 border border-gray-200 w-full max-w-2xl mx-auto bg-white shadow-md rounded-lg"
     >
       <h2 className="text-2xl font-semibold mb-4">New Apartment Listing</h2>
-      
+
       <TextField
         label="Title"
         variant="outlined"
@@ -177,7 +181,7 @@ export default function ListingUpload() {
         error={formik.touched.title && Boolean(formik.errors.title)}
         helperText={formik.touched.title && formik.errors.title}
       />
-  
+
       <FormControl fullWidth variant="outlined">
         <InputLabel htmlFor="outlined-adornment-price">Listing Price</InputLabel>
         <OutlinedInput
@@ -195,7 +199,7 @@ export default function ListingUpload() {
           <p className="text-red-500 text-sm mt-1">{formik.errors.price}</p>
         )}
       </FormControl>
-  
+
       <TextField
         label="Description"
         multiline
@@ -208,7 +212,14 @@ export default function ListingUpload() {
         error={formik.touched.description && Boolean(formik.errors.description)}
         helperText={formik.touched.description && formik.errors.description}
       />
-      <LocationDropdown onLocationSelect={(selectedLocation) => setLocation(selectedLocation)} />
+      <LocationDropdown
+        onLocationSelect={(selectedLocation) => {
+          if (formik.values.location !== selectedLocation) { // Prevent unnecessary updates
+            formik.setFieldValue('location', selectedLocation);
+            formik.setFieldTouched('location', true);
+          }
+        }}
+      />
       <TextField
         label="Availability"
         variant="outlined"
@@ -220,7 +231,7 @@ export default function ListingUpload() {
         error={formik.touched.availability && Boolean(formik.errors.availability)}
         helperText={formik.touched.availability && formik.errors.availability}
       />
-  
+
       <TextField
         label="Bedrooms"
         type="number"
@@ -233,7 +244,7 @@ export default function ListingUpload() {
         error={formik.touched.bedrooms && Boolean(formik.errors.bedrooms)}
         helperText={formik.touched.bedrooms && formik.errors.bedrooms}
       />
-  
+
       <TextField
         label="Bathrooms"
         type="number"
@@ -246,7 +257,7 @@ export default function ListingUpload() {
         error={formik.touched.bathrooms && Boolean(formik.errors.bathrooms)}
         helperText={formik.touched.bathrooms && formik.errors.bathrooms}
       />
-  
+
       <TextField
         label="Amenities"
         multiline
@@ -259,7 +270,7 @@ export default function ListingUpload() {
         error={formik.touched.amenities && Boolean(formik.errors.amenities)}
         helperText={formik.touched.amenities && formik.errors.amenities}
       />
-  
+
       <TextField
         label="Policies"
         multiline
@@ -272,19 +283,19 @@ export default function ListingUpload() {
         error={formik.touched.policies && Boolean(formik.errors.policies)}
         helperText={formik.touched.policies && formik.errors.policies}
       />
-{imagePreview.length > 0 && (
-  <Box className="flex flex-wrap gap-4">
-    {imagePreview.map((preview, index) => (
-      <CardMedia
-        key={index}
-        component="img"
-        className="h-56 object-cover w-[200px] border border-gray-300 rounded-md"
-        image={preview}
-        alt={`Preview ${index + 1}`}
-      />
-    ))}
-  </Box>
-)}
+      {imagePreview.length > 0 && (
+        <Box className="flex flex-wrap gap-4">
+          {imagePreview.map((preview, index) => (
+            <CardMedia
+              key={index}
+              component="img"
+              className="h-56 object-cover w-[200px] border border-gray-300 rounded-md"
+              image={preview}
+              alt={`Preview ${index + 1}`}
+            />
+          ))}
+        </Box>
+      )}
       <Button variant="contained" component="label" className="w-full mt-4">
         {fileNames.length > 0 ? `Uploaded Files: ${fileNames.join(', ')}` : 'Upload Image'}
         <input
@@ -294,9 +305,9 @@ export default function ListingUpload() {
           multiple
         />
       </Button>
-  
 
-  
+
+
       <Button
         type="submit"
         variant="contained"
@@ -307,6 +318,6 @@ export default function ListingUpload() {
       </Button>
     </form>
   );
-  
-  
+
+
 }
