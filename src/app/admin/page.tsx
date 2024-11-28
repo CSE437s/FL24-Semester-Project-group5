@@ -90,12 +90,11 @@ const AdminPage = () => {
   };
 
   return (
-    <div>
-      {/* Furniture Listings */}
-      <h2>Pending Furniture Listings</h2>
+    <div className="text-gray-700 p-6">
+      <h2 className='text-2xl font-semibold mb-3 text-gray-700 flex ml-1 mt-6'>Pending Furniture Listings</h2>
       <Grid container spacing={4}>
         {pendingFurniture.map((item) => (
-          <Grid item key={item.id} xs={12} sm={6} md={4}>
+          <Grid item key={item.id} xs={6} sm={4} lg={3} className='mb-4'>
             <FurnitureCard
               title={item.description}
               price={`$${item.price}`}
@@ -120,11 +119,10 @@ const AdminPage = () => {
         ))}
       </Grid>
 
-      {/* Apartment Listings */}
-      <h2>Pending Apartment Listings</h2>
+      <h2 className='text-2xl font-semibold mb-3 text-gray-700 flex ml-1 mt-6'>Pending Apartment Listings</h2>
       <Grid container spacing={4}>
         {pendingApartments.map((item) => (
-          <Grid item key={item.id} xs={12} sm={6} md={4}>
+          <Grid item key={item.id} xs={6} sm={4} lg={3} className='mb-4'>
             <ApartmentCard
               title={item.description}
               address={item.location}
