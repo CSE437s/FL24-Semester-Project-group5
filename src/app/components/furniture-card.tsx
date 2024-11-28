@@ -66,19 +66,20 @@ const FurnitureCard = ({
           />
         )}
         <CardContent className="relative flex flex-col gap-0.5 px-4 py-2">
-       
-        <IconButton
-          className="absolute top-2 right-4"
-          size="small"
-          aria-label="toggle favorite"
-          onClick={handleFavoriteClick}
-        >
-          {favorite ? (
-              <FavoriteIcon color="error" />
-            ) : (
-              <FavoriteBorderIcon />
-            )}
-          </IconButton>
+          {!approveButton &&
+            <IconButton
+              className="absolute top-2 right-4"
+              size="small"
+              aria-label="toggle favorite"
+              onClick={handleFavoriteClick}
+            >
+              {favorite ? (
+                <FavoriteIcon color="error" />
+              ) : (
+                <FavoriteBorderIcon />
+              )}
+            </IconButton>
+          }
           <Typography gutterBottom variant="h5" component="div">
             {title}
           </Typography>
