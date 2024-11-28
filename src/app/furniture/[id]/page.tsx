@@ -12,6 +12,9 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import "swiper/css";
 import "swiper/css/navigation";
 import { Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+
 interface ColorData {
   colors: string[] | null;
 }
