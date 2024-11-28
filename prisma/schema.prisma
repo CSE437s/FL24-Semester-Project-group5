@@ -81,6 +81,7 @@ model ApartmentListing {
   policies     String?
   bedrooms     Int?
   bathrooms    Int?
+  sold         Boolean @default(false)
 
   @@map("apartment_listing")
 }

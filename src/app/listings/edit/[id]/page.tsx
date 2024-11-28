@@ -5,16 +5,17 @@ import { useRouter, useParams } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import CardMedia from '@mui/material/CardMedia';
-import { Box, TextField, CardActions, Card,Typography, InputLabel, OutlinedInput, InputAdornment, Button, FormControl, CircularProgress } from '@mui/material';
+import { Box, TextField, CardActions, Card, Typography, InputLabel, OutlinedInput, InputAdornment, Button, FormControl, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 export default function EditApartmentListing() {
-  const { id } = useParams();  
+  const { id } = useParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [files, setFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const MAX_FILE_SIZE = 65 * 1024;
+  const [sold, setSold] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -41,16 +42,16 @@ export default function EditApartmentListing() {
       try {
         const newFilesByteArrays = await convertFilesToByteArray();
         const existingImagesByteArrays = imagePreview
-        .map((url) => url.split(",")[1])
-        .filter((byteArray) => byteArray !== undefined && byteArray !== null);
+          .map((url) => url.split(",")[1])
+          .filter((byteArray) => byteArray !== undefined && byteArray !== null);
         let allByteArrays;
-        if (existingImagesByteArrays[0] != undefined){
-           allByteArrays = [...existingImagesByteArrays, ...newFilesByteArrays];
-        }else{
-           allByteArrays = newFilesByteArrays;
+        if (existingImagesByteArrays[0] != undefined) {
+          allByteArrays = [...existingImagesByteArrays, ...newFilesByteArrays];
+        } else {
+          allByteArrays = newFilesByteArrays;
         }
-        
-        console.log(existingImagesByteArrays,newFilesByteArrays,allByteArrays );
+
+        console.log(existingImagesByteArrays, newFilesByteArrays, allByteArrays);
         const payload = {
           ...values,
           pics: allByteArrays
@@ -89,9 +90,9 @@ export default function EditApartmentListing() {
             policies: data.policies,
 
           });
-        
+
           setImagePreview(data.pics);
-          
+
         } else {
           console.error("Failed to fetch listing data");
         }
@@ -128,19 +129,19 @@ export default function EditApartmentListing() {
   };
 
   const convertFilesToByteArray = async () => {
-    const byteArrays =  await Promise.all(
-          files.map(file => {
-            return new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const byteString = reader.result as string;
-                resolve(byteString.split(',')[1]);
-              };
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            });
-          })
-        ) 
+    const byteArrays = await Promise.all(
+      files.map(file => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const byteString = reader.result as string;
+            resolve(byteString.split(',')[1]);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      })
+    )
     return byteArrays;
   };
   const handleDeletePic = (imageUrl: string) => {
@@ -165,8 +166,38 @@ export default function EditApartmentListing() {
     }
   };
 
+  const handleSold = async () => {
+    const confirmSold = confirm("Are you sure you want to mark this listing as sold?");
+    if (confirmSold) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/apartment/${id}/sold`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sold: true }),
+        });
+        const text = await response.text();
+        if (response.ok) {
+          const jsonResponse = JSON.parse(text);
+          console.log(jsonResponse); // Check response
+          alert("You have just sold your listing!");
+          setSold(true);
+          router.push('/listings');
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error("Failed to mark listing as sold", error);
+        alert("Failed to mark the listing as sold");
+        setSold(false);
+      }
+    }
+  };
+
   if (loading) return <CircularProgress />;
-console.log(imagePreview);
+  console.log(imagePreview);
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <TextField
@@ -281,6 +312,9 @@ console.log(imagePreview);
 
       <Button variant="contained" color="secondary" onClick={handleDelete}>
         Delete Listing
+      </Button>
+      <Button variant="contained" color="success" onClick={handleSold}>
+        Mark Sold
       </Button>
       <Button type="submit" variant="contained">Save Changes</Button>
     </Box>
