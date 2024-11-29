@@ -10,7 +10,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { Pagination } from 'swiper/modules';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import {CheckCircle, RemoveCircle} from '@mui/icons-material';
 
 interface FurnitureCardProps {
   title: string;
@@ -22,6 +22,7 @@ interface FurnitureCardProps {
   approveListing?: () => void;
   showPendingLabel?: boolean;
   approved?: boolean;
+  rejectListing?: () => void; 
 }
 
 const FurnitureCard = ({
@@ -34,6 +35,7 @@ const FurnitureCard = ({
   approveListing,
   showPendingLabel = false,
   approved,
+  rejectListing,
 
 }: FurnitureCardProps) => {
 
@@ -48,6 +50,11 @@ const FurnitureCard = ({
     e.stopPropagation(); 
     e.preventDefault();
     approveListing?.();
+  };
+  const handleRejectListing = (e: React.MouseEvent) => {
+    e.stopPropagation(); 
+    e.preventDefault();
+    rejectListing?.();
   };
 
   return (
@@ -121,10 +128,17 @@ const FurnitureCard = ({
             {approveListing && !approved && (
               <Box className="flex justify-end">
                 <IconButton onClick={handleApproveClick}>
-                  <CheckCircleIcon
+                  <CheckCircle
                     color="success"
                     fontSize="large"
                     className="text-green-600 hover:text-green-800"
+                  />
+                </IconButton>
+                <IconButton onClick={handleRejectListing}>
+                  <RemoveCircle
+                    color="error"
+                    fontSize="large"
+                    className="text-red-600 hover:text-red-800"
                   />
                 </IconButton>
               </Box>

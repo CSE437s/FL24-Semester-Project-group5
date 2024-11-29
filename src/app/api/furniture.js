@@ -74,6 +74,13 @@ router.get('/pending', async (req, res) => {
              '{}'::bytea[] AS pics
       FROM furniture_listing fl
       LEFT JOIN "FurnitureImage" fi ON fi."FurnitureListingId" = fl.id
+      WHERE approved = FALSE AND fi."imageData" IS NULL
+      GROUP BY fl.id
+      UNION
+      SELECT fl.*, 
+      ARRAY_AGG(fi."imageData") AS pics
+      FROM furniture_listing fl
+      JOIN "FurnitureImage" fi ON fi."FurnitureListingId" = fl.id
       WHERE approved = FALSE
       GROUP BY fl.id;
     `);
@@ -539,5 +546,26 @@ router.patch('/:id/favorite', async (req, res) => {
   });
   
   
+  router.patch('/:id/disapprove', async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      const result = await pool.query(
+        `DELETE FROM public."furniture_listing"
+         WHERE id = $1
+         RETURNING *`,
+        [id]
+      );
+  
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: 'Furniture listing not found' });
+      }
+  
+      res.json({ message: 'Furniture listing rejected successfully', listing: result.rows[0] });
+    } catch (error) {
+      console.error('Error rejected furniture listing:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 
 module.exports = router; 

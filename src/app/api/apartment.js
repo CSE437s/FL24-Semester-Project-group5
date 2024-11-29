@@ -64,6 +64,13 @@ router.get('/pending', async (req, res) => {
              '{}'::bytea[] AS pics
       FROM public."apartment_listing" al
       LEFT JOIN public."ApartmentImage" ai ON ai."ApartmentListingId" = al.id
+      WHERE al.approved = FALSE AND ai."imageData" IS NULL 
+      GROUP BY al.id
+      UNION      
+      SELECT al.*, 
+      ARRAY_AGG(ai."imageData") AS pics
+      FROM public."apartment_listing" al
+      JOIN public."ApartmentImage" ai ON ai."ApartmentListingId" = al.id
       WHERE al.approved = FALSE
       GROUP BY al.id;
     `);
@@ -416,6 +423,27 @@ router.patch('/:id/approve', async (req, res) => {
   }
 });
 
+router.patch('/:id/disapprove', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM public."apartment_listing"
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Apartment listing not found' });
+    }
+
+    res.json({ message: 'Apartment listing rejected successfully', listing: result.rows[0] });
+  } catch (error) {
+    console.error('Error rejected apartment listing:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 

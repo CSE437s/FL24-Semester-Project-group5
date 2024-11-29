@@ -10,7 +10,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { Pagination } from 'swiper/modules';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import {CheckCircle, RemoveCircle} from '@mui/icons-material';
 
 
 interface ApartmentCardProps {
@@ -24,9 +24,10 @@ interface ApartmentCardProps {
   approveListing?: () => void;
   showPendingLabel?: boolean;
   approved?: boolean;
+  rejectListing?: () => void;
 }
 
-export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, approveListing, showPendingLabel = false, approved }: ApartmentCardProps) => {
+export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, approveListing, showPendingLabel = false, approved, rejectListing}: ApartmentCardProps) => {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -37,6 +38,12 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
     e.stopPropagation(); 
     e.preventDefault();
     approveListing?.();
+  };
+
+  const handleRejectListing = (e: React.MouseEvent) => {
+    e.stopPropagation(); 
+    e.preventDefault();
+    rejectListing?.();
   };
   return (
     <Link href={linkDestination} passHref>
@@ -115,10 +122,17 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
             {approveListing && !approved && (
               <Box className="flex justify-end">
                 <IconButton onClick={handleApproveClick}>
-                  <CheckCircleIcon
+                  <CheckCircle
                     color="success"
                     fontSize="large"
                     className="text-green-600 hover:text-green-800"
+                  />
+                </IconButton>
+                <IconButton onClick={handleRejectListing}>
+                  <RemoveCircle
+                    color="error"
+                    fontSize="large"
+                    className="text-red-600 hover:text-red-800"
                   />
                 </IconButton>
               </Box>

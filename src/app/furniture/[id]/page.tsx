@@ -167,6 +167,20 @@ const FurnitureDescriptionPage = () => {
       );
       if (response.ok) {
         alert("Listing approved successfully!");
+
+        const message_text = "Congrats! Your apartment listing " + furnitureItem.description + " has been approved."
+        const messageData = {
+          sender_id: session?.user.id,
+          recipient_id: furnitureItem.user_id,
+          message_text: message_text
+        };
+
+        const response = await fetch('http://localhost:5001/api/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(messageData),
+        });
+
         setFurnitureItem((prev) =>
           prev ? { ...prev, approved: true } : prev // Update the local state to reflect the approval
         );
@@ -175,6 +189,40 @@ const FurnitureDescriptionPage = () => {
       }
     } catch (error) {
       console.error("Error approving the listing:", error);
+    }
+  };
+
+  const disapproveListing = async (reason:string) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/furniture/${id}/disapprove`,
+        {
+          method: "PATCH",
+        }
+      );
+      if (response.ok) {
+
+        const message_text = "Your furniture listing " + furnitureItem.description + " has not been approved. " +
+        "\n" + "Reason: " + reason;
+        const messageData = {
+          sender_id: session?.user.id,
+          recipient_id: furnitureItem.user_id,
+          message_text: message_text
+        };
+
+        const response = await fetch('http://localhost:5001/api/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(messageData),
+        });
+
+
+        router.back();
+      } else {
+        alert("Failed to reject the listing.");
+      }
+    } catch (error) {
+      console.error("Error reject the listing:", error);
     }
   };
 
@@ -309,6 +357,7 @@ const FurnitureDescriptionPage = () => {
               >
                 Contact Seller
               </Button>
+
             </Box>
           </CardContent>
   
@@ -318,6 +367,21 @@ const FurnitureDescriptionPage = () => {
               <Button variant="contained" color="success" onClick={approveListing} className="rounded-3xl p-3 w-1/2">
                 Approve Listing
               </Button>
+              <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              const reason = prompt("Please provide a reason for the rejection:");
+              if (reason) {
+                disapproveListing(reason);
+              } else {
+                alert("Rejection reason is required.");
+              }
+            }}
+            className="rounded-3xl p-3 w-1/2"
+          >
+            Reject Listing
+          </Button>
             </Box>
           )}
         </Box>
