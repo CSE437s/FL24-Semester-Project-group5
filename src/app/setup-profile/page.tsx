@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { TextField, Button, Container, Box, CircularProgress } from '@mui/material';
+import { TextField, Button, Container, Box, CircularProgress, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 
 const SetupProfile = () => {
@@ -23,7 +23,7 @@ const SetupProfile = () => {
     enableReinitialize: true,
     validationSchema: Yup.object({
       fullName: Yup.string().required('Full name is required'),
-      bio: Yup.string().required('Bio is required'),
+      bio: Yup.string().required('Bio is required, e.g. school year, interests, major'),
     }),
     onSubmit: async (values) => {
       setLoading(true);
@@ -49,6 +49,14 @@ const SetupProfile = () => {
   return (
     <Container component="main" maxWidth="xs">
       <Box sx={{ mt: 8 }}>
+        {/* Title */}
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: "semibold",fontSize:"1.75rem", color: "rgb(55, 65, 81)", mb: 2 }}
+        >
+          Setup Profile
+        </Typography>
+  
         <form onSubmit={formik.handleSubmit}>
           <TextField
             label="Email"
@@ -73,8 +81,14 @@ const SetupProfile = () => {
             helperText={formik.touched.bio && formik.errors.bio}
             margin="normal"
           />
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3 }}>
-            {loading ? <CircularProgress size={24} color="inherit"/> : 'Save Profile'}
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            className="bg-black p-3 rounded-3xl mt-3 text-white"
+            sx={{ mt: 3 }}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Save Profile'}
           </Button>
         </form>
       </Box>

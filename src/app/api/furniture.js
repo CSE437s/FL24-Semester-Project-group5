@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../../../db'); 
 
 router.get('/', async (req, res) => {
+  console.log("in 1")
   const { user_id } = req.query;
 
   try {
@@ -21,7 +22,7 @@ router.get('/', async (req, res) => {
         ON fi."FurnitureListingId" = fl.id
       LEFT JOIN public.favorites fa
         ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
-      WHERE fi."imageData" IS NULL
+      WHERE fi."imageData" IS NULL AND fl.approved = TRUE
       GROUP BY fl.id, bu.rating, fa.user_id
       UNION 
       SELECT fl.*, 
@@ -38,6 +39,7 @@ router.get('/', async (req, res) => {
         ON fi."FurnitureListingId" = fl.id
       LEFT JOIN public.favorites fa
         ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
+      WHERE fl.approved = TRUE
       GROUP BY fl.id, bu.rating, fa.user_id;
     `;
 
@@ -61,7 +63,154 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/pending', async (req, res) => {
+  console.log("in 2")
+
+  try {
+    console.log('Fetching pending furniture listings...');
+      
+    const pendingListings = await pool.query(`
+      SELECT fl.*, 
+             '{}'::bytea[] AS pics
+      FROM furniture_listing fl
+      LEFT JOIN "FurnitureImage" fi ON fi."FurnitureListingId" = fl.id
+      WHERE approved = FALSE AND fi."imageData" IS NULL
+      GROUP BY fl.id
+      UNION
+      SELECT fl.*, 
+      ARRAY_AGG(fi."imageData") AS pics
+      FROM furniture_listing fl
+      JOIN "FurnitureImage" fi ON fi."FurnitureListingId" = fl.id
+      WHERE approved = FALSE
+      GROUP BY fl.id;
+    `);
+      
+    const listings = pendingListings.rows.map((listing) => ({
+      ...listing,
+      pics: listing.pics.map((pic) => 
+        `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`
+      ),
+    }));
+      
+    res.json(listings);
+  } catch (error) {
+    console.error('Error fetching pending listings:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+router.get('/suggestions', async (req, res) => {
+  console.log("in 3")
+
+  const { user_id } = req.query;
+
+  console.log('Received request for suggestions for user_id:', user_id);
+
+  try {
+    // Fetch the user's favorites
+    const favoriteQuery = `
+      SELECT fl.description, fl.colors
+      FROM public.favorites f
+      JOIN public.furniture_listing fl ON f.listing_id = fl.id
+      WHERE f.user_id = $1 AND f.listing_type = 'furniture'
+    `;
+    const favorites = await pool.query(favoriteQuery, [user_id]);
+
+    // console.log('Favorites fetched:', favorites.rows);
+
+    if (favorites.rows.length === 0) {
+      // console.log('No favorites found for user_id:', user_id);
+      return res.json([]);
+    }
+
+    const keywords = favorites.rows
+      .map((row) => row.description.split(' '))
+      .flat()
+      .map((word) => word.toLowerCase());
+    const colors = favorites.rows
+      .map((row) => row.colors || [])
+      .flat();
+
+    // console.log('Extracted keywords:', keywords);
+    // console.log('Extracted colors:', colors);
+
+    const suggestionQuery = `
+    SELECT fl.*,
+    '{}'::bytea[] AS pics,
+    ((LOWER(fl.description) SIMILAR TO $1)::int + 
+    (fl.colors::text SIMILAR TO $2)::int) AS match_score
+    FROM public.furniture_listing fl
+    LEFT JOIN public."FurnitureImage" fi
+    ON fi."FurnitureListingId" = fl.id
+    WHERE (
+    LOWER(fl.description) SIMILAR TO $1
+    OR fl.colors::text SIMILAR TO $2
+    )
+    AND fl.approved = TRUE
+    AND fl.id NOT IN (
+    SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+    )
+    AND fi."imageData" IS NULL
+    UNION 
+    SELECT fl.*,
+    ARRAY_AGG(fi."imageData") AS pics,
+    2*((LOWER(fl.description) SIMILAR TO $1)::int + 
+    (fl.colors::text SIMILAR TO $2)::int) AS match_score
+    FROM public.furniture_listing fl
+    JOIN public."FurnitureImage" fi
+    ON fi."FurnitureListingId" = fl.id
+    WHERE (
+    LOWER(fl.description) SIMILAR TO $1
+    OR fl.colors::text SIMILAR TO $2
+    )
+    AND fl.approved = TRUE
+    AND fl.id NOT IN (
+    SELECT listing_id FROM public.favorites WHERE user_id = $3 AND listing_type = 'furniture'
+    )
+    GROUP BY fl.id ORDER BY match_score DESC
+    LIMIT 3;
+    `;
+    const keywordPattern = `%(${keywords.join('|')})%`;
+    const colorPattern = `%(${colors.join('|')})%`;
+
+    // console.log('Keyword pattern for query:', keywordPattern);
+    // console.log('Color pattern for query:', colorPattern);
+
+    const result = await pool.query(suggestionQuery, [
+      keywordPattern,
+      colorPattern,
+      user_id,
+    ]);
+
+    // console.log('Suggestions fetched:', suggestions.rows);
+    const suggestions = result.rows.map(suggestion => {
+      return {
+        ...suggestion,
+        pics: suggestion.pics.map(pic => {
+          return `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`; // Convert each Buffer to Base64
+        }),
+      };
+    });
+
+
+      res.json(suggestions);
+    
+    
+
+    // console.log('Randomized suggestions:', randomSuggestions);
+
+    
+  } catch (error) {
+    console.error('Error fetching suggestions:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 router.get('/:id', async (req, res) => {
+  console.log("in 4")
+
   const { user_id } = req.query;
   const { id } = req.params;
 
@@ -110,6 +259,7 @@ GROUP BY fl.id, bu.rating,u.name, fa.user_id ;`, [id, user_id]
 
     res.json(furniture); 
   } catch (err) {
+    console.log("hello")
     console.error(`Error fetching furniture item:`, err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -117,6 +267,8 @@ GROUP BY fl.id, bu.rating,u.name, fa.user_id ;`, [id, user_id]
 
 
 router.post('/check-or-add-user', async (req, res) => {
+  console.log("in 5")
+
   const { user_id } = req.body;
 
   try {
@@ -142,6 +294,8 @@ router.post('/check-or-add-user', async (req, res) => {
 });
 
 router.post('/upload', async (req, res) => {
+  console.log("in 6")
+
   try {
     const { price, description, condition, pics, user_id, location, colors } = req.body;
 
@@ -150,8 +304,8 @@ router.post('/upload', async (req, res) => {
 
     // Insert furniture listing into the database
     const result = await pool.query(
-      `INSERT INTO furniture_listing (user_id, price, description, condition, colors, location)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      `INSERT INTO furniture_listing (user_id, price, description, condition, colors, location, approved)
+       VALUES ($1, $2, $3, $4, $5, $6, FALSE) RETURNING *`,
       [user_id, price, description, condition, colorsArray, location]
     );
 
@@ -184,6 +338,8 @@ router.post('/upload', async (req, res) => {
 
 
 router.post('/check-or-add-user', async (req, res) => {
+  console.log("in 7")
+
   const { user_id } = req.body;
 console.log(user_id);
   try {
@@ -210,6 +366,8 @@ console.log(user_id);
 });
 
 router.put('/:id', async (req, res) => {
+  console.log("in 8")
+
   const { id } = req.params;
   const { price, description, condition, colors, location, pics } = req.body;
   
@@ -218,7 +376,7 @@ router.put('/:id', async (req, res) => {
 
     const result = await pool.query(
       `UPDATE public."furniture_listing"
-       SET price = $1, description = $2, condition = $3, colors = $4, location = $5
+       SET price = $1, description = $2, condition = $3, colors = $4, location = $5, approved = FALSE
        WHERE id = $6 RETURNING *`,
       [price, description, condition, colorsArray, location, id]
     );
@@ -253,6 +411,8 @@ console.log("bf", bufferPic);
 });
 
 router.delete('/delete/:id', async (req, res) => {
+  console.log("in 9")
+
   const { id } = req.params;
   const type = "furniture";
   try {
@@ -274,6 +434,8 @@ router.delete('/delete/:id', async (req, res) => {
 
 
 router.patch('/:id/favorite', async (req, res) => { 
+  console.log("in 10")
+
   try{
     const {user_id, listing_id, listing_type, favorite} = req.body;
     let result;
@@ -291,6 +453,8 @@ router.patch('/:id/favorite', async (req, res) => {
   });
 
   router.get('/mylistings/:user_id', async (req, res) => {
+    console.log("in 11")
+
     const { user_id } = req.params;
     try {
       const query = await pool.query(`SELECT fl.*, 
@@ -299,7 +463,8 @@ router.patch('/:id/favorite', async (req, res) => {
              CASE 
                WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
                ELSE false 
-             END AS favorite
+             END AS favorite,
+             fl.approved
       FROM public."furniture_listing" fl
       JOIN public."business_user" bu
         ON bu.user_id = fl."user_id"
@@ -316,7 +481,8 @@ router.patch('/:id/favorite', async (req, res) => {
              CASE 
                WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
                ELSE false 
-             END AS favorite
+             END AS favorite,
+             fl.approved
       FROM public."furniture_listing" fl
       JOIN public."business_user" bu
         ON bu.user_id = fl."user_id"
@@ -335,6 +501,8 @@ router.patch('/:id/favorite', async (req, res) => {
           `data:image/jpeg;base64,${Buffer.from(pic[0]).toString('base64')}`
         ),
       }));
+
+      console.log("furnitures", furnitures);
   
       res.json(furnitures);
     } catch (error) {
@@ -342,6 +510,7 @@ router.patch('/:id/favorite', async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });
+
 
   router.put('/:id/sold', async (req, res)=>{
     const { id } = req.params;
@@ -365,6 +534,63 @@ router.get('/users/:id', async (req, res)=>{
       return res.status(404).json({error: "Users not found."});
     }
     res.json(result.rows[0]);
+
+
+  router.patch('/:id/approve', async (req, res) => {
+    const { id } = req.params;
+  
+    // Validate ID
+    if (isNaN(parseInt(id, 10))) {
+      console.error(`Invalid ID provided: ${id}`);
+      return res.status(400).json({ error: 'Invalid ID' });
+    }
+  
+    console.log('Attempting to approve listing with ID:', id);
+  
+    try {
+      const result = await pool.query(
+        `UPDATE furniture_listing SET approved = TRUE WHERE id = $1 RETURNING *`,
+        [id]
+      );
+  
+      console.log('Query result:', result.rows);
+  
+      if (result.rowCount === 0) {
+        console.log('Listing not found for ID:', id);
+        return res.status(404).json({ error: 'Listing not found' });
+      }
+  
+      console.log('Listing approved successfully:', result.rows[0]);
+  
+      res.json({ message: 'Listing approved successfully', listing: result.rows[0] });
+    } catch (error) {
+      console.error('Error approving listing:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
+  
+  router.patch('/:id/disapprove', async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      const result = await pool.query(
+        `DELETE FROM public."furniture_listing"
+         WHERE id = $1
+         RETURNING *`,
+        [id]
+      );
+  
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: 'Furniture listing not found' });
+      }
+  
+      res.json({ message: 'Furniture listing rejected successfully', listing: result.rows[0] });
+    } catch (error) {
+      console.error('Error rejected furniture listing:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 
   }catch(error){
     console.error('Error getting users: ', error);

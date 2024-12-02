@@ -86,6 +86,7 @@ router.get('/conversations', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const { sender_id, recipient_id, message_text } = req.body;
+console.log(sender_id, recipient_id, message_text);
 
 try {
   // Check if sender and recipient exist

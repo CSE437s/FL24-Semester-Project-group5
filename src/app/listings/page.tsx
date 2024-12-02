@@ -33,6 +33,7 @@ interface Location {
 
 const Listings = () => {
   const [apartmentItems, setApartmentItems] = useState<ApartmentItems[]>([]);
+  const [aptSuggestions, setAptSuggestions] = useState<ApartmentItems[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
   const [distRange, setDistRange] = useState<number[]>([0, 3]);
@@ -41,8 +42,28 @@ const Listings = () => {
   const [bedNum, setBedNum] = useState<string>("Any");
   const [bathNum, setBathNum] = useState<string>("Any");
   const [sold, setSold] = useState<boolean>(false);
+
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  const fetchSuggestions = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/apartment/suggestions-apt?user_id=${session.user.id}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setAptSuggestions(data);
+      } else {
+        console.error("Error fetching suggestions");
+      }
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    }
+  };
 
   const handleAddListing = () => {
     if (status === 'unauthenticated') {
@@ -70,8 +91,12 @@ const Listings = () => {
         }
 
         const text = await response.text();
+        console.log("here", response.text)
+
         if (response.ok) {
           const data = JSON.parse(text);
+          console.log("here2",data)
+
           setApartmentItems(data);
 
 
@@ -98,6 +123,7 @@ const Listings = () => {
 
     if (status !== "loading") {
       fetchApartmentItems();
+      fetchSuggestions();
     }
   }, [session, status]);
 
@@ -143,18 +169,32 @@ const Listings = () => {
     hi.push(item.location);
   });
 
+  const toggleFavorite = async (id: number) => {
 
-  const toggleFavorite = (id: number) => {
     if (session) {
       const updatedItems = apartmentItems.map((item) =>
         item.id === id ? { ...item, favorite: !item.favorite } : item
       );
       setApartmentItems(updatedItems);
-      fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "apartment", favorite: updatedItems.find((item) => item.id === id)?.favorite }),
-      });
+
+
+      try {
+        const response = await fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: session.user.id, listing_id: id, listing_type: "apartment", favorite: updatedItems.find((item) => item.id === id)?.favorite }),
+        });
+        if (response.ok) {
+          // Fetch updated suggestions
+          fetchSuggestions();
+        } else {
+          console.error("Failed to update favorite on the backend.");
+        }
+      } catch (error) {
+        console.error("Error updating favorite:", error);
+
+      }
+
     } else {
       const res = confirm("You must be logged in to heart a apartment listing. Do you want to log in or sign up?");
       if (res) {
@@ -178,12 +218,13 @@ const Listings = () => {
     }
   };
   return (
-    <div className="flex flex-col  lg:flex-row p-8 space-x-0 lg:space-x-4">
+
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] p-8 space-x-0 lg:space-x-4">
       {/* Map Section */}
-      <div className="w-full lg:w-7/10 h-[1000px]">
+      <div className="w-full lg:w-7/10 sticky top-16">
         <Maps locations={filteredLocations} names={hi} />
       </div>
-
+  
       {/* Apartment Listings Section */}
       <div className="w-full lg:w-3/10 flex-grow pt-2 lg:pt-0 lg:pl-8 overflow-y-auto">
         <ApartmentFilter
@@ -198,8 +239,54 @@ const Listings = () => {
           handleAddApartment={handleAddListing}
         />
 
+        {aptSuggestions.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-3xl font-semibold mb-3 text-gray-700 flex ml-1 mt-6">
+              Suggestions for You
+            </h2>
+            <p className="text-sm text-gray-600 mb-6 ml-1">
+              Explore these apartments curated based on your preferences and favorites.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 p-1">
+              {aptSuggestions.map((item) => (
+                <div key={item.id} className="auto">
+                  <ApartmentCard
+                    title={item.description || "Apartment"}
+                    address={item.location}
+                    price={`$${item.price}`}
+                    images={
+                      item.pics?.length > 0
+                        ? item.pics
+                        : ["https://via.placeholder.com/345x140"]
+                    }
+                    linkDestination={
+                      item.user_id === session?.user.id
+                        ? `/listings/edit/${item.id}`
+                        : `/listings/${item.id}`
+                    }
+                    favorite={item.favorite}
+                    onFavoriteToggle={() => toggleFavorite(item.id)}
+                        sold={item.sold}
+    handleSold={() => handleSold(item.id, item.sold)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+  
         {/* Centered Grid of Apartment Cards */}
-        <div className="flex justify-center w-full">
+        <div>
+          <h2
+            className={`text-3xl font-semibold mb-3 text-gray-700 flex ml-1 ${
+              aptSuggestions.length === 0 ? 'mt-6' : ''
+            }`}
+          >
+            {aptSuggestions.length > 0 ? 'Other Listings' : 'Listings'}
+          </h2>
+          <p className="text-sm text-gray-600 mb-6 ml-1">
+            Find affordable apartments to sublet from WashU students nearby campus.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 p-1">
             {filteredItems.map((item) => (
               <div key={item.id} className="auto">
@@ -208,15 +295,20 @@ const Listings = () => {
                   title={item.description || "Apartment"}
                   address={item.location}
                   price={`$${item.price}`}
-                  images={item.pics || ["https://via.placeholder.com/345x140"]}
-
-                  linkDestination={item.user_id === session?.user.id
-                    ? `/listings/edit/${item.id}`
-                    : `/listings/${item.id}`}
+                  images={
+                    item.pics?.length > 0
+                      ? item.pics
+                      : ["https://via.placeholder.com/345x140"]
+                  }
+                  linkDestination={
+                    item.user_id === session?.user.id
+                      ? `/listings/edit/${item.id}`
+                      : `/listings/${item.id}`
+                  }
                   favorite={item.favorite}
                   onFavoriteToggle={() => toggleFavorite(item.id)}
-                  sold={item.sold}
-                  handleSold={() => handleSold(item.id, item.sold)}
+                      sold={item.sold}
+    handleSold={() => handleSold(item.id, item.sold)}
                 />
               </div>
             ))}
@@ -225,7 +317,6 @@ const Listings = () => {
         </div>
       </div>
     </div>
-
   );
 };
 
