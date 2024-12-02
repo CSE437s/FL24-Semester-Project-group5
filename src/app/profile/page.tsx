@@ -25,6 +25,7 @@ type FurnitureListing = {
  price: number;
  pics: string[];
  favorite: boolean;
+ sold: boolean;
 };
 
 
@@ -35,6 +36,7 @@ type ApartmentListing = {
  pics: string[];
  location: string;
  favorite: boolean;
+ sold: boolean;
 };
 
 
@@ -47,6 +49,7 @@ const ProfileContent = () => {
   const [apartmentListings, setApartmentListings] = useState<ApartmentListing[]>([]);
   const [favoriteFurnitureListings, setFavoriteFurnitureListings] = useState<FurnitureListing[]>([]);
   const [favoriteApartmentListings, setFavoriteApartmentListings] = useState<ApartmentListing[]>([]);
+  const [sold, setSold] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -165,6 +168,20 @@ const ProfileContent = () => {
     setActiveTab(newValue);
   };
 
+  const handleSold = (id: number, currentSoldStatus: boolean) => {
+    if (sold == true) {
+      const updatedSoldStatus = !currentSoldStatus;
+      const updatedItems = apartmentListings.map(item =>
+        item.id === id ? { ...item, sold: updatedSoldStatus } : item
+      );
+      setApartmentListings(updatedItems);
+      fetch(`http://localhost:5001/api/apartment/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sold: updatedSoldStatus })
+      });
+    }
+  };
 
   const toggleFavorite = async (id: number, type: 'furniture' | 'apartment', favorite: boolean) => {
     const updatedFavorite = !favorite;
@@ -231,6 +248,8 @@ const ProfileContent = () => {
                 linkDestination={`/furniture/${item.id}`}
                 favorite={item.favorite}
                 onFavoriteToggle={() => toggleFavorite(item.id, 'furniture', item.favorite)}
+                sold={item.sold}
+                handleSold={() => handleSold(item.id, item.sold)}
               />
             </Grid>
           ))}
@@ -256,6 +275,8 @@ const ProfileContent = () => {
                 linkDestination={`/listings/${item.id}`}
                 favorite={item.favorite}
                 onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
+                sold={item.sold}
+                handleSold={() => handleSold(item.id, item.sold)}
               />
             </Grid>
           ))}
@@ -291,6 +312,8 @@ const ProfileContent = () => {
                           linkDestination={`/furniture/edit/${item.id}`}
                           favorite={item.favorite}
                           onFavoriteToggle={() => toggleFavorite(item.id, 'furniture', item.favorite)}
+                          sold={item.sold}
+                          handleSold={() => handleSold(item.id, item.sold)}
                         />
                       </Grid>
                     ))}
@@ -315,6 +338,8 @@ const ProfileContent = () => {
                           linkDestination={`/apartment/edit/${item.id}`}
                           favorite={item.favorite}
                           onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
+                          sold={item.sold}
+                          handleSold={() => handleSold(item.id, item.sold)}
                         />
                       </Grid>
                     ))}
@@ -341,6 +366,8 @@ const ProfileContent = () => {
                           linkDestination={`/furniture/${item.id}`}
                           favorite={item.favorite}
                           onFavoriteToggle={() => toggleFavorite(item.id, 'furniture', item.favorite)}
+                          sold={item.sold}
+                          handleSold={() => handleSold(item.id, item.sold)}
                         />
                       </Grid>
                     ))}
@@ -366,6 +393,8 @@ const ProfileContent = () => {
                           linkDestination={`/apartment/${item.id}`}
                           favorite={item.favorite}
                           onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
+                          sold={item.sold}
+                          handleSold={() => handleSold(item.id, item.sold)}
                         />
                       </Grid>
                     ))}

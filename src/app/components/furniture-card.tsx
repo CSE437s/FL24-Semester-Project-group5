@@ -18,6 +18,8 @@ interface FurnitureCardProps {
   linkDestination: string;
   favorite: boolean;
   onFavoriteToggle: () => void; 
+  sold: boolean;
+  handleSold: () => void;
 }
 
 const FurnitureCard = ({ 
@@ -26,7 +28,7 @@ const FurnitureCard = ({
   images, 
   linkDestination, 
   favorite, 
-  onFavoriteToggle 
+  onFavoriteToggle, sold, handleSold
 }: FurnitureCardProps) => {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -34,7 +36,9 @@ const FurnitureCard = ({
     e.preventDefault();
     onFavoriteToggle(); 
   };
-
+  const isSold = () =>{
+    handleSold();
+  }
   return (
     <Link href={linkDestination} passHref>
       <Card className="w-full sm:w-52 md:w-60 lg:w-72 border border-gray-300 rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">
@@ -90,6 +94,24 @@ const FurnitureCard = ({
               {price}
             </Typography>
           </Box>
+          {sold && (
+              <div>
+                <Box
+                position="absolute"
+                bottom={0}
+                left={0}
+                right={0}
+                bgcolor="gray"
+                color="white"
+                py={-1}
+                textAlign="center"
+                fontWeight="bold"
+                zIndex={10}
+                >
+                <h2>SOLD</h2>
+                </Box>
+              </div>
+            ) }
         </CardContent>
       </Card>
     </Link>

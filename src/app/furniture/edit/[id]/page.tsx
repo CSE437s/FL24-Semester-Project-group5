@@ -28,6 +28,7 @@ export default function EditListing() {
   const [loading, setLoading] = useState(true);
   const [files, setFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [sold, setSold] = useState(false);
   const MAX_FILE_SIZE = 65 * 1024;
 
   const formik = useFormik({
@@ -176,6 +177,37 @@ export default function EditListing() {
     }
   };
 
+  const handleSold = async () => {
+    const confirmSold = confirm("Are you sure you want to mark this listing as sold?");
+    if (confirmSold) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/furniture/${id}/sold`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sold: true }),
+        });
+        const text = await response.text();
+        if (response.ok) {
+          const jsonResponse = JSON.parse(text);
+          console.log(jsonResponse); 
+          alert("You have just sold your listing!");
+          setSold(true);
+          router.push('/furniture');
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error("Failed to mark listing as sold", error);
+        alert("Failed to mark the listing as sold");
+        setSold(false);
+      }
+    }
+  };
+
+
   if (loading) return <CircularProgress />;
 
   return (
@@ -267,6 +299,9 @@ export default function EditListing() {
       </Button>
       <Button variant="contained" color="secondary" onClick={handleDelete}>
         Delete Listing
+      </Button>
+      <Button variant="contained" color="success" onClick={handleSold}>
+        Mark Sold
       </Button>
       <Button type="submit" variant="contained">
         Save Changes

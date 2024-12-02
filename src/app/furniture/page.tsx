@@ -20,6 +20,7 @@ interface FurnitureItem {
   colors: ColorData; 
   pics: string[];
   favorite: boolean;
+  sold: boolean;
 }
 
 const FurniturePage = () => {
@@ -28,6 +29,7 @@ const FurniturePage = () => {
   const [priceRange, setPriceRange] = useState<number[]>([0, 500]);
   const [ratingValue, setRatingValue] = useState<number>(0);
   const [colorsValue, setColors] = useState<string[]>([]);
+  const [sold, setSold] = useState<boolean>(false);
 
   const { data: session, status } = useSession(); 
   const router = useRouter();
@@ -109,6 +111,21 @@ const FurniturePage = () => {
   }
   };
 
+  const handleSold = (id: number, currentSoldStatus: boolean) => {
+    if (sold == true) {
+      const updatedSoldStatus = !currentSoldStatus;
+      const updatedItems = furnitureItems.map(item =>
+        item.id === id ? { ...item, sold: updatedSoldStatus } : item
+      );
+      setFurnitureItems(updatedItems);
+      fetch(`http://localhost:5001/api/apartment/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sold: updatedSoldStatus })
+      });
+    }
+  };
+
   return (
 
     
@@ -127,6 +144,8 @@ const FurniturePage = () => {
       : `/furniture/${item.id}`}
     favorite={item.favorite}
     onFavoriteToggle={() => toggleFavorite(item.id)}
+    sold={item.sold}
+    handleSold={() => handleSold(item.id, item.sold)}
 />
     </Grid>
   ))}

@@ -194,9 +194,8 @@ console.log("bf", bufferPic);
 
 router.put('/:id/sold', async (req, res)=>{
   const { id } = req.params;
-  const { sold } = req.body;
   try{
-    const result = await pool.query(`UPDATE public."apartment_listing" SET sold = TRUE WHERE id = $1 RETURNING *`, [id, sold]);
+    const result = await pool.query(`UPDATE public."apartment_listing" SET sold = TRUE WHERE id = $1 RETURNING *`, [id]);
     if(result.rowCount === 0){
       return res.status(404).json({error: "Apartment listing not found."});
     }

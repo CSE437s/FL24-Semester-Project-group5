@@ -216,7 +216,7 @@ const Listings = () => {
                   favorite={item.favorite}
                   onFavoriteToggle={() => toggleFavorite(item.id)}
                   sold={item.sold}
-                  handleSold={(soldStatus) => handleSold(item.id, item.sold)}
+                  handleSold={() => handleSold(item.id, item.sold)}
                 />
               </div>
             ))}

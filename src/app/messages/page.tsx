@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense  } from 'react';
 import { io } from "socket.io-client";
 import { useSession } from 'next-auth/react';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Button, CircularProgress } from '@mui/material';
+import { Rating, Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Button, CircularProgress } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useSearchParams } from 'next/navigation';
 
@@ -30,6 +30,7 @@ const MessagesContent = () => {
   const senderId = searchParams.get('sellerId');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [rating, setRating] = useState<number | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
 
   if (!session) {
@@ -167,6 +168,26 @@ const MessagesContent = () => {
 
 
 
+  const handleRatingChange = async (newValue: number | null) => {
+    setRating(newValue);
+    if (newValue) onRatingSubmit(newValue);
+    try{
+
+   
+    const response = await fetch(`http://localhost:5001/api/message/rating/${session?.user.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rating),
+    });
+
+
+  }catch(error) {
+    console.error("Error setting rating: ", error);
+  }
+
+  };
+
+
   return (
     <div className="p-4 min-h-screen bg-gray-50">
   <h1 className="mb-4 font-semibold text-2xl font-mono text-gray-800">Your Conversations</h1>
@@ -200,7 +221,18 @@ const MessagesContent = () => {
                 } ${msg.sender_id === session.user.id ? "rounded-br-none" : "rounded-bl-none"}`}
               >
                 <p className="text-sm">
-                  {msg.message_text}
+                {msg.message_text}
+                  {conversation.conversation_partner_name === "Admin" && msg.message_text.startsWith("Rate") && (
+                  <div className="flex items-center justify-center mt-4">
+                  <Rating
+                    value={rating}
+                    onChange={(_, newValue) => handleRatingChange(newValue)}
+                    size="large"
+                  />
+                </div>
+                  )}
+            
+
                 </p>
                 <small className={`text-xs mt-1 block ${msg.sender_id === session.user.id ? "text-blue-200" : "text-gray-500"}`}>
                   {new Date(msg.timestamp).toLocaleString()}
@@ -246,3 +278,7 @@ const MessagesPage = () => (
 );
 
 export default MessagesPage;
+function onRatingSubmit(newValue: number) {
+  throw new Error('Function not implemented.');
+}
+

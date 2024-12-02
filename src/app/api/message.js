@@ -136,4 +136,17 @@ console.log(recipientName);
 }
 });
 
+
+
+router.put('/rating/:id', async (req, res)=> {
+  const { id } = req.params;
+  const { rating } = req.body;
+  try{
+    const result = await pool.query(`INSERT INTO public."business_user" (user_id, rating) values ($1,$2) RETURNING *`, [id, rating]);
+    return res.status(201).json({ ...result.rows[0] });
+  }catch (error) {
+    console.error("Error inserting rating:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+})
 module.exports = router;

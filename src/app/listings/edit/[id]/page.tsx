@@ -5,12 +5,14 @@ import { useRouter, useParams } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import CardMedia from '@mui/material/CardMedia';
-import { Box, TextField, CardActions, Card, Typography, InputLabel, OutlinedInput, InputAdornment, Button, FormControl, CircularProgress } from '@mui/material';
+import {  Modal,  MenuItem, Select,  Box, TextField, CardActions, Card, Typography, InputLabel, OutlinedInput, InputAdornment, Button, FormControl, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 export default function EditApartmentListing() {
   const { id } = useParams();
   const router = useRouter();
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('');
   const [loading, setLoading] = useState(true);
   const [files, setFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
@@ -166,6 +168,21 @@ export default function EditApartmentListing() {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/furniture/users/${session?.user.id}`); 
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      } else {
+        console.error('Failed to fetch users');
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+
   const handleSold = async () => {
     const confirmSold = confirm("Are you sure you want to mark this listing as sold?");
     if (confirmSold) {
@@ -195,6 +212,7 @@ export default function EditApartmentListing() {
       }
     }
   };
+  
 
   if (loading) return <CircularProgress />;
   console.log(imagePreview);
@@ -318,5 +336,7 @@ export default function EditApartmentListing() {
       </Button>
       <Button type="submit" variant="contained">Save Changes</Button>
     </Box>
+
+    
   );
 }
