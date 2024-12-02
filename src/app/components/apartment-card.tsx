@@ -72,74 +72,71 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
             className="h-52 w-full object-cover border-b border-gray-300"
           />
         )}
-        <CardContent className="relative flex flex-col px-4 py-2">
-          {!approveListing && (
-            <IconButton
-              className="absolute top-2 right-4"
-              size="small"
-              aria-label="toggle favorite"
-              onClick={handleFavoriteClick}
-            >
-              {favorite ? (
-                <FavoriteIcon color="error" />
-              ) : (
-                <FavoriteBorderIcon />
-              )}
-            </IconButton>
-          )}
-          <Typography
-            gutterBottom
-            variant="h5"
-            component="div"
-            className="font-medium text-gray-800"
-          >
-            {title}
-          </Typography>
-                    {showPendingLabel && (
-            <Typography
-              variant="body2"
-              className={`font-semibold mb-2 ${
-                approved ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {approved ? "Approved" : "Pending"}
-            </Typography>
-          )}
-          <Typography
-            variant="body2"
-            className="text-gray-600 text-left"
-          >
-            {address}
-          </Typography>
-         
-          <Box className="mt-2 flex justify-between items-center">
-            <Typography
-              variant="h6"
-              className="text-black text-lg font-semibold"
-            >
-              {price}
-            </Typography>
-            {approveListing && !approved && (
-              <Box className="flex justify-end">
-                <IconButton onClick={handleApproveClick}>
-                  <CheckCircle
-                    color="success"
-                    fontSize="large"
-                    className="text-green-600 hover:text-green-800"
-                  />
-                </IconButton>
-                <IconButton onClick={handleRejectListing}>
-                  <RemoveCircle
-                    color="error"
-                    fontSize="large"
-                    className="text-red-600 hover:text-red-800"
-                  />
-                </IconButton>
-              </Box>
-            )}
-          </Box>
+<CardContent className="relative flex flex-col px-4 py-2">
+  <Box className="flex justify-between items-start">
+    <Typography
+      gutterBottom
+      variant="h5"
+      component="div"
+      className="font-medium text-gray-800"
+    >
+      {title}
+    </Typography>
+    {!approveListing && (
+      <IconButton
+        size="small"
+        aria-label="toggle favorite"
+        onClick={handleFavoriteClick}
+        className="ml-2"
+      >
+        {favorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+      </IconButton>
+    )}
+  </Box>
 
-        </CardContent>
+  {showPendingLabel && (
+    <Typography
+      variant="body2"
+      className={`font-semibold mb-2 ${
+        approved ? "text-green-600" : "text-red-600"
+      }`}
+    >
+      {approved ? "Approved" : "Pending"}
+    </Typography>
+  )}
+
+  <Typography variant="body2" className="text-gray-600 text-left">
+    {address}
+  </Typography>
+
+  <Box className="mt-2 flex justify-between items-center">
+    <Typography
+      variant="h6"
+      className="text-black text-lg font-semibold"
+    >
+      {price}
+    </Typography>
+    {approveListing && !approved && (
+      <Box className="flex justify-end">
+        <IconButton onClick={handleApproveClick}>
+          <CheckCircle
+            color="success"
+            fontSize="large"
+            className="text-green-600 hover:text-green-800"
+          />
+        </IconButton>
+        <IconButton onClick={handleRejectListing}>
+          <RemoveCircle
+            color="error"
+            fontSize="large"
+            className="text-red-600 hover:text-red-800"
+          />
+        </IconButton>
+      </Box>
+    )}
+  </Box>
+</CardContent>
+
       </Card>
     </Link>
   );
