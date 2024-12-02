@@ -1,32 +1,30 @@
 "use client";
 
-import * as React from "react";
-import { useRouter, useParams } from "next/navigation";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import {
-  Box,
-  TextField,
-  InputLabel,
-  OutlinedInput,
-  InputAdornment,
-  FormControl,
-  Button,
-  Typography,
-} from "@mui/material";
-import { useEffect, useState } from "react";
+
+import * as React from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import CardMedia from '@mui/material/CardMedia';
+import {  Modal,  MenuItem, Select,  Box, TextField, CardActions, Card, Typography, InputLabel, OutlinedInput, InputAdornment, Button, FormControl, CircularProgress } from '@mui/material';
+import { useEffect, useState } from 'react';
+
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
+
 export default function EditApartmentListing() {
   const { id } = useParams();
   const router = useRouter();
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('');
   const [loading, setLoading] = useState(true);
   const [files, setFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const MAX_FILE_SIZE = 65 * 1024;
+  const [sold, setSold] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -55,11 +53,11 @@ export default function EditApartmentListing() {
         const existingImagesByteArrays = imagePreview
           .map((url) => url.split(",")[1])
           .filter((byteArray) => byteArray !== undefined && byteArray !== null);
-
         const allByteArrays =
           existingImagesByteArrays.length > 0
             ? [...existingImagesByteArrays, ...newFilesByteArrays]
             : newFilesByteArrays;
+
 
         const payload = {
           ...values,
@@ -134,6 +132,7 @@ export default function EditApartmentListing() {
     }
   };
 
+
   const convertFilesToByteArray = async (fileList: File[]) => {
     const byteArrays = await Promise.all(
       fileList.map((file) => {
@@ -141,15 +140,83 @@ export default function EditApartmentListing() {
           const reader = new FileReader();
           reader.onloadend = () => {
             const byteString = reader.result as string;
+
             resolve(byteString.split(",")[1]);
           };
           reader.onerror = reject;
           reader.readAsDataURL(file);
+
         });
       })
     );
     return byteArrays;
   };
+
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/furniture/users/${session?.user.id}`); 
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      } else {
+        console.error('Failed to fetch users');
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+
+  const handleSold = async () => {
+    const confirmSold = confirm("Are you sure you want to mark this listing as sold?");
+    if (confirmSold) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/apartment/${id}/sold`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sold: true }),
+        });
+        const text = await response.text();
+        if (response.ok) {
+          const jsonResponse = JSON.parse(text);
+          console.log(jsonResponse); // Check response
+          alert("You have just sold your listing!");
+          setSold(true);
+          router.push('/listings');
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error("Failed to mark listing as sold", error);
+        alert("Failed to mark the listing as sold");
+        setSold(false);
+      }
+    }
+  };
+  const handleDelete = async () => {
+    const confirmDelete = confirm("Are you sure you want to delete this listing?");
+    if (confirmDelete) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/apartment/delete/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          router.push('/listings');
+        } else {
+          console.error("Failed to delete listing data");
+        }
+      } catch (error) {
+        console.error("Error deleting listing:", error);
+      }
+    }
+  };
+
+  if (loading) return <CircularProgress />;
+  console.log(imagePreview);
 
   return (
     <Box className="flex flex-wrap md:flex-nowrap gap-16 p-6 w-full max-w-7xl mx-auto bg-white shadow-lg rounded-lg mt-10 border border-gray-200 text-gray-700 mb-10">
@@ -293,6 +360,12 @@ export default function EditApartmentListing() {
           error={formik.touched.policies && Boolean(formik.errors.policies)}
           helperText={formik.touched.policies && formik.errors.policies}
         />
+      <Button variant="contained" color="secondary" onClick={handleDelete}>
+        Delete Listing
+      </Button>
+      <Button variant="contained" color="success" onClick={handleSold}>
+        Mark Sold
+      </Button>
 
         <Button
           type="submit"
@@ -302,6 +375,9 @@ export default function EditApartmentListing() {
           Save Changes
         </Button>
       </form>
+
     </Box>
+
+    
   );
 }

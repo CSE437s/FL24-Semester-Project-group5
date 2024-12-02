@@ -21,13 +21,16 @@ interface ApartmentCardProps {
   linkDestination: string;
   favorite: boolean;
   onFavoriteToggle: () => void;
+  sold: boolean;
+  handleSold: () => void;
+
   approveListing?: () => void;
   showPendingLabel?: boolean;
   approved?: boolean;
   rejectListing?: () => void;
 }
 
-export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, approveListing, showPendingLabel = false, approved, rejectListing}: ApartmentCardProps) => {
+export const ApartmentCard = ({ title, address, price, images, linkDestination, favorite, onFavoriteToggle, sold, handleSold, approveListing, showPendingLabel = false, approved, rejectListing}: ApartmentCardProps) => {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -45,10 +48,16 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
     e.preventDefault();
     rejectListing?.();
   };
+
+  const isSold = () =>{
+    handleSold();
+  }
+ 
   return (
     <Link href={linkDestination} passHref>
       <Card className="w-full sm:w-52 md:w-60 lg:w-72 border border-gray-300 rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">
         {images.length > 1 ? (
+
           <Swiper
             spaceBetween={10}
             pagination={true}
@@ -135,6 +144,24 @@ export const ApartmentCard = ({ title, address, price, images, linkDestination, 
       </Box>
     )}
   </Box>
+                {sold && (
+              <div>
+                <Box
+                position="absolute"
+                bottom={0}
+                left={0}
+                right={0}
+                bgcolor="gray"
+                color="white"
+                py={-1}
+                textAlign="center"
+                fontWeight="bold"
+                zIndex={10}
+                >
+                <h2>SOLD</h2>
+                </Box>
+              </div>
+            ) }
 </CardContent>
 
       </Card>

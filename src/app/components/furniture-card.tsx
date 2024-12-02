@@ -18,6 +18,8 @@ interface FurnitureCardProps {
   images: string[];
   linkDestination: string;
   favorite: boolean;
+  sold: boolean;
+  handleSold: () => void;
   onFavoriteToggle: () => void;
   approveListing?: () => void;
   showPendingLabel?: boolean;
@@ -36,7 +38,8 @@ const FurnitureCard = ({
   showPendingLabel = false,
   approved,
   rejectListing,
-
+sold,
+  handleSold
 }: FurnitureCardProps) => {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -56,7 +59,9 @@ const FurnitureCard = ({
     e.preventDefault();
     rejectListing?.();
   };
-
+  const isSold = () =>{
+    handleSold();
+  }
   return (
     <Link href={linkDestination} passHref>
       <Card className="w-full sm:w-52 md:w-60 lg:w-72 border border-gray-300 rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">
@@ -153,9 +158,30 @@ const FurnitureCard = ({
       </Box>
     )}
   </Box>
-</CardContent>
 
-      </Card>
+          {sold && (
+              <div>
+                <Box
+                position="absolute"
+                bottom={0}
+                left={0}
+                right={0}
+                bgcolor="gray"
+                color="white"
+                py={-1}
+                textAlign="center"
+                fontWeight="bold"
+                zIndex={10}
+                >
+                <h2>SOLD</h2>
+                </Box>
+              </div>
+            ) }
+            </CardContent>
+            </Card>
+     
+
+      
     </Link>
   );
 }

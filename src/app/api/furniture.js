@@ -512,6 +512,30 @@ router.patch('/:id/favorite', async (req, res) => {
   });
 
 
+  router.put('/:id/sold', async (req, res)=>{
+    const { id } = req.params;
+    try{
+      const result = await pool.query(`UPDATE public."furniture_listing" SET sold = TRUE WHERE id = $1 RETURNING *`, [id]);
+      if(result.rowCount === 0){
+        return res.status(404).json({error: "Furniture listing not found."});
+      }
+      res.json(result.rows[0]);
+    }catch(error){
+      console.error('Error marking furniture as sold:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
+router.get('/users/:id', async (req, res)=>{
+  const {user_id} = req.params;
+  try{
+    const result = await pool.query(`SELECT id, name, email from public."User" WHERE email != 'subletify@wustl.edu' OR id != $1`, [user_id]);
+    if(result.rowCount === 0){
+      return res.status(404).json({error: "Users not found."});
+    }
+    res.json(result.rows[0]);
+
+
   router.patch('/:id/approve', async (req, res) => {
     const { id } = req.params;
   
@@ -568,4 +592,9 @@ router.patch('/:id/favorite', async (req, res) => {
     }
   });
 
+  }catch(error){
+    console.error('Error getting users: ', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
 module.exports = router; 

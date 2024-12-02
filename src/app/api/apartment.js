@@ -327,6 +327,20 @@ console.log("bf", bufferPic);
   }
 });
 
+router.put('/:id/sold', async (req, res)=>{
+  const { id } = req.params;
+  try{
+    const result = await pool.query(`UPDATE public."apartment_listing" SET sold = TRUE WHERE id = $1 RETURNING *`, [id]);
+    if(result.rowCount === 0){
+      return res.status(404).json({error: "Apartment listing not found."});
+    }
+    res.json(result.rows[0]);
+  }catch(error){
+    console.error('Error marking apartment as sold:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 router.delete('/delete/:id', async (req, res) => {
   const { id } = req.params;
   const type = "apartment";
