@@ -134,6 +134,35 @@ export default function EditListing() {
     }
   };
 
+  const handleSold = async () => {
+    const confirmSold = confirm("Are you sure you want to mark this listing as sold?");
+    if (confirmSold) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/furniture/${id}/sold`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sold: true }),
+        });
+        const text = await response.text();
+        if (response.ok) {
+          const jsonResponse = JSON.parse(text);
+          console.log(jsonResponse); 
+          alert("You have just sold your listing!");
+          setSold(true);
+          router.push('/furniture');
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error("Failed to mark listing as sold", error);
+        alert("Failed to mark the listing as sold");
+        setSold(false);
+      }
+    }
+  };
   const convertFilesToByteArray = async (fileList: File[]) => {
     const byteArrays = await Promise.all(
       fileList.map((file) => {
@@ -149,6 +178,24 @@ export default function EditListing() {
       })
     );
     return byteArrays;
+  };
+
+  const handleDelete = async () => {
+    const confirmDelete = confirm("Are you sure you want to delete this listing?");
+    if (confirmDelete) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/furniture/delete/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          router.push('/listings');
+        } else {
+          console.error("Failed to delete listing data");
+        }
+      } catch (error) {
+        console.error("Error deleting listing:", error);
+      }
+    }
   };
 
   return (
@@ -189,40 +236,6 @@ export default function EditListing() {
       {/* Right Column: Form */}
       <form onSubmit={formik.handleSubmit} className="flex flex-col items-center gap-4 w-full md:w-1/2">
         <h2 className="text-2xl font-semibold mb-4">Edit Furniture Listing</h2>
-
-  const handleSold = async () => {
-    const confirmSold = confirm("Are you sure you want to mark this listing as sold?");
-    if (confirmSold) {
-      try {
-        const response = await fetch(`http://localhost:5001/api/furniture/${id}/sold`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ sold: true }),
-        });
-        const text = await response.text();
-        if (response.ok) {
-          const jsonResponse = JSON.parse(text);
-          console.log(jsonResponse); 
-          alert("You have just sold your listing!");
-          setSold(true);
-          router.push('/furniture');
-        } else {
-          const data = await response.json();
-          alert(`Error: ${data.error}`);
-        }
-      } catch (error) {
-        console.error("Failed to mark listing as sold", error);
-        alert("Failed to mark the listing as sold");
-        setSold(false);
-      }
-    }
-  };
-
-
-  if (loading) return <CircularProgress />;
-
         <FormControl fullWidth>
           <InputLabel htmlFor="outlined-adornment-price">Price</InputLabel>
           <OutlinedInput

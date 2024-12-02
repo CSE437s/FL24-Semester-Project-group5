@@ -20,28 +20,25 @@ type UserProfile = {
 
 
 type FurnitureListing = {
- id: number;
- description: string;
- price: number;
- pics: string[];
- favorite: boolean;
- sold: boolean;
-
+  id: number;
+  description: string;
+  price: number;
+  pics: string[];
+  favorite: boolean;
   approved: boolean;
-
+  sold: boolean;
 };
 
 
 type ApartmentListing = {
-
- id: number;
- description: string;
- price: number;
- pics: string[];
- location: string;
- favorite: boolean;
- sold: boolean;
+  id: number;
+  description: string;
+  price: number;
+  pics: string[];
+  location: string;
+  favorite: boolean;
   approved: boolean;
+sold: boolean;
 };
 
 
@@ -246,6 +243,9 @@ const ProfileContent = () => {
           </Typography>
         </Box>
   
+        {/* Listings Section */}
+        <Box>
+          {userId ? (
             <>
               {/* Seller's Furniture Listings */}
               <Typography variant="h5" className="text-gray-700 font-bold" sx={{ mt: 2 }}>
@@ -262,10 +262,9 @@ const ProfileContent = () => {
                           images={item.pics || ["https://via.placeholder.com/345x140"]}
                           linkDestination={`/furniture/${item.id}`}
                           favorite={item.favorite}
-                          onFavoriteToggle={() => toggleFavorite(item.id, 'furniture', item.favorite)}
+                          onFavoriteToggle={() => toggleFavorite(item.id, "furniture", item.favorite)}
                           sold={item.sold}
                           handleSold={() => handleSold(item.id, item.sold)}
-
                         />
                       </Grid>
                     ))}
@@ -293,7 +292,7 @@ const ProfileContent = () => {
                           images={item.pics || ["https://via.placeholder.com/345x140"]}
                           linkDestination={`/listings/${item.id}`}
                           favorite={item.favorite}
-                          onFavoriteToggle={() => toggleFavorite(item.id, 'apartment', item.favorite)}
+                          onFavoriteToggle={() => toggleFavorite(item.id, "apartment", item.favorite)}
                           sold={item.sold}
                           handleSold={() => handleSold(item.id, item.sold)}
                         />
@@ -334,8 +333,8 @@ const ProfileContent = () => {
                                 onFavoriteToggle={() => toggleFavorite(item.id, "furniture", item.favorite)}
                                 approved={item.approved}
                                 showPendingLabel={true}
-                                                sold={item.sold}
-                handleSold={() => handleSold(item.id, item.sold)}
+                                sold={item.sold}
+                                handleSold={() => handleSold(item.id, item.sold)}
                               />
                             </Grid>
                           ))}
@@ -363,8 +362,8 @@ const ProfileContent = () => {
                                 onFavoriteToggle={() => toggleFavorite(item.id, "apartment", item.favorite)}
                                 approved={item.approved}
                                 showPendingLabel={true}
-                                                sold={item.sold}
-                handleSold={() => handleSold(item.id, item.sold)}
+                                sold={item.sold}
+                                handleSold={() => handleSold(item.id, item.sold)}
                               />
                             </Grid>
                           ))}
@@ -391,8 +390,8 @@ const ProfileContent = () => {
                                 linkDestination={`/furniture/${item.id}`}
                                 favorite={item.favorite}
                                 onFavoriteToggle={() => toggleFavorite(item.id, "furniture", item.favorite)}
-                                                sold={item.sold}
-                handleSold={() => handleSold(item.id, item.sold)}
+                                sold={item.sold}
+                                handleSold={() => handleSold(item.id, item.sold)}
                               />
                             </Grid>
                           ))}
@@ -418,8 +417,8 @@ const ProfileContent = () => {
                                 linkDestination={`/apartment/${item.id}`}
                                 favorite={item.favorite}
                                 onFavoriteToggle={() => toggleFavorite(item.id, "apartment", item.favorite)}
-                                                sold={item.sold}
-                handleSold={() => handleSold(item.id, item.sold)}
+                                sold={item.sold}
+                                handleSold={() => handleSold(item.id, item.sold)}
                               />
                             </Grid>
                           ))}
@@ -433,7 +432,6 @@ const ProfileContent = () => {
                   )}
                 </Box>
               </Box>
-
             </>
           )}
         </Box>

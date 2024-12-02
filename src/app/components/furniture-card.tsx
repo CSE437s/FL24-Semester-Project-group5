@@ -18,7 +18,6 @@ interface FurnitureCardProps {
   images: string[];
   linkDestination: string;
   favorite: boolean;
-  onFavoriteToggle: () => void; 
   sold: boolean;
   handleSold: () => void;
   onFavoriteToggle: () => void;
@@ -159,17 +158,7 @@ sold,
       </Box>
     )}
   </Box>
-</CardContent>
 
-          <Box className="text-left">
-            <Typography
-              variant="h6"
-              color="primary"
-              className="text-blue-800 text-lg p-0 m-0 font-medium"
-            >
-              {price}
-            </Typography>
-          </Box>
           {sold && (
               <div>
                 <Box
@@ -188,9 +177,11 @@ sold,
                 </Box>
               </div>
             ) }
-        </CardContent>
+            </CardContent>
+            </Card>
+     
 
-      </Card>
+      
     </Link>
   );
 }

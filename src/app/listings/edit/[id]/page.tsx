@@ -197,7 +197,23 @@ export default function EditApartmentListing() {
       }
     }
   };
-  
+  const handleDelete = async () => {
+    const confirmDelete = confirm("Are you sure you want to delete this listing?");
+    if (confirmDelete) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/apartment/delete/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          router.push('/listings');
+        } else {
+          console.error("Failed to delete listing data");
+        }
+      } catch (error) {
+        console.error("Error deleting listing:", error);
+      }
+    }
+  };
 
   if (loading) return <CircularProgress />;
   console.log(imagePreview);

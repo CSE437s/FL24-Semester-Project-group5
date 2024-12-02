@@ -200,6 +200,8 @@ const FurniturePage = () => {
                     linkDestination={`/furniture/${item.id}`}
                     favorite={item.favorite}
                     onFavoriteToggle={() => toggleFavorite(item.id)}
+                    sold={item.sold}
+                    handleSold={() => handleSold(item.id, item.sold)}
                   />
                 </Grid>
               ))}
