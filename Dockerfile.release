@@ -6,5 +6,6 @@ RUN npm install
 COPY . .
 RUN npm i -g prisma 
 RUN npx prisma generate
+RUN npm install
 EXPOSE 3000
 CMD npm run dev

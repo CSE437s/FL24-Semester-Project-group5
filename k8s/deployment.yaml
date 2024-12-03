@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-subletify
+  labels:
+    app: db-subletify
+spec:
+  selector:
+    matchLabels:
+      app: db-subletify
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: db-subletify
+    spec:
+      containers:
+        - image: docker.io/library/postgres:latest
+          name: db-subletify
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: subletifydev_v2
+            - name: POSTGRES_PASSWORD
+              value: 'swe workshop'
+            - name: POSTGRES_USER
+              value: cse437group5
+          livenessProbe:
+            tcpSocket:
+              port: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-subletify
+spec:
+  selector:
+    app: db-subletify
+  ports:
+    - port: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subletify
+  labels:
+    app: subletify
+spec:
+  selector:
+    matchLabels:
+      app: subletify
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: subletify
+    spec:
+      containers:
+        - image: subletify:v1
+          imagePullPolicy: Never
+          name: subletify
+          ports:
+            - containerPort: 3000
+          env:
+            - name: APP_APPLICATION__HOST
+              value: "0.0.0.0"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: subletify
+spec:
+  type: LoadBalancer
+  selector:
+    app: subletify
+  ports:
+    - port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: subletify-ingress
+spec:
+  rules:
+    - http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: subletify
+                port:
+                  number: 3000

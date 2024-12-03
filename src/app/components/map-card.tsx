@@ -17,7 +17,7 @@ interface Location {
   
   const MapCard: React.FC<MapCardProps> = ({ locations, names}) => {
     return (
-      <div style={{ height: '60%', width: '100%' }}>
+      <div style={{ height: '100%', width: '100%' }}>
         <Maps locations={locations} names = {names} /> 
       </div>
     );

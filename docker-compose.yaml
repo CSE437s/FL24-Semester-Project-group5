@@ -1,17 +1,35 @@
+
 version: '3.8'
 
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://cse437group5:swe workshop@db:5432/subletifydev_v2"
+    ports:
+      - "3000:3000"
+      - "5001:5001"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    env_file:
+      - .env
+
   db:
-    image: docker.io/postgres:latest
+    image: postgres:latest
     restart: always
     environment:
       POSTGRES_USER: cse437group5
       POSTGRES_PASSWORD: "swe workshop"
       POSTGRES_DB: subletifydev_v2  
-    expose:
-      - 5432
+    ports:
+      - "5432:5432"
+
     healthcheck:
-      test: ["CMD", "pg_isready"]
+      test: ["CMD", "pg_isready", "-U", "cse437group5" , "-D", "subletifydev_v2"]
       interval: 10s
       timeout: 5s
       retries: 5

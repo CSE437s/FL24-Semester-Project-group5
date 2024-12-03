@@ -76,7 +76,7 @@ export default function Filter({ tags, setTags, priceRange, setPriceRange, ratin
 
   return (
     <Box
-      className="w-64 p-5 border border-gray-300 rounded-lg shadow-md space-y-6 flex flex-col justify-between h-full">
+      className="w-64 p-5 border border-gray-400 rounded-lg shadow-md space-y-6 flex flex-col gap-14 text-gray-700">
       <Stack spacing={1} sx={{ width: '100%' }}>
         <Autocomplete
           multiple

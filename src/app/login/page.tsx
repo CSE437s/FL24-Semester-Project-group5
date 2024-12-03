@@ -57,13 +57,14 @@ const LoginPage = () => {
         });
 
         if (res.ok) {
+          console.log(values.password)
           const signInRes = await signIn("credentials", {
             email: values.email,
             password: values.password,
-            callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/setup-profile?isNewUser=true&email=${values.email}`,
+            callbackUrl: `http://localhost:3000/setup-profile?isNewUser=true&email=${values.email}`,
             redirect: false,
           });
-          
+          console.log("signIn response:", signInRes);
           if (signInRes?.ok) {
             router.push('/setup-profile');
           } else {
@@ -149,7 +150,7 @@ const LoginPage = () => {
                   helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
                 />
               )}
-              <Button disabled={loading || !formik.isValid || !formik.dirty || (value === 1 && !formik.touched.confirmPassword)} type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+              <Button disabled={loading || !formik.isValid || !formik.dirty || (value === 1 && !formik.touched.confirmPassword)} type="submit" fullWidth variant="contained" className='bg-black p-3 rounded-3xl mt-3'>
                 {loading ? <CircularProgress size={24} /> : value === 0 ? 'Sign In' : 'Sign Up'}
               </Button>
             </form>
