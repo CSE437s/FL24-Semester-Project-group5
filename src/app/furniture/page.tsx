@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
 import FurnitureCard from '../components/furniture-card';
 import Filter from '../components/furniture-filter-card';
-import { useSession } from 'next-auth/react';  
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 interface ColorData {
@@ -12,14 +12,15 @@ interface ColorData {
 }
 interface FurnitureItem {
   id: number;
-  user_id: number; 
+  user_id: number;
   price: number;
   description: string;
   condition: string;
   rating: number;
-  colors: ColorData; 
+  colors: ColorData;
   pics: string[];
   favorite: boolean;
+  sold: boolean;
 }
 
 const FurniturePage = () => {
@@ -29,8 +30,9 @@ const FurniturePage = () => {
   const [priceRange, setPriceRange] = useState<number[]>([0, 500]);
   const [ratingValue, setRatingValue] = useState<number>(0);
   const [colorsValue, setColors] = useState<string[]>([]);
+  const [sold, setSold] = useState<boolean>(false);
 
-  const { data: session, status } = useSession(); 
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const fetchSuggestions = async () => {
@@ -51,25 +53,28 @@ const FurniturePage = () => {
       console.error("Error fetching suggestions:", error);
     }
   };
+  useEffect(() => {
+    console.log('furnitureItems', furnitureItems)
+  }, [furnitureItems])
 
   const handleAddFurniture = () => {
     if (status === 'unauthenticated') {
       const res = confirm("You must be logged in to add a furniture listing. Do you want to log in or sign up?");
-      if(res){
-        router.push('/login'); 
+      if (res) {
+        router.push('/login');
       }
-    } else  {
-      router.push('/furniture/upload'); 
+    } else {
+      router.push('/furniture/upload');
     }
-  };  useEffect(() => {
+  }; useEffect(() => {
     const fetchFurnitureItems = async () => {
       try {
         let response;
         if (session?.user?.id) {
-          
+
           response = await fetch(`http://localhost:5001/api/furniture?user_id=${session.user.id}`);
         } else if (status === "unauthenticated") {
-    
+
           response = await fetch('http://localhost:5001/api/furniture');
         } else {
           return;
@@ -102,8 +107,8 @@ const FurniturePage = () => {
     if (colors) {
       for (let i = 0; i < colors.length; i++) {
         if (colorsValue.includes(colors[i])) {
-          isColorMatch = true; 
-          break; 
+          isColorMatch = true;
+          break;
         }
       }
     }
@@ -118,7 +123,7 @@ const FurniturePage = () => {
         item.id === id ? { ...item, favorite: !item.favorite } : item
       );
       setFurnitureItems(updatedItems);
-  
+
       // Send favorite update to the backend
       try {
         const response = await fetch(`http://localhost:5001/api/furniture/${id}/favorite`, {
@@ -131,7 +136,7 @@ const FurniturePage = () => {
             favorite: updatedItems.find((item) => item.id === id)?.favorite,
           }),
         });
-  
+
         if (response.ok) {
           // Fetch updated suggestions
           fetchSuggestions();
@@ -150,16 +155,37 @@ const FurniturePage = () => {
       }
     }
   };
-  
+
+
+  const handleSold = (id: number, currentSoldStatus: boolean) => {
+    if (sold == true) {
+      const updatedSoldStatus = !currentSoldStatus;
+      const updatedItems = furnitureItems.map(item =>
+        item.id === id ? { ...item, sold: updatedSoldStatus } : item
+      );
+      setFurnitureItems(updatedItems);
+      fetch(`http://localhost:5001/api/apartment/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sold: updatedSoldStatus })
+      });
+    }
+  };
+
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-5 mx-10">
+    <div className="flex flex-col lg:flex-row gap-6 mx-10 h-[calc(100vh-80px)]">
       {/* Main Content */}
-      <div className="flex-grow">
+      <div className="flex-grow overflow-y-auto pr-5">
         {/* Suggestions Section */}
         {suggestions.length > 0 && (
           <div className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4">Suggestions for You</h2>
+            <h2 className="text-3xl font-semibold mb-3 text-gray-700 flex ml-1 mt-6">
+              Suggestions for You
+            </h2>
+            <p className="text-sm text-gray-600 mb-6 ml-1">
+              Explore these furniture items curated based on your preferences and favorites.
+            </p>
             <Grid container spacing={4}>
               {suggestions.map((item) => (
                 <Grid item key={item.id} xs={12} sm={6} md={4}>
@@ -174,6 +200,8 @@ const FurniturePage = () => {
                     linkDestination={`/furniture/${item.id}`}
                     favorite={item.favorite}
                     onFavoriteToggle={() => toggleFavorite(item.id)}
+                    sold={item.sold}
+                    handleSold={() => handleSold(item.id, item.sold)}
                   />
                 </Grid>
               ))}
@@ -182,10 +210,14 @@ const FurniturePage = () => {
         )}
 
         {/* Filtered Listings Section */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">
+        <div className='mb-14'>
+          <h2 className={`text-3xl font-semibold mb-3 text-gray-700 flex ml-1 ${suggestions.length === 0 ? 'mt-6' : ''
+            }`}>
             {suggestions.length > 0 ? 'Other Furniture Listings' : 'Furniture Listings'}
           </h2>
+          <p className="text-sm text-gray-600 mb-6 ml-1">
+            Find affordable furniture from WashU students to decorate your apartment or dorm. Perfect for those moving on or off-campus.
+          </p>
           <Grid container spacing={4}>
             {filteredItems.map((item) => (
               <Grid item key={item.id} xs={12} sm={6} md={4}>
@@ -204,6 +236,8 @@ const FurniturePage = () => {
                   }
                   favorite={item.favorite}
                   onFavoriteToggle={() => toggleFavorite(item.id)}
+                      sold={item.sold}
+    handleSold={() => handleSold(item.id, item.sold)}
                 />
               </Grid>
             ))}
@@ -212,7 +246,7 @@ const FurniturePage = () => {
       </div>
 
       {/* Filter container */}
-      <div className="w-full lg:w-1/4">
+      <div className="w-full lg:w-1/4 lg:sticky lg:top-0 mt-6">
         <Filter
           tags={tags}
           setTags={setTags}
@@ -225,6 +259,7 @@ const FurniturePage = () => {
           handleAddFurniture={handleAddFurniture}
         />
       </div>
+
     </div>
   );
 };

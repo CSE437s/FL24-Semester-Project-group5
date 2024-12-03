@@ -14,6 +14,11 @@ import { useFormik } from 'formik';
 import CardMedia from '@mui/material/CardMedia';
 import * as Yup from 'yup';
 import LocationDropdown from '../../components/location-dropdown';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+
 
 export default function ListingUpload() {
   const [files, setFiles] = React.useState<File[]>([]);
@@ -68,10 +73,12 @@ export default function ListingUpload() {
       policies: '',
     },
     validationSchema: validationSchema,
+    validateOnBlur: true, // Enable validation on blur
+    validateOnChange: true, // Enable validation on change
     onSubmit: async (values) => {
-      console.log('setFiles',  files);
+      console.log('setFiles', files);
       const byteArrays = await convertFilesToByteArray();
-      console.log("b",byteArrays);
+      console.log("b", byteArrays);
       const payload = {
         ...values,
         pics: byteArrays,
@@ -80,38 +87,38 @@ export default function ListingUpload() {
       };
 
       const checkUserResponse = await fetch('http://localhost:5001/api/furniture/check-or-add-user', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ user_id: session?.user?.id }),  
-  });
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: session?.user?.id }),
+      });
 
-  // If the user check fails, exit early
-  if (!checkUserResponse.ok) {
-    console.error('Error checking or adding user:', checkUserResponse.statusText);
-    return;
-  }
+      // If the user check fails, exit early
+      if (!checkUserResponse.ok) {
+        console.error('Error checking or adding user:', checkUserResponse.statusText);
+        return;
+      }
 
-  const checkUserData = await checkUserResponse.json();
-  console.log('User Check/Add Response for Apartment:', checkUserData);
+      const checkUserData = await checkUserResponse.json();
+      console.log('User Check/Add Response for Apartment:', checkUserData);
 
 
-  const uploadResponse = await fetch('http://localhost:5001/api/apartment/upload', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+      const uploadResponse = await fetch('http://localhost:5001/api/apartment/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-  // If the upload is successful, redirect to the listings page
-  if (uploadResponse.ok) {
-    console.log("Apartment listing uploaded successfully.");
-    router.push('/listings');
-  } else {
-    console.error("Failed to upload apartment listing:", uploadResponse.statusText);
-  }
+      // If the upload is successful, redirect to the listings page
+      if (uploadResponse.ok) {
+        console.log("Apartment listing uploaded successfully.");
+        router.push('/listings');
+      } else {
+        console.error("Failed to upload apartment listing:", uploadResponse.statusText);
+      }
     },
   });
 
@@ -125,15 +132,15 @@ export default function ListingUpload() {
 
         return;
       }
-    // Append new files to the existing ones
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    
-    // Generate previews for all files 
-    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-    setImagePreview((prevPreviews) => [...prevPreviews, ...newPreviews]);
+      // Append new files to the existing ones
+      setFiles((prevFiles) => [...prevFiles, ...newFiles]);
 
-    // Append new file names to the existing list
-    setFileNames((prevFileNames) => [...prevFileNames, ...newFiles.map(file => file.name)]);
+      // Generate previews for all files 
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setImagePreview((prevPreviews) => [...prevPreviews, ...newPreviews]);
+
+      // Append new file names to the existing list
+      setFileNames((prevFileNames) => [...prevFileNames, ...newFiles.map(file => file.name)]);
     }
   };
 
@@ -160,153 +167,167 @@ export default function ListingUpload() {
     };
   }, [imagePreview]);
   return (
-    <form
-      onSubmit={formik.handleSubmit}
-      className="flex flex-col items-center gap-4 p-8 border border-gray-200 w-full max-w-2xl mx-auto bg-white shadow-md rounded-lg"
-    >
-      <h2 className="text-2xl font-semibold mb-4">New Apartment Listing</h2>
-      
-      <TextField
-        label="Title"
-        variant="outlined"
-        fullWidth
-        name="title"
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.title}
-        error={formik.touched.title && Boolean(formik.errors.title)}
-        helperText={formik.touched.title && formik.errors.title}
-      />
-  
-      <FormControl fullWidth variant="outlined">
-        <InputLabel htmlFor="outlined-adornment-price">Listing Price</InputLabel>
-        <OutlinedInput
-          id="outlined-adornment-price"
-          startAdornment={<InputAdornment position="start">$</InputAdornment>}
-          label="Listing Price"
-          name="price"
-          type="number"
+    <Box className="flex flex-wrap md:flex-nowrap gap-16 p-6 w-full max-w-7xl mx-auto bg-white shadow-lg rounded-lg mt-10 border border-gray-200 text-gray-700">
+      {/* Left Column: Image Previews */}
+      <Box className="flex flex-col items-center w-full md:w-1/2 gap-4">
+        <h3 className="text-2xl font-semibold">Image Preview</h3>
+        <Box className="w-full h-full max-h-[400px] mt-2">
+          {imagePreview.length > 0 ? (
+            <Swiper
+              spaceBetween={10}
+              pagination={{ clickable: true }}
+              modules={[Pagination]}
+              className="h-full max-h-[400px] w-full"
+            >
+              {imagePreview.map((preview, index) => (
+                <SwiperSlide key={index} className="h-full w-full">
+                  <img
+                    src={preview}
+                    className="h-full w-full object-cover border border-gray-300 rounded-md"
+                    alt={`Preview ${index + 1}`}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <Box className="h-full w-full flex items-center justify-center border border-dashed border-gray-400 rounded-md">
+              <p className="text-gray-500">No images uploaded</p>
+            </Box>
+          )}
+        </Box>
+        <Button variant="contained" component="label" className="bg-black p-3 rounded-3xl mt-3 w-full">
+          {fileNames.length > 0 ? `Uploaded Files: ${fileNames.join(', ')}` : 'Upload Image'}
+          <input
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            multiple
+          />
+        </Button>
+      </Box>
+
+      {/* Right Column: Form */}
+      <form onSubmit={formik.handleSubmit} className="flex flex-col items-center gap-4 w-full md:w-1/2">
+        <h2 className="text-2xl font-semibold mb-4">New Apartment Listing</h2>
+
+        <TextField
+          label="Title"
+          variant="outlined"
+          fullWidth
+          name="title"
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
-          value={formik.values.price}
-          error={formik.touched.price && Boolean(formik.errors.price)}
+          value={formik.values.title}
+          error={formik.touched.title && Boolean(formik.errors.title)}
+          helperText={formik.touched.title && formik.errors.title}
         />
-        {formik.touched.price && formik.errors.price && (
-          <p className="text-red-500 text-sm mt-1">{formik.errors.price}</p>
-        )}
-      </FormControl>
-  
-      <TextField
-        label="Description"
-        multiline
-        rows={4}
-        fullWidth
-        name="description"
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.description}
-        error={formik.touched.description && Boolean(formik.errors.description)}
-        helperText={formik.touched.description && formik.errors.description}
-      />
-      <LocationDropdown onLocationSelect={(selectedLocation) => setLocation(selectedLocation)} />
-      <TextField
-        label="Availability"
-        variant="outlined"
-        fullWidth
-        name="availability"
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.availability}
-        error={formik.touched.availability && Boolean(formik.errors.availability)}
-        helperText={formik.touched.availability && formik.errors.availability}
-      />
-  
-      <TextField
-        label="Bedrooms"
-        type="number"
-        variant="outlined"
-        fullWidth
-        name="bedrooms"
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.bedrooms}
-        error={formik.touched.bedrooms && Boolean(formik.errors.bedrooms)}
-        helperText={formik.touched.bedrooms && formik.errors.bedrooms}
-      />
-  
-      <TextField
-        label="Bathrooms"
-        type="number"
-        variant="outlined"
-        fullWidth
-        name="bathrooms"
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.bathrooms}
-        error={formik.touched.bathrooms && Boolean(formik.errors.bathrooms)}
-        helperText={formik.touched.bathrooms && formik.errors.bathrooms}
-      />
-  
-      <TextField
-        label="Amenities"
-        multiline
-        rows={4}
-        fullWidth
-        name="amenities"
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.amenities}
-        error={formik.touched.amenities && Boolean(formik.errors.amenities)}
-        helperText={formik.touched.amenities && formik.errors.amenities}
-      />
-  
-      <TextField
-        label="Policies"
-        multiline
-        rows={4}
-        fullWidth
-        name="policies"
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values.policies}
-        error={formik.touched.policies && Boolean(formik.errors.policies)}
-        helperText={formik.touched.policies && formik.errors.policies}
-      />
-{imagePreview.length > 0 && (
-  <Box className="flex flex-wrap gap-4">
-    {imagePreview.map((preview, index) => (
-      <CardMedia
-        key={index}
-        component="img"
-        className="h-56 object-cover w-[200px] border border-gray-300 rounded-md"
-        image={preview}
-        alt={`Preview ${index + 1}`}
-      />
-    ))}
-  </Box>
-)}
-      <Button variant="contained" component="label" className="w-full mt-4">
-        {fileNames.length > 0 ? `Uploaded Files: ${fileNames.join(', ')}` : 'Upload Image'}
-        <input
-          type="file"
-          hidden
-          onChange={handleFileChange}
-          multiple
-        />
-      </Button>
-  
 
-  
-      <Button
-        type="submit"
-        variant="contained"
-        disabled={!formik.isValid || !formik.dirty}
-        className="w-full mt-6 bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-200"
-      >
-        Submit Listing
-      </Button>
-    </form>
+        <FormControl fullWidth variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-price">Listing Price</InputLabel>
+          <OutlinedInput
+            id="outlined-adornment-price"
+            startAdornment={<InputAdornment position="start">$</InputAdornment>}
+            label="Listing Price"
+            name="price"
+            type="number"
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            value={formik.values.price}
+            error={formik.touched.price && Boolean(formik.errors.price)}
+          />
+          {formik.touched.price && formik.errors.price && (
+            <p className="text-red-500 text-sm mt-1">{formik.errors.price}</p>
+          )}
+        </FormControl>
+
+        <TextField
+          label="Description"
+          multiline
+          rows={4}
+          fullWidth
+          name="description"
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.description}
+          error={formik.touched.description && Boolean(formik.errors.description)}
+          helperText={formik.touched.description && formik.errors.description}
+        />
+
+        <LocationDropdown onLocationSelect={(selectedLocation) => setLocation(selectedLocation)} />
+
+        <TextField
+          label="Availability"
+          variant="outlined"
+          fullWidth
+          name="availability"
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.availability}
+          error={formik.touched.availability && Boolean(formik.errors.availability)}
+          helperText={formik.touched.availability && formik.errors.availability}
+        />
+
+        <TextField
+          label="Bedrooms"
+          type="number"
+          variant="outlined"
+          fullWidth
+          name="bedrooms"
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.bedrooms}
+          error={formik.touched.bedrooms && Boolean(formik.errors.bedrooms)}
+          helperText={formik.touched.bedrooms && formik.errors.bedrooms}
+        />
+
+        <TextField
+          label="Bathrooms"
+          type="number"
+          variant="outlined"
+          fullWidth
+          name="bathrooms"
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.bathrooms}
+          error={formik.touched.bathrooms && Boolean(formik.errors.bathrooms)}
+          helperText={formik.touched.bathrooms && formik.errors.bathrooms}
+        />
+
+        <TextField
+          label="Amenities"
+          multiline
+          rows={4}
+          fullWidth
+          name="amenities"
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.amenities}
+          error={formik.touched.amenities && Boolean(formik.errors.amenities)}
+          helperText={formik.touched.amenities && formik.errors.amenities}
+        />
+
+        <TextField
+          label="Policies"
+          multiline
+          rows={4}
+          fullWidth
+          name="policies"
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.policies}
+          error={formik.touched.policies && Boolean(formik.errors.policies)}
+          helperText={formik.touched.policies && formik.errors.policies}
+        />
+
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!formik.isValid || !formik.dirty}
+          className="w-full bg-black p-3 rounded-3xl mt-3 text-white disabled:bg-gray-200"
+        >
+          Submit Listing
+        </Button>
+      </form>
+    </Box>
   );
-  
-  
 }
