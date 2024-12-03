@@ -15,20 +15,26 @@ import {
   MenuItem,
   FormControl,
   Typography,
+  Modal,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import { useSession } from 'next-auth/react';
 
 export default function EditListing() {
   const { id } = useParams();
   const router = useRouter();
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('');
   const [loading, setLoading] = useState(true);
   const [files, setFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [sold, setSold] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const { data: session, status } = useSession();
   const MAX_FILE_SIZE = 65 * 1024;
 
   const formik = useFormik({
@@ -38,6 +44,7 @@ export default function EditListing() {
       condition: "",
       colors: [],
       location: "",
+      user_id: "",
     },
     validationSchema: Yup.object({
       description: Yup.string()
@@ -99,6 +106,7 @@ export default function EditListing() {
             condition: data.condition,
             colors: data.colors,
             location: data.location,
+            user_id: data.user_id
           });
           setImagePreview(data.pics);
         } else {
@@ -134,35 +142,72 @@ export default function EditListing() {
     }
   };
 
-  const handleSold = async () => {
-    const confirmSold = confirm("Are you sure you want to mark this listing as sold?");
-    if (confirmSold) {
-      try {
-        const response = await fetch(`http://localhost:5001/api/furniture/${id}/sold`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ sold: true }),
-        });
-        const text = await response.text();
-        if (response.ok) {
-          const jsonResponse = JSON.parse(text);
-          console.log(jsonResponse); 
-          alert("You have just sold your listing!");
-          setSold(true);
-          router.push('/furniture');
-        } else {
-          const data = await response.json();
-          alert(`Error: ${data.error}`);
-        }
-      } catch (error) {
-        console.error("Failed to mark listing as sold", error);
-        alert("Failed to mark the listing as sold");
-        setSold(false);
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/furniture/users/${id}`); 
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      } else {
+        console.error('Failed to fetch users');
       }
+    } catch (error) {
+      console.error('Error fetching users:', error);
     }
   };
+
+  const openModal = async () => {
+    await fetchUsers();
+    setShowModal(true);
+  };
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedUser(''); 
+  };
+  const handleConfirmSold = async () => {
+    if (!selectedUser) {
+      alert('Please select a user to whom the listing is sold.');
+      return;
+    }
+
+  try {
+    const response = await fetch(`http://localhost:5001/api/furniture/${id}/sold`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sold: true, buyerId: selectedUser }),
+    });
+    if (response.ok) {
+      alert('You have just sold your listing!');
+      const message_text = "Rate your furniture purchase: " + formik.values.description;
+      const messageData = {
+        sender_id: 'ADMIN',
+        recipient_id: selectedUser,
+        message_text: message_text,
+        seller: formik.values.user_id
+      };
+
+      const response = await fetch('http://localhost:5001/api/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(messageData),
+      });
+      setShowModal(false);
+      setSelectedUser('');
+      router.push('/furniture');
+
+
+    } else {
+      const data = await response.json();
+      alert(`Error: ${data.error}`);
+    }
+  } catch (error) {
+    console.error('Failed to mark listing as sold', error);
+    alert('Failed to mark the listing as sold');
+  }
+};
+
   const convertFilesToByteArray = async (fileList: File[]) => {
     const byteArrays = await Promise.all(
       fileList.map((file) => {
@@ -200,6 +245,52 @@ export default function EditListing() {
 
   return (
     <Box className="flex flex-wrap md:flex-nowrap gap-16 p-6 w-full max-w-7xl mx-auto bg-white shadow-lg rounded-lg mt-10 border border-gray-200 text-gray-700 mb-10">
+
+<Modal open={showModal} onClose={closeModal}>
+  <Box
+    sx={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: 400,
+      bgcolor: 'background.paper',
+      borderRadius: 2,
+      boxShadow: 24,
+      p: 4,
+    }}
+  >
+    <Typography variant="h6" component="h2" gutterBottom>
+      Select Buyer
+    </Typography>
+    <FormControl fullWidth>
+      <InputLabel id="buyer-select-label">Buyer</InputLabel>
+      <Select
+        labelId="buyer-select-label"
+        value={selectedUser}
+        onChange={(e) => setSelectedUser(e.target.value)}
+        fullWidth
+      >
+        <MenuItem value="">
+          <em>None</em>
+        </MenuItem>
+        {users.map((user) => (
+          <MenuItem key={user.id} value={user.id}>
+            {user.email}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+      <Button variant="contained" color="success" onClick={handleConfirmSold}>
+        Confirm
+      </Button>
+      <Button variant="outlined" color="error" onClick={closeModal}>
+        Cancel
+      </Button>
+    </Box>
+  </Box>
+</Modal>
       {/* Left Column: Image Preview */}
       <Box className="flex flex-col items-center w-full md:w-1/2 gap-4">
         <h3 className="text-2xl font-semibold">Image Preview</h3>
@@ -304,7 +395,7 @@ export default function EditListing() {
       <Button variant="contained" color="secondary" onClick={handleDelete}>
         Delete Listing
       </Button>
-      <Button variant="contained" color="success" onClick={handleSold}>
+      <Button variant="contained" color="success" onClick={openModal}>
         Mark Sold
       </Button>
 

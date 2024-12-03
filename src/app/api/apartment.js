@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   try {
     const result =  await pool.query( 
 `SELECT fl.*, 
-       bu.rating, 
+       AVG(bu.rating) AS rating, 
        '{}'::bytea[] AS pics,
        CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true ELSE false END AS favorite
 FROM public."apartment_listing" fl
@@ -20,10 +20,10 @@ LEFT JOIN public."ApartmentImage" fi
 LEFT JOIN public.favorites fa
   ON fa.listing_id = fl.id AND fa.listing_type = 'apartment'
 WHERE fi."imageData" IS NULL AND fl.approved = TRUE
-GROUP BY fl.id, bu.rating, fa.user_id
+GROUP BY fl.id, fl."user_id", fa.user_id
 UNION 
 SELECT fl.*, 
-       bu.rating, 
+      AVG(bu.rating) AS rating, 
        ARRAY_AGG(fi."imageData") AS pics,
        CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true ELSE false END AS favorite
 FROM public."apartment_listing" fl
@@ -34,7 +34,7 @@ JOIN public."ApartmentImage" fi
 LEFT JOIN public.favorites fa
   ON fa.listing_id = fl.id AND fa.listing_type = 'apartment'
 WHERE fl.approved = TRUE
-GROUP BY fl.id, bu.rating, fa.user_id;
+GROUP BY fl.id, fl."user_id", fa.user_id;
 `,[user_id]);
 
 
@@ -197,7 +197,7 @@ router.get('/:id', async (req, res) => {
     const result = await pool.query(
       `
 SELECT fl.*, 
-       bu.rating, 
+       AVG(bu.rating) AS rating,
        '{}'::bytea[] AS pics,
        CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $2 THEN true ELSE false END AS favorite
 FROM public."apartment_listing" fl
@@ -208,10 +208,10 @@ LEFT JOIN public."ApartmentImage" fi
 LEFT JOIN public.favorites fa
   ON fa.listing_id = fl.id AND fa.listing_type = 'apartment'
 WHERE fi."imageData" IS NULL AND fl.id = $1
-GROUP BY fl.id, bu.rating,fa.user_id 
+GROUP BY fl.id, fl."user_id",fa.user_id 
 UNION 
 SELECT fl.*, 
-       bu.rating, 
+       AVG(bu.rating) AS rating,
        ARRAY_AGG(fi."imageData") AS pics,
        CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $2 THEN true ELSE false END AS favorite
 FROM public."apartment_listing" fl
@@ -222,7 +222,7 @@ JOIN public."ApartmentImage" fi
 LEFT JOIN public.favorites fa
   ON fa.listing_id = fl.id AND fa.listing_type = 'apartment'
 WHERE fl.id = $1
-GROUP BY fl.id, bu.rating,fa.user_id;`, [id,user_id]
+GROUP BY fl.id, fl."user_id",fa.user_id;`, [id,user_id]
     );
 
     if (result.rows.length === 0) {
@@ -365,7 +365,7 @@ router.get('/mylistings/:user_id', async (req, res) => {
   const { user_id } = req.params;
   try {
     const query = await pool.query(` SELECT fl.*, 
-           bu.rating, 
+           AVG(bu.rating) AS rating,
            '{}'::bytea[] AS pics,
            CASE 
              WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
@@ -379,10 +379,10 @@ router.get('/mylistings/:user_id', async (req, res) => {
     LEFT JOIN public.favorites fa
       ON fa.listing_id = fl.id AND fa.listing_type = 'apartment'
     WHERE fi."imageData" IS NULL AND fl.user_id = $1
-    GROUP BY fl.id, bu.rating,fa.user_id
+    GROUP BY fl.id, fl."user_id",fa.user_id
     UNION 
     SELECT fl.*, 
-           bu.rating, 
+           AVG(bu.rating) AS rating,
            ARRAY_AGG(fi."imageData") AS pics,
            CASE 
              WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
@@ -396,7 +396,7 @@ router.get('/mylistings/:user_id', async (req, res) => {
     LEFT JOIN public.favorites fa
       ON fa.listing_id = fl.id AND fa.listing_type = 'apartment'
   WHERE fl.user_id = $1
-    GROUP BY fl.id, bu.rating,fa.user_id ;
+    GROUP BY fl.id, fl."user_id",fa.user_id ;
     `,[user_id]);
 
 
@@ -460,7 +460,25 @@ router.patch('/:id/disapprove', async (req, res) => {
 });
 
 
-
+router.get('/users/:id', async (req, res)=>{
+  const {id} = req.params;
+  try{
+    const result = await pool.query(`WITH CTE AS (
+      SELECT user_id from public."apartment_listing" where id = $1
+      )
+      SELECT id, name, email from public."User"  u
+       left join cte on cte.user_id = u.id
+       WHERE cte is null and 
+	   u.email != 'subletify@wustl.edu'`, [id]);
+    if(result.rowCount === 0){
+      return res.status(404).json({error: "Users not found."});
+    }
+    res.json(result.rows);
+  }catch(error){
+    console.error('Error getting users: ', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
 
 
 module.exports = router;

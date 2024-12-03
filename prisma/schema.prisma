@@ -59,6 +59,7 @@ model FurnitureListing {
   colors      Json?
   location    String
   approved    Boolean? @default(false)
+  sold        Boolean  @default(false)
 
   @@map("furniture_listing")
 }
@@ -82,11 +83,8 @@ model ApartmentListing {
   policies     String?
   bedrooms     Int?
   bathrooms    Int?
-
-  sold         Boolean @default(false)
-
   approved     Boolean? @default(false)
-
+  sold         Boolean  @default(false)
 
   @@map("apartment_listing")
 }
@@ -98,6 +96,7 @@ model messages {
   message_text    String   @map("message_text")
   timestamp       DateTime @default(now()) @map("timestamp")
   conversation_id String?  @map("conversation_id")
+  seller          String?
   recipient       User     @relation("ReceivedMessages", fields: [recipient_id], references: [id])
   sender          User     @relation("SentMessages", fields: [sender_id], references: [id])
 

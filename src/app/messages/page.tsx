@@ -15,12 +15,14 @@ interface Message {
   message_text: string;
   timestamp: string;
   recipient_name?: string; 
+ 
 }
 
 interface Conversation {
   conversation_partner_name: string; 
   conversation_partner_id: string;
   messages: Message[];
+  seller?:string;
 }
 
 const MessagesContent = () => {
@@ -44,7 +46,7 @@ const MessagesContent = () => {
           const response = await fetch(`http://localhost:5001/api/message/conversations?userId=${session.user.id}`);
           const data: Conversation[] = await response.json();
 
-          
+          console.log(data);
           const updatedConversations = data.map(conversation => ({
             ...conversation,
             conversation_partner_name: conversation.conversation_partner_name 
@@ -144,6 +146,7 @@ const MessagesContent = () => {
                 conversation_partner_name: data.recipient_name || 'Unknown',
                 conversation_partner_id: recipientId,
                 messages: [],
+                seller:data.seller
               },
             ]);
           } else {
@@ -153,6 +156,7 @@ const MessagesContent = () => {
                 conversation_partner_name: data.messages[0]?.recipient_name || data.messages[0]?.name || 'Unknown',
                 conversation_partner_id: recipientId,
                 messages: data.messages,
+                seller:data.seller
               },
             ]);
           }
@@ -168,24 +172,23 @@ const MessagesContent = () => {
 
 
 
-  const handleRatingChange = async (newValue: number | null) => {
+  const handleRatingChange = async (newValue: number | null, seller: string | undefined) => {
     setRating(newValue);
-    if (newValue) onRatingSubmit(newValue);
-    try{
-
-   
-    const response = await fetch(`http://localhost:5001/api/message/rating/${session?.user.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(rating),
-    });
-
-
-  }catch(error) {
-    console.error("Error setting rating: ", error);
-  }
-
+    if (newValue) {
+      try {
+        console.log(newValue, seller);
+       
+        const response = await fetch(`http://localhost:5001/api/message/rating/${seller}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rating: parseInt(newValue.toString(), 10) }),
+        });
+      } catch (error) {
+        console.error("Error setting rating: ", error);
+      }
+    }
   };
+  
 
 
   return (
@@ -222,11 +225,12 @@ const MessagesContent = () => {
               >
                 <p className="text-sm">
                 {msg.message_text}
+             
                   {conversation.conversation_partner_name === "Admin" && msg.message_text.startsWith("Rate") && (
                   <div className="flex items-center justify-center mt-4">
                   <Rating
                     value={rating}
-                    onChange={(_, newValue) => handleRatingChange(newValue)}
+                    onChange={(_, newValue) => handleRatingChange(newValue, conversation.seller)}
                     size="large"
                   />
                 </div>
@@ -278,7 +282,5 @@ const MessagesPage = () => (
 );
 
 export default MessagesPage;
-function onRatingSubmit(newValue: number) {
-  throw new Error('Function not implemented.');
-}
+
 
