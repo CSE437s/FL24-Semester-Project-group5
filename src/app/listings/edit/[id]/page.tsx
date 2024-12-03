@@ -40,6 +40,7 @@ export default function EditApartmentListing() {
       amenities: "",
       policies: "",
       user_id: "",
+      location:"",
     },
     validationSchema: Yup.object({
       title: Yup.string().min(5, "Title must be at least 5 characters").required("Title is required"),
@@ -100,7 +101,8 @@ export default function EditApartmentListing() {
             bathrooms: data.bathrooms,
             amenities: data.amenities,
             policies: data.policies,
-            user_id: data.user_id
+            user_id: data.user_id,
+            location: data.location,
           });
 
           setImagePreview(data.pics);
@@ -405,6 +407,18 @@ const handleConfirmSold = async () => {
           value={formik.values.bathrooms}
           error={formik.touched.bathrooms && Boolean(formik.errors.bathrooms)}
           helperText={formik.touched.bathrooms && formik.errors.bathrooms}
+        />
+                <TextField
+          id="outlined-location"
+          label="Location"
+          variant="outlined"
+          name="location"
+          fullWidth
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.location}
+          error={formik.touched.location && Boolean(formik.errors.location)}
+          helperText={formik.touched.location && formik.errors.location}
         />
 
         <TextField
