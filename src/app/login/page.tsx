@@ -57,13 +57,14 @@ const LoginPage = () => {
         });
 
         if (res.ok) {
+          console.log(values.password)
           const signInRes = await signIn("credentials", {
             email: values.email,
             password: values.password,
-            callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/setup-profile?isNewUser=true&email=${values.email}`,
+            callbackUrl: `http://localhost:3000/setup-profile?isNewUser=true&email=${values.email}`,
             redirect: false,
           });
-          
+          console.log("signIn response:", signInRes);
           if (signInRes?.ok) {
             router.push('/setup-profile');
           } else {
