@@ -24,7 +24,7 @@ GROUP BY fl.id, fl."user_id", fa.user_id
 UNION 
 SELECT fl.*, 
       AVG(bu.rating) AS rating, 
-       ARRAY_AGG(fi."imageData") AS pics,
+       ARRAY_AGG(DISTINCT fi."imageData") AS pics,
        CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true ELSE false END AS favorite
 FROM public."apartment_listing" fl
 JOIN public."business_user" bu
@@ -68,7 +68,7 @@ router.get('/pending', async (req, res) => {
       GROUP BY al.id
       UNION      
       SELECT al.*, 
-      ARRAY_AGG(ai."imageData") AS pics
+      ARRAY_AGG(DISTINCT ai."imageData") AS pics
       FROM public."apartment_listing" al
       JOIN public."ApartmentImage" ai ON ai."ApartmentListingId" = al.id
       WHERE al.approved = FALSE
@@ -212,7 +212,7 @@ GROUP BY fl.id, fl."user_id",fa.user_id
 UNION 
 SELECT fl.*, 
        AVG(bu.rating) AS rating,
-       ARRAY_AGG(fi."imageData") AS pics,
+       ARRAY_AGG( DISTINCT fi."imageData") AS pics,
        CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $2 THEN true ELSE false END AS favorite
 FROM public."apartment_listing" fl
 JOIN public."business_user" bu
@@ -383,7 +383,7 @@ router.get('/mylistings/:user_id', async (req, res) => {
     UNION 
     SELECT fl.*, 
            AVG(bu.rating) AS rating,
-           ARRAY_AGG(fi."imageData") AS pics,
+           ARRAY_AGG(DISTINCT fi."imageData") AS pics,
            CASE 
              WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
              ELSE false 

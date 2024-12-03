@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
       UNION 
       SELECT fl.*, 
              AVG(bu.rating) AS rating, 
-             ARRAY_AGG(fi."imageData") AS pics,
+             ARRAY_AGG(DISTINCT fi."imageData") AS pics,
              CASE 
                WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
                ELSE false 
@@ -78,7 +78,7 @@ router.get('/pending', async (req, res) => {
       GROUP BY fl.id
       UNION
       SELECT fl.*, 
-      ARRAY_AGG(fi."imageData") AS pics
+      ARRAY_AGG(DISTINCT fi."imageData") AS pics
       FROM furniture_listing fl
       JOIN "FurnitureImage" fi ON fi."FurnitureListingId" = fl.id
       WHERE approved = FALSE
@@ -233,7 +233,7 @@ GROUP BY fl.id, fl."user_id",u.name,fa.user_id
 UNION 
 SELECT fl.*, 
        AVG(bu.rating) AS rating, 
-       ARRAY_AGG(fi."imageData") AS pics, u.name,
+       ARRAY_AGG(DISTINCT fi."imageData") AS pics, u.name,
        CASE WHEN COUNT(fa.id) > 0 AND fa.user_id = $2 THEN true ELSE false END AS favorite
 FROM public."furniture_listing" fl
 JOIN public."business_user" bu
@@ -310,7 +310,7 @@ router.post('/upload', async (req, res) => {
     );
 
     const furnitureListingId = result.rows[0].id;
-    console.log("bfs", pics, Array.isArray(pics));
+   
     if (Array.isArray(pics) && pics.length === 0) {
      
     } else if (Array.isArray(pics)) { 
@@ -458,7 +458,7 @@ router.patch('/:id/favorite', async (req, res) => {
     const { user_id } = req.params;
     try {
       const query = await pool.query(`SELECT fl.*, 
-             bu.rating, 
+            AVG(bu.rating) AS rating, 
              '{}'::bytea[] AS pics,
              CASE 
                WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
@@ -473,11 +473,11 @@ router.patch('/:id/favorite', async (req, res) => {
       LEFT JOIN public.favorites fa
         ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
       WHERE fi."imageData" IS NULL AND fl.user_id = $1
-      GROUP BY fl.id, bu.rating,fa.user_id
+      GROUP BY fl.id, fl."user_id",fa.user_id
       UNION 
       SELECT fl.*, 
-             bu.rating, 
-             ARRAY_AGG(fi."imageData") AS pics,
+             AVG(bu.rating) AS rating, 
+             ARRAY_AGG(DISTINCT fi."imageData") AS pics,
              CASE 
                WHEN COUNT(fa.id) > 0 AND fa.user_id = $1 THEN true 
                ELSE false 
@@ -491,7 +491,7 @@ router.patch('/:id/favorite', async (req, res) => {
       LEFT JOIN public.favorites fa
         ON fa.listing_id = fl.id AND fa.listing_type = 'furniture'
 		WHERE fl.user_id = $1
-      GROUP BY fl.id, bu.rating,fa.user_id ;
+      GROUP BY fl.id, fl."user_id",fa.user_id ;
       `,[user_id]);
   
 

@@ -277,7 +277,7 @@ const handleConfirmSold = async () => {
         </MenuItem>
         {users.map((user) => (
           <MenuItem key={user.id} value={user.id}>
-            {user.name}
+            {user.email}
           </MenuItem>
         ))}
       </Select>

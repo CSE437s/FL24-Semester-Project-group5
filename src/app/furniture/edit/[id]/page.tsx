@@ -388,10 +388,7 @@ export default function EditListing() {
         />
 
 
-      <Button variant="contained" component="label">
-        Upload Images
-        <input type="file" hidden onChange={handleFileChange} multiple />
-      </Button>
+
       <Button variant="contained" color="secondary" onClick={handleDelete}>
         Delete Listing
       </Button>

@@ -54,6 +54,7 @@ router.get('/conversations', async (req, res) => {
     );
 
     const groupedConversations = result.rows.reduce((acc, message) => {
+      console.log("message", message.seller, message.message_text);
       const isSender = message.sender_id === userId;
       const conversationPartnerId = isSender ? message.recipient_id : message.sender_id;
       const conversationPartnerName = isSender ? message.recipient_name : message.sender_name;
@@ -63,8 +64,11 @@ router.get('/conversations', async (req, res) => {
           conversation_partner_id: conversationPartnerId,
           conversation_partner_name: conversationPartnerName,
           messages: [],
-          seller: message.seller
+          seller: message.seller || null
         };
+      }else if (message.seller) {
+       
+        acc[conversationPartnerId].seller = message.seller;
       }
       acc[conversationPartnerId].messages.push({
         sender_id: message.sender_id,
@@ -92,7 +96,7 @@ try {
   if (sender_id === "ADMIN"){
     const admin = await pool.query(`SELECT id FROM public."User" WHERE email = 'subletify@wustl.edu' `);
     sender = admin.rows[0].id;
-    console.log(sender);
+
   }else{
     sender = sender_id;
     const checkSender = await pool.query('SELECT id FROM public."User" WHERE id = $1', [sender]);
@@ -134,7 +138,7 @@ try {
     );
     
   }
-console.log(recipientName);
+
 
   return res.status(201).json({ ...result.rows[0], recipient_name: recipientName });
 } catch (error) {

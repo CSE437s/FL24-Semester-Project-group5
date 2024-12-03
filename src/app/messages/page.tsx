@@ -46,7 +46,7 @@ const MessagesContent = () => {
           const response = await fetch(`http://localhost:5001/api/message/conversations?userId=${session.user.id}`);
           const data: Conversation[] = await response.json();
 
-          console.log(data);
+          console.log("hi", data);
           const updatedConversations = data.map(conversation => ({
             ...conversation,
             conversation_partner_name: conversation.conversation_partner_name 
@@ -101,7 +101,6 @@ const MessagesContent = () => {
         recipient_name: recipient_name 
       };
   
-      console.log('Sending message:', messageData); 
       socket.emit('message', messageData); 
   
       try {
