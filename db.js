@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   user: 'cse437group5',
-  host: 'localhost', 
+  host: 'db', 
   database: 'subletifydev_v2',
   password: 'swe workshop',
   port: 5432,
