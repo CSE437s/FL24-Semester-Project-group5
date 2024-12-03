@@ -327,6 +327,19 @@ export default function EditListing() {
       {/* Right Column: Form */}
       <form onSubmit={formik.handleSubmit} className="flex flex-col items-center gap-4 w-full md:w-1/2">
         <h2 className="text-2xl font-semibold mb-4">Edit Furniture Listing</h2>
+
+        <TextField
+          id="outlined-location"
+          label="Description"
+          variant="outlined"
+          name="Description"
+          fullWidth
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.description}
+          error={formik.touched.description && Boolean(formik.errors.location)}
+          helperText={formik.touched.description && formik.errors.description}
+        />
         <FormControl fullWidth>
           <InputLabel htmlFor="outlined-adornment-price">Price</InputLabel>
           <OutlinedInput
