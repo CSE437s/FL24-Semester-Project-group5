@@ -54,6 +54,7 @@ router.get('/conversations', async (req, res) => {
     );
 
     const groupedConversations = result.rows.reduce((acc, message) => {
+      console.log("message", message.seller, message.message_text);
       const isSender = message.sender_id === userId;
       const conversationPartnerId = isSender ? message.recipient_id : message.sender_id;
       const conversationPartnerName = isSender ? message.recipient_name : message.sender_name;
@@ -62,8 +63,12 @@ router.get('/conversations', async (req, res) => {
         acc[conversationPartnerId] = { 
           conversation_partner_id: conversationPartnerId,
           conversation_partner_name: conversationPartnerName,
-          messages: []
+          messages: [],
+          seller: message.seller || null
         };
+      }else if (message.seller) {
+       
+        acc[conversationPartnerId].seller = message.seller;
       }
       acc[conversationPartnerId].messages.push({
         sender_id: message.sender_id,
@@ -85,17 +90,23 @@ router.get('/conversations', async (req, res) => {
 
 
 router.post('/', async (req, res) => {
-  const { sender_id, recipient_id, message_text } = req.body;
-
+  const { sender_id, recipient_id, message_text, seller } = req.body;
+let sender;
 try {
-  // Check if sender and recipient exist
-  const checkSender = await pool.query('SELECT id FROM public."User" WHERE id = $1', [sender_id]);
-  const checkRecipient = await pool.query('SELECT id, name FROM public."User" WHERE id = $1', [recipient_id]);
-  
-  if (checkSender.rowCount === 0) {
-    return res.status(400).json({ error: `Sender ID ${sender_id} does not exist.` });
+  if (sender_id === "ADMIN"){
+    const admin = await pool.query(`SELECT id FROM public."User" WHERE email = 'subletify@wustl.edu' `);
+    sender = admin.rows[0].id;
+
+  }else{
+    sender = sender_id;
+    const checkSender = await pool.query('SELECT id FROM public."User" WHERE id = $1', [sender]);
+    if (checkSender.rowCount === 0) {
+      return res.status(400).json({ error: `Sender ID ${sender} does not exist.` });
+    }
   }
-  
+
+
+  const checkRecipient = await pool.query('SELECT id, name FROM public."User" WHERE id = $1', [recipient_id]);
   if (checkRecipient.rowCount === 0) {
     return res.status(400).json({ error: `Recipient ID ${recipient_id} does not exist.` });
   }
@@ -106,28 +117,28 @@ try {
      WHERE (sender_id = $1 AND recipient_id = $2) 
         OR (sender_id = $2 AND recipient_id = $1) 
      LIMIT 1`,
-    [sender_id, recipient_id]
+    [sender, recipient_id]
   );
   let result;
   if (existingConversation.rows.length > 0){
     const conversationId = existingConversation.rows[0].conversation_id;
       // Insert the message
    result = await pool.query(
-    `INSERT INTO messages (conversation_id, sender_id, recipient_id, message_text, timestamp)
-     VALUES ($1, $2, $3, $4, NOW())
+    `INSERT INTO messages (conversation_id, sender_id, recipient_id, message_text, timestamp, seller)
+     VALUES ($1, $2, $3, $4, NOW(), $5)
      RETURNING *`,
-    [conversationId, sender_id, recipient_id, message_text]
+    [conversationId, sender, recipient_id, message_text, seller]
   );
   } else{
      result = await pool.query(
-      `INSERT INTO messages (conversation_id, sender_id, recipient_id, message_text, timestamp)
-       VALUES (gen_random_uuid(), $1, $2, $3, NOW())
+      `INSERT INTO messages (conversation_id, sender_id, recipient_id, message_text, timestamp, seller)
+       VALUES (gen_random_uuid(), $1, $2, $3, NOW(), $4)
        RETURNING *`,
-      [sender_id, recipient_id, message_text]
+      [sender, recipient_id, message_text, seller]
     );
     
   }
-console.log(recipientName);
+
 
   return res.status(201).json({ ...result.rows[0], recipient_name: recipientName });
 } catch (error) {
@@ -135,5 +146,20 @@ console.log(recipientName);
   return res.status(500).json({ error: "Internal Server Error" });
 }
 });
+
+
+
+router.post('/rating/:id', async (req, res)=> {
+  const { id } = req.params;
+  const { rating } = req.body;
+  try{
+    const result = await pool.query(`INSERT INTO public."business_user" (user_id, rating) values ($1,$2) RETURNING *`, [id, rating]);
+    return res.status(201).json({ ...result.rows[0] });
+  }catch (error) {
+    console.error("Error inserting rating:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+})
+
 
 module.exports = router;
